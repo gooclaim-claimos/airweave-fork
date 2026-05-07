@@ -164,6 +164,15 @@ class BrowseRequest(BaseModel):
             "Convenience: limit results to these entity types. Translated to a FilterGroup."
         ),
     )
+    name_query: Optional[str] = Field(
+        default=None,
+        description=(
+            "Case-insensitive substring search against the entity name. Bypasses the "
+            "FilterCondition `contains` operator (which is token-match in Vespa) and "
+            "translates to a regex `matches` clause."
+        ),
+        max_length=200,
+    )
 
 
 class BrowseResponse(BaseModel):

@@ -88,21 +88,11 @@ interface BrowseResponse {
     offset: number;
 }
 
-interface FilterCondition {
-    field: string;
-    operator: string;
-    value: string | number | boolean | string[] | number[];
-}
-
-interface FilterGroup {
-    conditions: FilterCondition[];
-}
-
 interface BrowseRequestBody {
     limit: number;
     offset: number;
     sync_ids?: string[];
-    filter?: FilterGroup[];
+    name_query?: string;
 }
 
 interface BrowseTableProps {
@@ -140,11 +130,7 @@ const buildBrowseBody = (
     }
     const trimmed = nameQuery.trim();
     if (trimmed) {
-        body.filter = [
-            {
-                conditions: [{ field: "name", operator: "contains", value: trimmed }],
-            },
-        ];
+        body.name_query = trimmed;
     }
     return body;
 };

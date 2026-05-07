@@ -61,6 +61,7 @@ class BrowseService(BrowseServiceProtocol):
 
         filter_groups = self._build_filter_groups(request)
         collection_id = str(collection.id)
+        name_substring = (request.name_query or "").strip() or None
 
         results, total = await asyncio.gather(
             self._vector_db.filter_search(
@@ -68,10 +69,12 @@ class BrowseService(BrowseServiceProtocol):
                 collection_id=collection_id,
                 limit=request.limit,
                 offset=request.offset,
+                name_substring=name_substring,
             ),
             self._vector_db.count(
                 filter_groups=filter_groups,
                 collection_id=collection_id,
+                name_substring=name_substring,
             ),
         )
 
