@@ -74,6 +74,8 @@ class SourceConnectionErrorCategory(str, Enum):
     API_KEY_INVALID = "api_key_invalid"
     AUTH_PROVIDER_ACCOUNT_GONE = "auth_provider_account_gone"
     AUTH_PROVIDER_CREDENTIALS_INVALID = "auth_provider_credentials_invalid"
+    USAGE_LIMIT_EXCEEDED = "usage_limit_exceeded"
+    RATE_LIMITED = "rate_limited"
 
 
 class CollectionStatus(str, Enum):
