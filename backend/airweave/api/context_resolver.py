@@ -9,13 +9,14 @@ Testable by passing fakes for every dependency.
 
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException, Request
 from fastapi_auth0 import Auth0User
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from airweave import schemas
+from airweave import crud, schemas
 from airweave.analytics.service import analytics
 from airweave.api.context import ApiContext, RequestHeaders
 from airweave.core.config import settings
@@ -29,6 +30,8 @@ from airweave.domains.organizations.protocols import (
     OrganizationRepositoryProtocol,
 )
 from airweave.domains.users.protocols import UserRepositoryProtocol
+from airweave.models.organization import Organization as OrganizationModel
+from airweave.models.user_organization import UserOrganization
 from airweave.schemas.rate_limit import RateLimitResult
 
 # ---------------------------------------------------------------------------
@@ -213,8 +216,6 @@ class ContextResolver:
     async def _fetch_auth0_user(
         self, db: AsyncSession, auth0_user: Auth0User
     ) -> Optional[schemas.User]:
-        from datetime import datetime
-
         if not auth0_user.email:
             return None
         try:
@@ -260,11 +261,65 @@ class ContextResolver:
                 db, id=uuid.UUID(organization_id), skip_access_validation=True, enrich=True
             )
             if not org:
-                raise HTTPException(
-                    status_code=404, detail=f"Organization {organization_id} not found"
-                )
+                # Gooclaim fork — auto-provision org for trusted external
+                # callers when EXTERNAL_ORG_ID_PROVISIONING is on. The nginx
+                # auth-request sidecar is the trusted boundary that has
+                # already verified the gooclaim JWT before forwarding the
+                # X-Organization-ID header (= gooclaim tenant_id).
+                if not settings.AUTH_ENABLED and settings.EXTERNAL_ORG_ID_PROVISIONING:
+                    org = await self._auto_provision_organization(db, organization_id)
+                else:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Organization {organization_id} not found",
+                    )
             await self._cache.set_organization(org)
         return org
+
+    async def _auto_provision_organization(
+        self, db: AsyncSession, organization_id: str
+    ) -> schemas.Organization:
+        """Auto-create an organization with a caller-supplied UUID.
+
+        Gooclaim fork only — gated behind EXTERNAL_ORG_ID_PROVISIONING. In
+        v1.0 the gooclaim tenant_id is reused as the Airweave org id 1:1,
+        eliminating the need for a separate mapping table. The nginx
+        sidecar already verified the upstream JWT, so the header is trusted.
+        The system superuser is added as the owner of the new org.
+        """
+        system_user_model = await self._users.get_by_email(db, email=settings.FIRST_SUPERUSER)
+        if not system_user_model:
+            raise HTTPException(
+                status_code=500,
+                detail="System superuser missing — cannot auto-provision org",
+            )
+
+        org_uuid = uuid.UUID(organization_id)
+        organization = OrganizationModel(
+            id=org_uuid,
+            name=f"tenant-{organization_id[:8]}",
+            description="Auto-provisioned via gooclaim bridge",
+            org_metadata={"gooclaim_tenant_id": organization_id},
+        )
+        db.add(organization)
+        await db.flush()
+
+        is_primary = system_user_model.primary_organization_id is None
+        user_org = UserOrganization(
+            user_id=system_user_model.id,
+            organization_id=org_uuid,
+            role="owner",
+            is_primary=is_primary,
+        )
+        db.add(user_org)
+        await db.commit()
+        await db.refresh(organization)
+
+        enriched = await crud.organization.get(
+            db, id=org_uuid, skip_access_validation=True, enrich=True
+        )
+        logger.info(f"airweave.gooclaim_bridge: auto-provisioned org {organization_id}")
+        return enriched if enriched else schemas.Organization.model_validate(organization)
 
     # ------------------------------------------------------------------
     # Access validation
@@ -283,6 +338,17 @@ class ContextResolver:
                     status_code=401,
                     detail="Authentication succeeded but user account was not found",
                 )
+            # Gooclaim fork — in SYSTEM-auth + external-provisioning mode,
+            # nginx is the trusted boundary; we skip the user_organizations
+            # membership check because (a) the org may have just been
+            # auto-provisioned in this very request, and (b) the system
+            # user is implicitly an owner of every auto-provisioned org.
+            if (
+                auth.method == AuthMethod.SYSTEM
+                and not settings.AUTH_ENABLED
+                and settings.EXTERNAL_ORG_ID_PROVISIONING
+            ):
+                return
             user_org_ids = [str(org.organization.id) for org in auth.user.user_organizations]
             if organization_id not in user_org_ids:
                 raise HTTPException(
