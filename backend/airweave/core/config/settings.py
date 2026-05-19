@@ -104,6 +104,14 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_NAME: str = "Admin"
 
     AUTH_ENABLED: Optional[bool] = False
+    # Gooclaim fork — when AUTH_ENABLED is False AND this flag is True, the
+    # context resolver will auto-create an organization with the UUID
+    # provided in the X-Organization-ID header if it does not yet exist.
+    # The nginx-auth-request sidecar in front of Airweave is the trusted
+    # boundary that validates the upstream JWT before forwarding the header.
+    # See gooclaim-infra/helm/airweave/templates/ingress.yaml for the nginx
+    # config that gates this header.
+    EXTERNAL_ORG_ID_PROVISIONING: bool = False
     AUTH0_DOMAIN: Optional[str] = None
     AUTH0_AUDIENCE: Optional[str] = None
     AUTH0_RULE_NAMESPACE: Optional[str] = None
