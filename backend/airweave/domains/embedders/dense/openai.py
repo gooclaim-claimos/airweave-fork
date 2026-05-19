@@ -3,9 +3,15 @@
 Handles batching, concurrency, token validation, input/response
 validation, and error translation. Callers pass text, get
 DenseEmbedding back, handle errors themselves.
+
+Gooclaim patch: supports Azure OpenAI via OPENAI_BASE_URL env var.
+Set OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/v1/
+and OPENAI_API_KEY=<azure-key> to route embeddings through Azure
+OpenAI (Indian-region for IRDAI compliance).
 """
 
 import asyncio
+import os
 
 import tiktoken
 from openai import AsyncOpenAI
@@ -57,8 +63,11 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
         """
         self._model = model
         self._dimensions = dimensions
+        # Gooclaim patch: honor OPENAI_BASE_URL for Azure OpenAI routing.
+        base_url = os.getenv("OPENAI_BASE_URL") or None
         self._client = AsyncOpenAI(
             api_key=api_key,
+            base_url=base_url,
             timeout=self._CLIENT_TIMEOUT,
             max_retries=self._CLIENT_MAX_RETRIES,
         )

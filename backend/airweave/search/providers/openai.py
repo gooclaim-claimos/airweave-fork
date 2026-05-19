@@ -2,8 +2,13 @@
 
 Supports text generation, structured output, embeddings, and reranking.
 Most complete provider with all capabilities.
+
+Gooclaim patch: supports Azure OpenAI via OPENAI_BASE_URL env var.
+Set OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/v1/
+to route through Azure OpenAI (Indian-region for IRDAI compliance).
 """
 
+import os
 from typing import Any, Dict, List, Optional
 
 from openai import AsyncOpenAI
@@ -32,8 +37,13 @@ class OpenAIProvider(BaseProvider):
         super().__init__(api_key, model_spec, ctx)
 
         try:
+            # Gooclaim patch: honor OPENAI_BASE_URL for Azure OpenAI routing.
+            base_url = os.getenv("OPENAI_BASE_URL") or None
             self.client = AsyncOpenAI(
-                api_key=api_key, timeout=self.TIMEOUT, max_retries=self.MAX_RETRIES
+                api_key=api_key,
+                base_url=base_url,
+                timeout=self.TIMEOUT,
+                max_retries=self.MAX_RETRIES,
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize OpenAI client: {e}") from e
