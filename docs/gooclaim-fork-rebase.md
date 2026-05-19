@@ -1,20 +1,29 @@
 # Gooclaim fork — upstream rebase runbook
 
-This fork (`gooclaim-claimos/airweave-fork`) carries a minimal patch on top
-of `airweave-ai/airweave` to support **Azure OpenAI** routing via the
-`OPENAI_BASE_URL` env var.
+This fork (`gooclaim-claimos/airweave-fork`) carries Gooclaim patches on
+top of `airweave-ai/airweave`:
 
-## The patch (small, focused)
+1. **Azure OpenAI routing** via `OPENAI_BASE_URL` env var
+2. **External-org auto-provision** for the gooclaim ↔ Airweave bridge
 
-Modified files:
-- `backend/airweave/domains/embedders/dense/openai.py`
-  Adds `base_url=os.getenv("OPENAI_BASE_URL")` to `AsyncOpenAI(...)`
-- `backend/airweave/search/providers/openai.py`
-  Same change for the LLM provider client
-- `.env.example`
-  Documents the new `OPENAI_BASE_URL` env var
+## The patches (small, focused)
 
-Total: ~10 lines across 3 files.
+**Patch 1 — Azure OpenAI (PR #1, merged):**
+- `backend/airweave/domains/embedders/dense/openai.py` — adds
+  `base_url=os.getenv("OPENAI_BASE_URL")` to `AsyncOpenAI(...)`
+- `backend/airweave/search/providers/openai.py` — same for LLM provider
+- `.env.example` — documents `OPENAI_BASE_URL`
+
+**Patch 2 — External-org provisioning (PR #2, merged):**
+- `backend/airweave/core/config/settings.py` — adds
+  `EXTERNAL_ORG_ID_PROVISIONING: bool = False`
+- `backend/airweave/api/context_resolver.py` — auto-creates org when
+  `X-Organization-ID` header carries an unknown UUID (gated behind
+  `AUTH_ENABLED=False + EXTERNAL_ORG_ID_PROVISIONING=True`); skips
+  membership check in this mode (nginx-auth-request is the trust
+  boundary)
+
+Total: ~90 lines across 4 files.
 
 ## Why this patch
 
@@ -27,10 +36,17 @@ through Azure OpenAI without further code changes.
 
 ## Branches
 
-- `main` — tracks upstream `airweave-ai/airweave` releases (we pin tags)
-- `gooclaim-azure-openai` — feature branch with our patch
-- `gooclaim` — our "production" branch, fast-forwarded from a tagged upstream
-  release + cherry-pick of `gooclaim-azure-openai`
+| Branch | Role |
+|--------|------|
+| `develop` | **Default branch.** Gooclaim PR target. CI runs on push/PR via `.github/workflows/gooclaim-ci.yml`. |
+| `main` | Stable. Built into our Docker image (`ghcr.io/gooclaim-claimos/airweave-backend:vX.Y.Z-gck.N`). Promote from `develop` once green. |
+| `claude/s5-*`, feature branches | PR-only branches → develop. |
+
+Upstream sync flow:
+```
+upstream/main → fork/main (rebase + replay our patches)
+fork/main     → fork/develop (FF sync so develop stays current)
+```
 
 ## Rebase against new upstream release
 
