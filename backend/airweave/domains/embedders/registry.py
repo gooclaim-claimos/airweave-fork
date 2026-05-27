@@ -54,7 +54,7 @@ class DenseEmbedderRegistry(DenseEmbedderRegistryProtocol):
 
         Called once at startup. After this, all lookups are dict reads.
         """
-        from airweave.domains.embedders.registry_data import DENSE_EMBEDDERS
+        from airweave.domains.embedders.registry_data import DENSE_EMBEDDERS  # noqa: PLC0415
 
         for spec in DENSE_EMBEDDERS:
             entry = DenseEmbedderEntry(
@@ -118,7 +118,7 @@ class SparseEmbedderRegistry(SparseEmbedderRegistryProtocol):
 
         Called once at startup. After this, all lookups are dict reads.
         """
-        from airweave.domains.embedders.registry_data import SPARSE_EMBEDDERS
+        from airweave.domains.embedders.registry_data import SPARSE_EMBEDDERS  # noqa: PLC0415
 
         for spec in SPARSE_EMBEDDERS:
             entry = SparseEmbedderEntry(

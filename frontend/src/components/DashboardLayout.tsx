@@ -39,6 +39,7 @@ import { useOrganizationStore } from "@/lib/stores/organizations";
 import { useUsageStore } from "@/lib/stores/usage";
 import { getStoredErrorDetails, clearStoredErrorDetails } from "@/lib/error-utils";
 import { BillingGuard } from "@/components/BillingGuard";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 import {
   Tooltip,
   TooltipContent,
@@ -154,11 +155,23 @@ CollectionsSection.displayName = 'CollectionsSection';
 
 // Memoized Logo component
 const Logo = memo(({ theme }: { theme: string }) => {
-  const logoSrc = theme === "dark" ? "/logo-airweave-darkbg.svg" : "/logo-airweave-lightbg.svg";
+  const logoSrc = "/gooclaim-logo.svg";
 
   return (
-    <Link to="/" className="flex items-center">
-      <img src={logoSrc} alt="Airweave" className="h-8" />
+    <Link to="/" className="flex items-center gap-3" aria-label="Gooclaim Data Sources">
+      <img
+        src={logoSrc}
+        alt="Gooclaim"
+        className="h-9 w-9 rounded-[10px] object-contain shrink-0"
+      />
+      <div className="min-w-0 flex flex-col leading-tight">
+        <span className="font-bold text-[17px] tracking-tight text-foreground leading-[1.2]">
+          Gooclaim OS
+        </span>
+        <span className="text-[12px] font-medium uppercase text-muted-foreground tracking-[0.08em] mt-[2px] whitespace-nowrap">
+          Data Sources
+        </span>
+      </div>
     </Link>
   );
 });
@@ -331,16 +344,18 @@ const DashboardLayout = () => {
           {/* Collections Section - Isolated and Memoized */}
           <CollectionsSection />
 
-          {/* API Keys Section */}
-          <div>
-            <NavItem
-              to="/api-keys"
-              isActive={isApiKeysActive}
-              icon={<Key className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
-            >
-              API keys
-            </NavItem>
-          </div>
+          {/* API Keys Section — hidden in Gooclaim mode (centralized in Portal Access Control) */}
+          {!IS_GOOCLAIM_TENANT && (
+            <div>
+              <NavItem
+                to="/api-keys"
+                isActive={isApiKeysActive}
+                icon={<Key className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
+              >
+                API keys
+              </NavItem>
+            </div>
+          )}
 
           {/* Auth Providers Section */}
           <div>
@@ -353,29 +368,33 @@ const DashboardLayout = () => {
             </NavItem>
           </div>
 
-          {/* Webhooks Section */}
-          <div>
-            <NavItem
-              to="/webhooks"
-              isActive={isWebhooksActive}
-              icon={<Webhook className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
-            >
-              Webhooks
-              <span className="ml-1.5 text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wide">beta</span>
-            </NavItem>
-          </div>
+          {/* Webhooks Section — hidden in Gooclaim mode (no webhook usage in v1.0) */}
+          {!IS_GOOCLAIM_TENANT && (
+            <div>
+              <NavItem
+                to="/webhooks"
+                isActive={isWebhooksActive}
+                icon={<Webhook className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
+              >
+                Webhooks
+                <span className="ml-1.5 text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wide">beta</span>
+              </NavItem>
+            </div>
+          )}
 
-          {/* Connect Playground */}
-          <div>
-            <NavItem
-              to="/connect/playground"
-              isActive={isConnectPlaygroundActive}
-              icon={<Plug className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
-            >
-              Connect
-              <span className="ml-1.5 text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wide">new</span>
-            </NavItem>
-          </div>
+          {/* Connect Playground — hidden in Gooclaim mode (dev/debug tool, would confuse tenant users) */}
+          {!IS_GOOCLAIM_TENANT && (
+            <div>
+              <NavItem
+                to="/connect/playground"
+                isActive={isConnectPlaygroundActive}
+                icon={<Plug className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />}
+              >
+                Connect
+                <span className="ml-1.5 text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wide">new</span>
+              </NavItem>
+            </div>
+          )}
 
         </div>
       </ScrollArea>
@@ -428,31 +447,33 @@ const DashboardLayout = () => {
               <header className={`h-16 sticky top-0 pr-2 backdrop-blur-sm z-10 ${resolvedTheme === 'dark' ? 'bg-background/80' : 'bg-background/95'} border-b border-border/30`}>
                 <div className="flex justify-end items-center h-full px-6">
                   <nav className="flex items-center space-x-4">
-                    {/* GitHub icon */}
-                    <a
-                      href="https://github.com/airweave-ai/airweave"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.04] h-8 w-8 rounded-full transition-colors duration-150 ease-out"
-                    >
-                      <Github size={20} className="text-muted-foreground" />
-                    </a>
+                    {/* GitHub icon — hidden in Gooclaim mode (private fork, brand leak) */}
+                    {!IS_GOOCLAIM_TENANT && (
+                      <a
+                        href="https://github.com/gooclaim.com/airweave"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.04] h-8 w-8 rounded-full transition-colors duration-150 ease-out"
+                      >
+                        <Github size={20} className="text-muted-foreground" />
+                      </a>
+                    )}
 
-
-
-                    {/* Discord icon */}
-                    <a
-                      href="https://discord.com/invite/484HY9Ehxt"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.04] h-8 w-8 rounded-full transition-colors duration-150 ease-out"
-                    >
-                      <DiscordIcon size={20} />
-                    </a>
+                    {/* Discord icon — hidden in Gooclaim mode (external redirect, DPDP risk) */}
+                    {!IS_GOOCLAIM_TENANT && (
+                      <a
+                        href="https://discord.com/invite/484HY9Ehxt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.04] h-8 w-8 rounded-full transition-colors duration-150 ease-out"
+                      >
+                        <DiscordIcon size={20} />
+                      </a>
+                    )}
 
                     {/* Docs icon */}
                     <a
-                      href="https://docs.airweave.ai/welcome"
+                      href="https://docs.gooclaim.com/welcome"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center hover:bg-black/[0.04] dark:hover:bg-white/[0.04] h-8 w-8 rounded-full transition-colors duration-150 ease-out"
@@ -460,19 +481,21 @@ const DashboardLayout = () => {
                       <FileText size={20} className="text-muted-foreground" />
                     </a>
 
-                    {/* Get a demo button */}
-                    <a
-                      href="https://cal.com/lennert-airweave/airweave-demo"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button
-                        variant="outline"
-                        className="hidden md:flex border-primary/60 border-[1px] text-primary/90 hover:bg-primary/10 hover:text-foreground/65 h-9 px-4 text-sm rounded-lg transition-all duration-200 hover:shadow-sm"
+                    {/* Get a demo button — hidden in Gooclaim mode (Airweave-specific demo URL) */}
+                    {!IS_GOOCLAIM_TENANT && (
+                      <a
+                        href="https://cal.com/lennert-gooclaim.comrweave-demo"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        Get a Demo
-                      </Button>
-                    </a>
+                        <Button
+                          variant="outline"
+                          className="hidden md:flex border-primary/60 border-[1px] text-primary/90 hover:bg-primary/10 hover:text-foreground/65 h-9 px-4 text-sm rounded-lg transition-all duration-200 hover:shadow-sm"
+                        >
+                          Get a Demo
+                        </Button>
+                      </a>
+                    )}
 
                     {/* Theme Switcher */}
                     <DropdownMenu>

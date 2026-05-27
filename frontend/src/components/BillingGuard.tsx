@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CreditCard } from 'lucide-react';
 import authConfig from '@/config/auth';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 interface BillingGuardProps {
   children: React.ReactNode;
@@ -18,6 +19,12 @@ export const BillingGuard = ({ children, requiresActiveBilling = true }: Billing
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    // Gooclaim mode: billing managed in Portal — skip all checks.
+    if (IS_GOOCLAIM_TENANT) {
+      setIsChecking(false);
+      return;
+    }
+
     // If auth is disabled (local OSS/dev), do nothing
     if (!authConfig.authEnabled) {
       setIsChecking(false);
@@ -43,6 +50,7 @@ export const BillingGuard = ({ children, requiresActiveBilling = true }: Billing
 
   // Redirect to billing setup immediately after checking
   useEffect(() => {
+    if (IS_GOOCLAIM_TENANT) return;
     if (!authConfig.authEnabled) return;
 
     if (!isChecking && !billingLoading && billingInfo && !billingInfo.is_oss) {
@@ -52,6 +60,11 @@ export const BillingGuard = ({ children, requiresActiveBilling = true }: Billing
       }
     }
   }, [isChecking, billingLoading, billingInfo, location.pathname, navigate]);
+
+  // Gooclaim mode: billing managed in Portal Usage tab — bypass entirely.
+  if (IS_GOOCLAIM_TENANT) {
+    return <>{children}</>;
+  }
 
   // In local OSS/dev with auth disabled, bypass billing guard entirely
   if (!authConfig.authEnabled) {

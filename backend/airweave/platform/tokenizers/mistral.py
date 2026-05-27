@@ -13,7 +13,7 @@ def _get_mistral_tokenizer_class():
     global _MistralTokenizer
     if _MistralTokenizer is None:
         try:
-            from mistral_common.tokens.tokenizers.mistral import (
+            from mistral_common.tokens.tokenizers.mistral import (  # noqa: PLC0415
                 MistralTokenizer as MT,
             )
 

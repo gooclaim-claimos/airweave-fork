@@ -96,7 +96,7 @@ export function ConnectPreview({
             src={connectUrl}
             className="w-full h-full border-0"
             allow="clipboard-write"
-            title="Airweave Connect"
+            title="Gooclaim OS Connect"
           />
         </div>
       </div>

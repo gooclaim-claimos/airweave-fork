@@ -65,7 +65,7 @@ class PdfExtractionResult:
 async def extract_pdf_text(path: str) -> PdfExtractionResult:
     """Extract text from a PDF, detecting which pages need OCR."""
     try:
-        import fitz  # PyMuPDF
+        import fitz  # PyMuPDF  # noqa: PLC0415
     except ImportError:
         raise SyncFailureError("PyMuPDF (fitz) required for PDF text extraction but not installed")
 

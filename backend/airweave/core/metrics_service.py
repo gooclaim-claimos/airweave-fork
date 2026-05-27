@@ -48,6 +48,17 @@ class PrometheusMetricsService(MetricsService):
         host: str,
         port: int,
     ) -> None:
+        """Wire up the metrics facade with its collaborators.
+
+        Args:
+            http: HTTP metrics implementation injected into the request layer.
+            agentic_search: Agentic-search metrics implementation.
+            db_pool: DB connection pool metrics implementation.
+            renderer: Renderer used by the sidecar HTTP server to expose
+                Prometheus text output.
+            host: Bind address for the metrics sidecar HTTP server.
+            port: TCP port for the metrics sidecar HTTP server.
+        """
         self.http = http
         self.agentic_search = agentic_search
         self.db_pool = db_pool

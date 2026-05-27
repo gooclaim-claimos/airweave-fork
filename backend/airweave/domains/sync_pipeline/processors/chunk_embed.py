@@ -111,7 +111,7 @@ class ChunkEmbedProcessor:
         runtime: "SyncRuntime",
     ) -> List[BaseEntity]:
         """Chunk code with AST-aware CodeChunker."""
-        from airweave.platform.chunkers.code import CodeChunker
+        from airweave.platform.chunkers.code import CodeChunker  # noqa: PLC0415
 
         # Filter unsupported languages
         supported, unsupported = await self._filter_unsupported_languages(entities)
@@ -137,7 +137,7 @@ class ChunkEmbedProcessor:
         sync_context: "SyncContext",
     ) -> List[BaseEntity]:
         """Chunk text with SemanticChunker."""
-        from airweave.platform.chunkers.semantic import SemanticChunker
+        from airweave.platform.chunkers.semantic import SemanticChunker  # noqa: PLC0415
 
         chunker = SemanticChunker()
         texts = [e.textual_representation for e in entities]
@@ -155,8 +155,8 @@ class ChunkEmbedProcessor:
     ) -> Tuple[List[BaseEntity], List[BaseEntity]]:
         """Filter code entities by tree-sitter support."""
         try:
-            from magika import Magika
-            from tree_sitter_language_pack import get_parser
+            from magika import Magika  # noqa: PLC0415
+            from tree_sitter_language_pack import get_parser  # noqa: PLC0415
         except ImportError:
             return entities, []
 

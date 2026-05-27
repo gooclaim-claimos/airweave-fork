@@ -60,7 +60,7 @@ export const CollectionCard = ({
             </h3>
           </div>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 truncate">
-            {readableId}.airweave.ai
+            {readableId}.gooclaim.com
           </p>
 
           {/* Status badge */}

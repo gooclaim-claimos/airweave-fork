@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ThemeProvider } from '@/lib/theme-provider';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 import { Toaster } from 'sonner';
 import '@/styles/toast.css';
 
@@ -36,14 +37,14 @@ function App() {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="airweave-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="gooclaim-ui-theme">
       <Routes>
         {/* Public routes */}
         <Route path={publicPaths.login} element={<Login />} />
         <Route path={publicPaths.callback} element={<Callback />} />
-        <Route path={publicPaths.onboarding} element={<Onboarding />} />
-        <Route path={publicPaths.billingSuccess} element={<BillingSuccess />} />
-        <Route path={publicPaths.billingCancel} element={<BillingCancel />} />
+        <Route path={publicPaths.onboarding} element={IS_GOOCLAIM_TENANT ? <Navigate to="/" replace /> : <Onboarding />} />
+        <Route path={publicPaths.billingSuccess} element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingSuccess />} />
+        <Route path={publicPaths.billingCancel} element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingCancel />} />
 
         {/* Auth callback routes - OUTSIDE of DashboardLayout */}
         {/* <Route path="/auth/callback/:short_name" element={<AuthCallback />} /> */}
@@ -63,9 +64,9 @@ function App() {
           {/* Organization routes */}
           <Route path="/organization/settings" element={<OrganizationSettingsUnified />} />
 
-          {/* Billing routes */}
-          <Route path="/billing/setup" element={<BillingSetup />} />
-          <Route path="/billing/portal" element={<BillingPortal />} />
+          {/* Billing routes — gated to /collections in Gooclaim mode (billing managed in Portal) */}
+          <Route path="/billing/setup" element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingSetup />} />
+          <Route path="/billing/portal" element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingPortal />} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<AdminDashboard />} />

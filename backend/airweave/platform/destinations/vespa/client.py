@@ -89,7 +89,7 @@ class VespaClient:
         Returns:
             Connected VespaClient instance
         """
-        from vespa.application import Vespa
+        from vespa.application import Vespa  # noqa: PLC0415
 
         vespa_url = url or settings.VESPA_URL
         vespa_port = port or settings.VESPA_PORT

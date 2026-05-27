@@ -48,6 +48,12 @@ class InvalidInputError(AirweaveException):
     """Exception raised when user-supplied input fails validation (maps to 422)."""
 
     def __init__(self, message: Optional[str] = "Invalid input"):
+        """Create a new InvalidInputError instance.
+
+        Args:
+            message: Human-readable error message describing the validation
+                failure. Defaults to ``"Invalid input"`` if not supplied.
+        """
         self.message = message
         super().__init__(self.message)
 

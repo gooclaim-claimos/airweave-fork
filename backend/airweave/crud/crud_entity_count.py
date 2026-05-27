@@ -73,7 +73,7 @@ class CRUDEntityCount(CRUDBaseOrganization[EntityCount, EntityCountCreate, Entit
     def _get_registry_metadata() -> dict:
         """Return {short_name: {name, type, description}} from the entity definition registry."""
         # [code blue] todo: remove container import
-        from airweave.core.container import container as app_container
+        from airweave.core.container import container as app_container  # noqa: PLC0415
 
         return {
             entry.short_name: {
@@ -100,7 +100,7 @@ class CRUDEntityCount(CRUDBaseOrganization[EntityCount, EntityCountCreate, Entit
         sync_id: UUID,
     ) -> int:
         """Get total entity count across all types for a sync."""
-        from sqlalchemy import func
+        from sqlalchemy import func  # noqa: PLC0415
 
         stmt = select(func.sum(EntityCount.count)).where(EntityCount.sync_id == sync_id)
         result = await db.execute(stmt)

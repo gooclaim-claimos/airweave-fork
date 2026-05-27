@@ -593,10 +593,10 @@ class SyncOrchestrator:
             return
 
         try:
-            from sqlalchemy import select as sa_select
+            from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-            from airweave import crud
-            from airweave.models.entity import Entity as EntityModel
+            from airweave import crud  # noqa: PLC0415
+            from airweave.models.entity import Entity as EntityModel  # noqa: PLC0415
 
             async with get_db_context() as db:
                 # Get the original source_name from any synced entity

@@ -53,7 +53,7 @@ async def run_in_thread_pool(func: Callable[..., T], *args, **kwargs) -> T:
     try:
         # If there are keyword arguments, wrap the function with partial
         if kwargs:
-            from functools import partial
+            from functools import partial  # noqa: PLC0415
 
             func = partial(func, **kwargs)
             return await loop.run_in_executor(executor, func, *args)

@@ -194,7 +194,7 @@ async def _run_agentic_search_v2(
 ) -> None:
     """Run agentic search in background. All exceptions caught to guarantee error event."""
     try:
-        from airweave.db.session import AsyncSessionLocal
+        from airweave.db.session import AsyncSessionLocal  # noqa: PLC0415
 
         async with AsyncSessionLocal() as search_db:
             await service.search(search_db, ctx, readable_id, request)

@@ -17,6 +17,15 @@ class PrometheusDbPoolMetrics(DbPoolMetrics):
         registry: CollectorRegistry | None = None,
         max_overflow: int = 0,
     ) -> None:
+        """Register DB pool gauges on a Prometheus collector registry.
+
+        Args:
+            registry: Existing ``CollectorRegistry`` to register gauges against so they
+                are exposed on the shared ``/metrics`` endpoint. A new registry is
+                created when ``None`` is provided (useful for isolated tests).
+            max_overflow: Configured max overflow size for the pool, exported as a
+                static gauge so dashboards can compare live overflow against the cap.
+        """
         self._registry = registry or CollectorRegistry()
 
         self._pool_size = Gauge(
@@ -62,6 +71,14 @@ class PrometheusDbPoolMetrics(DbPoolMetrics):
         checked_in: int,
         overflow: int,
     ) -> None:
+        """Set current values on the connection pool gauges.
+
+        Args:
+            pool_size: Current size of the connection pool.
+            checked_out: Number of connections currently checked out by callers.
+            checked_in: Number of idle connections currently available in the pool.
+            overflow: Number of connections currently in the overflow tier.
+        """
         self._pool_size.set(pool_size)
         self._checked_out.set(checked_out)
         self._checked_in.set(checked_in)
@@ -77,6 +94,7 @@ class FakeDbPoolMetrics(DbPoolMetrics):
     """In-memory spy implementing the DbPoolMetrics protocol."""
 
     def __init__(self) -> None:
+        """Initialize all recorded pool values to ``None`` and reset the update count."""
         self.pool_size: int | None = None
         self.checked_out: int | None = None
         self.checked_in: int | None = None
@@ -91,6 +109,14 @@ class FakeDbPoolMetrics(DbPoolMetrics):
         checked_in: int,
         overflow: int,
     ) -> None:
+        """Store the latest pool snapshot and increment the update counter.
+
+        Args:
+            pool_size: Current size of the connection pool.
+            checked_out: Number of connections currently checked out by callers.
+            checked_in: Number of idle connections currently available in the pool.
+            overflow: Number of connections currently in the overflow tier.
+        """
         self.pool_size = pool_size
         self.checked_out = checked_out
         self.checked_in = checked_in

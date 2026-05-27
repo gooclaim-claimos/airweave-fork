@@ -622,7 +622,7 @@ class GmailSource(BaseSource):
         if not descriptors:
             return
 
-        async def _attachment_worker(descriptor: Dict):
+        async def _attachment_worker(descriptor: Dict):  # noqa: C901  # mime/size/error branching is intentional
             mime_type = descriptor["mime_type"]
             filename = descriptor["filename"]
             attachment_id = descriptor["attachment_id"]

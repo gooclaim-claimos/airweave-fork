@@ -17,13 +17,18 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 // PostHog configuration
 const POSTHOG_KEY = 'phc_Ytp26UB3WwGCdjHTpDBI9HQg2ZA38ITMDKI6fE6EPGS';
 const POSTHOG_HOST = 'https://eu.posthog.com';
 
-// Initialize PostHog outside of React component to avoid race conditions
-if (typeof window !== 'undefined') {
+// Initialize PostHog outside of React component to avoid race conditions.
+// In Gooclaim mode, skip init entirely — Gooclaim has its own observability
+// stack (gooclaim-observe) and double-tracking + extra DPDP consent banner
+// must not appear to tenant users. `posthog.capture(...)` calls elsewhere
+// become no-ops when the client is uninitialized.
+if (typeof window !== 'undefined' && !IS_GOOCLAIM_TENANT) {
     posthog.init(POSTHOG_KEY, {
         api_host: POSTHOG_HOST,
         person_profiles: 'always',

@@ -37,11 +37,11 @@ export default function ConnectPlayground() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div className="min-w-0 flex-1 mr-4">
-            <h1 className="text-2xl font-bold">Airweave Connect</h1>
+            <h1 className="text-2xl font-bold">Gooclaim OS Connect</h1>
             <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-              Airweave Connect is an embeddable widget that handles OAuth, credentials, and data sync, letting your users connect their apps to your product.{" "}
+              Gooclaim OS Connect is an embeddable widget that handles OAuth, credentials, and data sync, letting your users connect their apps to your product.{" "}
               <a
-                href="https://docs.airweave.ai/connect"
+                href="https://docs.gooclaim.com/connect"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-primary hover:underline"

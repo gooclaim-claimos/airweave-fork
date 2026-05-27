@@ -117,7 +117,7 @@ class GroqProvider(BaseProvider):
 
     async def rerank(self, query: str, documents: List[str], top_n: int) -> List[Dict[str, Any]]:
         """Rerank documents using Groq structured output."""
-        from airweave.search.prompts import RERANKING_SYSTEM_PROMPT
+        from airweave.search.prompts import RERANKING_SYSTEM_PROMPT  # noqa: PLC0415
 
         if not self.model_spec.rerank_model:
             raise RuntimeError("Rerank model not configured for Groq provider")
@@ -164,7 +164,7 @@ class GroqProvider(BaseProvider):
         self, query: str, documents: List[str]
     ) -> tuple[List[int], str]:
         """Select maximum documents that fit in context window and build prompt."""
-        from airweave.search.prompts import RERANKING_SYSTEM_PROMPT
+        from airweave.search.prompts import RERANKING_SYSTEM_PROMPT  # noqa: PLC0415
 
         if not self.rerank_tokenizer:
             raise RuntimeError(

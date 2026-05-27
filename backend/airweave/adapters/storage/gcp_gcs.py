@@ -58,7 +58,7 @@ class GCSBackend(StorageBackend):
         """Lazy-load GCS client (sync)."""
         if self._client is None:
             try:
-                from google.cloud import storage
+                from google.cloud import storage  # noqa: PLC0415
 
                 self._client = storage.Client(project=self.project)
                 self._bucket = self._client.bucket(self.bucket_name)
@@ -85,7 +85,7 @@ class GCSBackend(StorageBackend):
 
     async def write_json(self, path: str, data: Dict[str, Any]) -> None:
         """Write JSON to GCS."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
@@ -102,12 +102,12 @@ class GCSBackend(StorageBackend):
 
     async def read_json(self, path: str) -> Dict[str, Any]:
         """Read JSON from GCS."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
         def _read():
-            from google.cloud.exceptions import NotFound
+            from google.cloud.exceptions import NotFound  # noqa: PLC0415
 
             bucket = self._get_bucket()
             blob = bucket.blob(blob_name)
@@ -128,7 +128,7 @@ class GCSBackend(StorageBackend):
 
     async def write_file(self, path: str, content: bytes) -> None:
         """Write binary content to GCS."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
@@ -144,12 +144,12 @@ class GCSBackend(StorageBackend):
 
     async def read_file(self, path: str) -> bytes:
         """Read binary content from GCS."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
         def _read():
-            from google.cloud.exceptions import NotFound
+            from google.cloud.exceptions import NotFound  # noqa: PLC0415
 
             bucket = self._get_bucket()
             blob = bucket.blob(blob_name)
@@ -167,7 +167,7 @@ class GCSBackend(StorageBackend):
 
     async def exists(self, path: str) -> bool:
         """Check if blob exists in GCS."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
@@ -183,12 +183,12 @@ class GCSBackend(StorageBackend):
 
     async def delete(self, path: str) -> bool:
         """Delete blob or all blobs under prefix."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         blob_name = self._resolve(path)
 
         def _delete():
-            from google.cloud.exceptions import NotFound
+            from google.cloud.exceptions import NotFound  # noqa: PLC0415
 
             bucket = self._get_bucket()
             deleted_count = 0
@@ -218,7 +218,7 @@ class GCSBackend(StorageBackend):
 
     async def list_files(self, prefix: str = "") -> List[str]:
         """List all blobs under prefix."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         full_prefix = self._resolve(prefix)
         if prefix and not full_prefix.endswith("/"):
@@ -243,7 +243,7 @@ class GCSBackend(StorageBackend):
 
     async def list_dirs(self, prefix: str = "") -> List[str]:
         """List 'directories' under prefix."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         full_prefix = self._resolve(prefix)
         if not full_prefix.endswith("/"):
@@ -274,7 +274,7 @@ class GCSBackend(StorageBackend):
 
     async def count_files(self, prefix: str = "", pattern: str = "*") -> int:
         """Count blobs under prefix without building full list."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         full_prefix = self._resolve(prefix)
         if prefix and not full_prefix.endswith("/"):

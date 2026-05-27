@@ -1,5 +1,5 @@
 /**
- * Core validation types for the Airweave validation system
+ * Core validation types for the Gooclaim validation system
  */
 
 export type ValidationSeverity = 'info' | 'warning';

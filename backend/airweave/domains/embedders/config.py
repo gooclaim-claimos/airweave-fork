@@ -152,7 +152,7 @@ def _validate_local_reachability(dense_spec: DenseEmbedderEntry) -> None:
     endpoint with a short timeout. Raises EmbeddingConfigError with actionable
     instructions if the service is unreachable.
     """
-    from airweave.domains.embedders.dense.local import LocalDenseEmbedder
+    from airweave.domains.embedders.dense.local import LocalDenseEmbedder  # noqa: PLC0415
 
     if dense_spec.embedder_class_ref is not LocalDenseEmbedder:
         return

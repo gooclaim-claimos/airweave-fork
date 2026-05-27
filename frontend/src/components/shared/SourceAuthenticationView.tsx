@@ -153,7 +153,7 @@ export const SourceAuthenticationView: React.FC<SourceAuthenticationViewProps> =
                 "text-sm",
                 isDark ? "text-gray-400" : "text-gray-600"
               )}>
-                Grant permission to Airweave
+                Grant permission to Gooclaim OS
               </p>
             </div>
           </div>
@@ -311,8 +311,8 @@ export const SourceAuthenticationView: React.FC<SourceAuthenticationViewProps> =
                   "shadow-lg"
                 )}>
                   <img
-                    src={isDark ? "/airweave-logo-svg-white-darkbg.svg" : "/airweave-logo-svg-lightbg-blacklogo.svg"}
-                    alt="Airweave"
+                    src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+                    alt="Gooclaim"
                     className="w-10 h-10 object-contain"
                   />
                 </div>

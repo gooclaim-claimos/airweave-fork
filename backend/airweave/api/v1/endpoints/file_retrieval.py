@@ -205,7 +205,7 @@ async def download_files_batch(
             )
 
         # Create ZIP file in memory
-        import io
+        import io  # noqa: PLC0415
 
         zip_buffer = io.BytesIO()
 

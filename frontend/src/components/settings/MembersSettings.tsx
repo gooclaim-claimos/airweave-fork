@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api';
 import { useUsageStore } from '@/lib/stores/usage';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 // Member interfaces
 interface Member {
@@ -314,8 +315,29 @@ export const MembersSettings = ({ currentOrganization }: MembersSettingsProps) =
           </Badge>
         )}
       </div>
-      {/* Invite Members */}
-      {canEdit && (
+      {/* Invite Members — in Gooclaim mode, team membership is managed in Portal Access Control */}
+      {IS_GOOCLAIM_TENANT && canEdit && (
+        <div className="rounded-md border border-border/60 bg-muted/30 p-4 text-sm">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <p className="font-medium text-foreground">Team managed in Portal</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Members are auto-synced from your Gooclaim tenant. Invite new members from
+                {' '}
+                <a
+                  href="https://portal.gooclaim.com/access-control/members"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  Portal → Access Control → Members
+                </a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      {!IS_GOOCLAIM_TENANT && canEdit && (
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium text-foreground">Invite new member</h3>

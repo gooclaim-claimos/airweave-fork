@@ -21,7 +21,7 @@ class CRUDUser(CRUDBaseUser[User, UserCreate, UserUpdate]):
 
     def _get_user_query_with_orgs(self):
         """Get a base query for users with organizations loaded."""
-        from airweave.models.user_organization import UserOrganization
+        from airweave.models.user_organization import UserOrganization  # noqa: PLC0415
 
         return select(User).options(
             selectinload(User.user_organizations)
@@ -139,7 +139,9 @@ class CRUDUser(CRUDBaseUser[User, UserCreate, UserUpdate]):
         Returns:
             tuple[schemas.User, schemas.Organization]: The newly created schemas.
         """
-        from airweave.crud.crud_organization import organization as crud_organization
+        from airweave.crud.crud_organization import (  # noqa: PLC0415
+            organization as crud_organization,  # noqa: PLC0415
+        )
 
         async def _create_with_organization(
             db: AsyncSession, *, obj_in: UserCreate, uow: UnitOfWork
@@ -252,7 +254,7 @@ class CRUDUser(CRUDBaseUser[User, UserCreate, UserUpdate]):
         """Get a user by API key using the encrypted key validation."""
         try:
             # Use the crud_api_key function that handles decryption
-            from airweave.crud.crud_api_key import api_key as crud_api_key
+            from airweave.crud.crud_api_key import api_key as crud_api_key  # noqa: PLC0415
 
             # This will handle the decryption and validation
             api_key_obj = await crud_api_key.get_by_key(db, key=api_key)

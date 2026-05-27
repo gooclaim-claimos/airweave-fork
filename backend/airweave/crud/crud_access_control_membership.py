@@ -63,7 +63,7 @@ class CRUDAccessControlMembership(
         Returns:
             List of AccessControlMembership objects scoped to the collection
         """
-        from airweave.models.source_connection import SourceConnection
+        from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
 
         # Join AccessControlMembership with SourceConnection to filter by collection
         stmt = (
@@ -105,7 +105,7 @@ class CRUDAccessControlMembership(
         Returns:
             Number of memberships processed
         """
-        from sqlalchemy.dialects.postgresql import insert
+        from sqlalchemy.dialects.postgresql import insert  # noqa: PLC0415
 
         if not memberships:
             return 0
@@ -188,7 +188,7 @@ class CRUDAccessControlMembership(
         Returns:
             Number of memberships deleted
         """
-        from sqlalchemy import delete
+        from sqlalchemy import delete  # noqa: PLC0415
 
         if not ids:
             return 0
@@ -217,7 +217,7 @@ class CRUDAccessControlMembership(
         Returns:
             Number of memberships deleted
         """
-        from sqlalchemy import delete
+        from sqlalchemy import delete  # noqa: PLC0415
 
         stmt = delete(AccessControlMembership).where(
             AccessControlMembership.organization_id == organization_id,
@@ -260,7 +260,7 @@ class CRUDAccessControlMembership(
             source_connection_id: Source connection ID
             source_name: Source short name
         """
-        from sqlalchemy.dialects.postgresql import insert
+        from sqlalchemy.dialects.postgresql import insert  # noqa: PLC0415
 
         stmt = insert(AccessControlMembership).values(
             organization_id=organization_id,
@@ -309,7 +309,7 @@ class CRUDAccessControlMembership(
         Returns:
             Number of rows deleted (0 or 1)
         """
-        from sqlalchemy import delete
+        from sqlalchemy import delete  # noqa: PLC0415
 
         stmt = delete(AccessControlMembership).where(
             AccessControlMembership.organization_id == organization_id,
@@ -344,7 +344,7 @@ class CRUDAccessControlMembership(
         Returns:
             Number of rows deleted
         """
-        from sqlalchemy import delete
+        from sqlalchemy import delete  # noqa: PLC0415
 
         stmt = delete(AccessControlMembership).where(
             AccessControlMembership.organization_id == organization_id,

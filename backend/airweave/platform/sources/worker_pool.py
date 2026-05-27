@@ -97,6 +97,18 @@ class WorkerPool:
         max_queue_size: int = 100,
         logger: Any = None,
     ) -> None:
+        """Initialize the worker pool.
+
+        Args:
+            max_workers: Maximum number of concurrent worker tasks.
+            max_rps: Optional global rate limit in requests/sec. ``None`` disables.
+            burst: Token bucket burst size; defaults to ``max(1, int(max_rps))``.
+            max_queue_size: Bounded queue capacity feeding the workers.
+            logger: Optional structured logger; falls back to a module default.
+
+        Raises:
+            ValueError: If ``max_workers`` is less than 1.
+        """
         if max_workers < 1:
             raise ValueError("max_workers must be >= 1")
 
@@ -112,10 +124,12 @@ class WorkerPool:
 
     @property
     def max_workers(self) -> int:
+        """Return the configured maximum number of concurrent workers."""
         return self._max_workers
 
     @property
     def max_rps(self) -> Optional[float]:
+        """Return the configured rate limit in requests/sec, or None if disabled."""
         return self._bucket._rate if self._bucket else None
 
     # ------------------------------------------------------------------
@@ -143,7 +157,7 @@ class WorkerPool:
     # High-level API
     # ------------------------------------------------------------------
 
-    async def map(
+    async def map(  # noqa: C901  # producer/worker fan-out with error + ordering branches
         self,
         items: Union[Iterable[Any], AsyncIterable[Any]],
         worker: Callable[[Any], AsyncIterable[BaseEntity]],

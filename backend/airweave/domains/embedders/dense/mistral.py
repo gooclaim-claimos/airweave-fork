@@ -154,8 +154,8 @@ class MistralDenseEmbedder(DenseEmbedderProtocol):
             EmbedderConnectionError: On connection failure.
             EmbedderProviderError: On other API errors.
         """
-        import httpx
-        from mistralai.models import SDKError
+        import httpx  # noqa: PLC0415
+        from mistralai.models import SDKError  # noqa: PLC0415
 
         try:
             return await self._create_embeddings(batch)

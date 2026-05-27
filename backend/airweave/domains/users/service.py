@@ -58,7 +58,7 @@ class UserService(UserServiceProtocol):
         account linking), it gets updated silently.  Handles welcome
         email and analytics for new users.
         """
-        from airweave.core.exceptions import NotFoundException
+        from airweave.core.exceptions import NotFoundException  # noqa: PLC0415
 
         existing_user = None
         try:

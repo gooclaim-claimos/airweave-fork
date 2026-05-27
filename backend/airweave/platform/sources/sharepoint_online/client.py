@@ -416,7 +416,7 @@ class GraphClient:
         max_attempts: int = 3,
     ) -> httpx.Response:
         """Execute a SP REST GET with simple retry on transient errors."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         for attempt in range(1, max_attempts + 1):
             try:
@@ -494,7 +494,7 @@ class GraphClient:
         Returns a mapping of user_id -> email (lowercase).
         IDs that cannot be resolved are omitted from the result.
         """
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         CONCURRENCY = 10
         semaphore = asyncio.Semaphore(CONCURRENCY)

@@ -15,7 +15,6 @@ from airweave import schemas
 from airweave.api import deps
 from airweave.api.context import ApiContext
 from airweave.api.deps import Inject
-from airweave.domains.organizations import logic
 from airweave.api.router import TrailingSlashRouter
 from airweave.core.exceptions import PermissionException
 from airweave.core.logging import logger
@@ -25,6 +24,7 @@ from airweave.domains.billing.exceptions import (
     BillingStateError,
 )
 from airweave.domains.billing.protocols import BillingServiceProtocol, BillingWebhookProtocol
+from airweave.domains.organizations import logic
 
 router = TrailingSlashRouter()
 

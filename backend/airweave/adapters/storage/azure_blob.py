@@ -54,8 +54,8 @@ class AzureBlobBackend(StorageBackend):
         """Lazy-load async blob service client."""
         if self._blob_service_client is None:
             try:
-                from azure.identity.aio import DefaultAzureCredential
-                from azure.storage.blob.aio import BlobServiceClient
+                from azure.identity.aio import DefaultAzureCredential  # noqa: PLC0415
+                from azure.storage.blob.aio import BlobServiceClient  # noqa: PLC0415
 
                 account_url = f"https://{self.storage_account}.blob.core.windows.net"
                 self._credential = DefaultAzureCredential()

@@ -167,9 +167,9 @@ async def _build_org_context(
     Returns:
         ApiContext configured for the target organization
     """
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.core.logging import LoggerConfigurator
+    from airweave.core.logging import LoggerConfigurator  # noqa: PLC0415
 
     # Fetch target organization
     org_result = await db.execute(sa_select(Organization).where(Organization.id == target_org_id))
@@ -209,15 +209,15 @@ def _build_sort_subqueries(query, sort_by: str):
     Returns:
         Tuple of (query, subqueries_dict) where subqueries_dict contains named subqueries.
     """
-    from datetime import datetime
+    from datetime import datetime  # noqa: PLC0415
 
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.models.billing_period import BillingPeriod
-    from airweave.models.source_connection import SourceConnection
-    from airweave.models.usage import Usage
-    from airweave.models.user import User
-    from airweave.schemas.billing_period import BillingPeriodStatus
+    from airweave.models.billing_period import BillingPeriod  # noqa: PLC0415
+    from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
+    from airweave.models.usage import Usage  # noqa: PLC0415
+    from airweave.models.user import User  # noqa: PLC0415
+    from airweave.schemas.billing_period import BillingPeriodStatus  # noqa: PLC0415
 
     subqueries = {}
 
@@ -293,7 +293,7 @@ def _build_sort_subqueries(query, sort_by: str):
 
 def _get_sort_column(sort_by: str, subqueries: dict):
     """Get the SQLAlchemy column to sort by."""
-    from airweave.models.usage import Usage
+    from airweave.models.usage import Usage  # noqa: PLC0415
 
     # Map sort_by to column
     column_map = {
@@ -348,7 +348,7 @@ async def _update_membership_role(
         )
         return False
 
-    from sqlalchemy import update
+    from sqlalchemy import update  # noqa: PLC0415
 
     stmt = (
         update(UserOrganization)
@@ -484,7 +484,7 @@ async def list_all_organizations(
     }
 
     # Fetch last active timestamp for each organization (most recent user activity)
-    from airweave.models.user import User
+    from airweave.models.user import User  # noqa: PLC0415
 
     last_active_query = (
         select(
@@ -502,7 +502,7 @@ async def list_all_organizations(
     usage_map = await crud.usage.get_current_usage_for_orgs(db, organization_ids=org_ids)
 
     # Fetch source connection counts in one query (dynamically counted, not stored in usage)
-    from airweave.models.source_connection import SourceConnection
+    from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
 
     source_connection_count_query = (
         select(
@@ -711,7 +711,7 @@ async def upgrade_organization_to_enterprise(  # noqa: C901
         owner_user_org = result.scalar_one_or_none()
 
         if owner_user_org:
-            from airweave.models.user import User
+            from airweave.models.user import User  # noqa: PLC0415
 
             stmt = select(User).where(User.id == owner_user_org.user_id)
             result = await db.execute(stmt)
@@ -840,9 +840,9 @@ async def create_enterprise_organization(
     # Create organization with enterprise billing
     async with UnitOfWork(db) as uow:
         # Create the organization (without Auth0/Stripe integration to avoid automatic trial setup)
-        from airweave.core.datetime_utils import utc_now_naive
-        from airweave.models.organization import Organization
-        from airweave.models.organization_billing import OrganizationBilling
+        from airweave.core.datetime_utils import utc_now_naive  # noqa: PLC0415
+        from airweave.models.organization import Organization  # noqa: PLC0415
+        from airweave.models.organization_billing import OrganizationBilling  # noqa: PLC0415
 
         org = Organization(
             name=organization_data.name,
@@ -1124,16 +1124,16 @@ async def resync_with_execution_config(
     )
 
     # Bypass organization filtering for all queries (admin access)
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.core.shared_models import IntegrationType, SyncJobStatus
-    from airweave.db.unit_of_work import UnitOfWork
-    from airweave.models.collection import Collection
-    from airweave.models.connection import Connection
-    from airweave.models.source_connection import SourceConnection
-    from airweave.models.sync import Sync
-    from airweave.models.sync_connection import SyncConnection
-    from airweave.models.sync_job import SyncJob
+    from airweave.core.shared_models import IntegrationType, SyncJobStatus  # noqa: PLC0415
+    from airweave.db.unit_of_work import UnitOfWork  # noqa: PLC0415
+    from airweave.models.collection import Collection  # noqa: PLC0415
+    from airweave.models.connection import Connection  # noqa: PLC0415
+    from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
+    from airweave.models.sync import Sync  # noqa: PLC0415
+    from airweave.models.sync_connection import SyncConnection  # noqa: PLC0415
+    from airweave.models.sync_job import SyncJob  # noqa: PLC0415
 
     # Get the sync without organization filtering
     result = await db.execute(sa_select(Sync).where(Sync.id == sync_id))
@@ -1351,7 +1351,7 @@ async def admin_search_collection(
     Raises:
         HTTPException: If not admin or collection not found
     """
-    from airweave.search.service import service
+    from airweave.search.service import service  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1409,7 +1409,7 @@ async def admin_search_collection_as_user(
     Raises:
         HTTPException: If not admin or collection not found.
     """
-    from airweave.search.service import service
+    from airweave.search.service import service  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1484,7 +1484,7 @@ async def admin_get_cursor(
     Returns:
         Cursor data dict, or 404 if no cursor exists
     """
-    from airweave.domains.syncs.cursors.service import SyncCursorService
+    from airweave.domains.syncs.cursors.service import SyncCursorService  # noqa: PLC0415
 
     sync_cursor_service = SyncCursorService()
 
@@ -1530,7 +1530,7 @@ async def admin_delete_cursor(
     Removes the sync cursor, which forces the next sync to do a full crawl
     instead of incremental. Useful for debugging or resetting sync state.
     """
-    from airweave.domains.syncs.cursors.service import SyncCursorService
+    from airweave.domains.syncs.cursors.service import SyncCursorService  # noqa: PLC0415
 
     sync_cursor_service = SyncCursorService()
 
@@ -1656,7 +1656,7 @@ async def admin_list_all_syncs(
     Raises:
         HTTPException: If not admin or invalid parameters
     """
-    from airweave.core.admin_sync_service import admin_sync_service
+    from airweave.core.admin_sync_service import admin_sync_service  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1760,11 +1760,11 @@ async def admin_cancel_sync_job(
     Raises:
         HTTPException: If not admin, job not found, or job not cancellable
     """
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.core.datetime_utils import utc_now_naive
-    from airweave.core.shared_models import SyncJobStatus
-    from airweave.models.sync_job import SyncJob
+    from airweave.core.datetime_utils import utc_now_naive  # noqa: PLC0415
+    from airweave.core.shared_models import SyncJobStatus  # noqa: PLC0415
+    from airweave.models.sync_job import SyncJob  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1856,12 +1856,12 @@ async def admin_cancel_sync_by_id(
     Raises:
         HTTPException: If not admin or sync not found
     """
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.core.datetime_utils import utc_now_naive
-    from airweave.core.shared_models import SyncJobStatus
-    from airweave.models.sync import Sync
-    from airweave.models.sync_job import SyncJob
+    from airweave.core.datetime_utils import utc_now_naive  # noqa: PLC0415
+    from airweave.core.shared_models import SyncJobStatus  # noqa: PLC0415
+    from airweave.models.sync import Sync  # noqa: PLC0415
+    from airweave.models.sync_job import SyncJob  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 
@@ -1994,10 +1994,10 @@ async def admin_delete_sync(
     Raises:
         HTTPException: If not admin, sync not found, or deletion fails
     """
-    from sqlalchemy import select as sa_select
+    from sqlalchemy import select as sa_select  # noqa: PLC0415
 
-    from airweave.models.source_connection import SourceConnection
-    from airweave.models.sync import Sync
+    from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
+    from airweave.models.sync import Sync  # noqa: PLC0415
 
     _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
 

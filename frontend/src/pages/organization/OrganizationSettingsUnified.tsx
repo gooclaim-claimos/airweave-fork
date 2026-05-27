@@ -15,6 +15,7 @@ import { SourceRateLimits } from '@/components/settings/SourceRateLimits';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FeatureFlags } from '@/lib/constants/feature-flags';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 
@@ -41,11 +42,15 @@ export const OrganizationSettingsUnified = () => {
   // Add state for primary toggle loading
   const [isPrimaryToggleLoading, setIsPrimaryToggleLoading] = useState(false);
 
-  // Update tab when URL params change
+  // Update tab when URL params change. In Gooclaim mode, redirect hidden tabs to Settings.
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab') as TabType || 'settings';
+    if (IS_GOOCLAIM_TENANT && (tabFromUrl === 'billing' || tabFromUrl === 'api-keys')) {
+      navigate('/organization/settings?tab=settings', { replace: true });
+      return;
+    }
     setActiveTab(tabFromUrl);
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   // Check for billing success parameter
   useEffect(() => {
@@ -163,12 +168,17 @@ export const OrganizationSettingsUnified = () => {
     FeatureFlags.SOURCE_RATE_LIMITING
   );
 
+  // In Gooclaim mode, API Keys + Billing tabs are managed in Portal — hide them here.
   const tabs = [
     { id: 'settings' as TabType, label: 'Settings', icon: <SettingsIcon className="h-3.5 w-3.5" /> },
-    { id: 'api-keys' as TabType, label: 'API Keys', icon: <Key className="h-3.5 w-3.5" /> },
+    ...(IS_GOOCLAIM_TENANT
+      ? []
+      : [{ id: 'api-keys' as TabType, label: 'API Keys', icon: <Key className="h-3.5 w-3.5" /> }]),
     { id: 'members' as TabType, label: 'Members', icon: <Users className="h-3.5 w-3.5" /> },
     { id: 'usage' as TabType, label: 'Usage', icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { id: 'billing' as TabType, label: 'Billing', icon: <CreditCard className="h-3.5 w-3.5" /> },
+    ...(IS_GOOCLAIM_TENANT
+      ? []
+      : [{ id: 'billing' as TabType, label: 'Billing', icon: <CreditCard className="h-3.5 w-3.5" /> }]),
     ...(hasRateLimitingFeature
       ? [{ id: 'rate-limiting' as TabType, label: 'Rate Limiting', icon: <Gauge className="h-3.5 w-3.5" /> }]
       : []),

@@ -56,8 +56,8 @@ async def lifespan(app: FastAPI):
     Initializes the DI container, runs alembic migrations, and syncs platform components.
     """
     # Initialize the dependency injection container (fail fast if wiring is broken)
-    from airweave.core import container as container_mod
-    from airweave.core.container import initialize_container
+    from airweave.core import container as container_mod  # noqa: PLC0415
+    from airweave.core.container import initialize_container  # noqa: PLC0415
 
     logger.info("Initializing dependency injection container...")
     initialize_container(settings)
@@ -91,8 +91,8 @@ async def lifespan(app: FastAPI):
         )
 
     # Start metrics sidecar + DB pool sampler; wire app.state.http_metrics
-    from airweave.core.metrics_service import metrics_lifespan
-    from airweave.db.session import async_engine
+    from airweave.core.metrics_service import metrics_lifespan  # noqa: PLC0415
+    from airweave.db.session import async_engine  # noqa: PLC0415
 
     async with metrics_lifespan(app, container_mod.container.metrics, async_engine.pool):
         yield
@@ -100,7 +100,7 @@ async def lifespan(app: FastAPI):
     container_mod.container.health.shutting_down = True
 
     # Clean up health check engine connections
-    from airweave.db.session import health_check_engine
+    from airweave.db.session import health_check_engine  # noqa: PLC0415
 
     await health_check_engine.dispose()
 

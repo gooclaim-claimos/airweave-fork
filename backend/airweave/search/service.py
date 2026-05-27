@@ -99,7 +99,7 @@ class SearchService:
         ctx.logger.debug(f"Search completed in {duration_ms:.2f}ms")
 
         # Track search completion to PostHog
-        from airweave.analytics.search_analytics import track_search_completion
+        from airweave.analytics.search_analytics import track_search_completion  # noqa: PLC0415
 
         # Extract search configuration for analytics
         search_config = {
@@ -178,7 +178,7 @@ class SearchService:
         start_time = time.monotonic()
 
         # Get collection without organization filtering
-        from airweave.models.collection import Collection
+        from airweave.models.collection import Collection  # noqa: PLC0415
 
         result = await db.execute(
             sa_select(Collection).where(Collection.readable_id == readable_collection_id)
@@ -259,8 +259,8 @@ class SearchService:
         start_time = time.monotonic()
 
         # Get collection without organization filtering
-        import airweave.core.container as _container_module
-        from airweave.models.collection import Collection
+        import airweave.core.container as _container_module  # noqa: PLC0415
+        from airweave.models.collection import Collection  # noqa: PLC0415
 
         assert _container_module.container is not None
         _access_broker = _container_module.container.access_broker

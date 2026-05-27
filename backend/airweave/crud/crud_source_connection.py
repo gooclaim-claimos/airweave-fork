@@ -205,8 +205,8 @@ class CRUDSourceConnection(
         self, db: AsyncSession, source_conns: List[SourceConnection]
     ) -> Dict[UUID, str]:
         """Fetch authentication methods from credentials."""
-        from airweave.models.connection import Connection
-        from airweave.models.integration_credential import IntegrationCredential
+        from airweave.models.connection import Connection  # noqa: PLC0415
+        from airweave.models.integration_credential import IntegrationCredential  # noqa: PLC0415
 
         conn_ids = [sc.connection_id for sc in source_conns if sc.connection_id]
         if not conn_ids:
@@ -278,7 +278,7 @@ class CRUDSourceConnection(
         self, db: AsyncSession, source_conns: List[SourceConnection]
     ) -> Dict[UUID, int]:
         """Fetch total entity counts from EntityCount table."""
-        from airweave.models.entity_count import EntityCount
+        from airweave.models.entity_count import EntityCount  # noqa: PLC0415
 
         sync_ids = [sc.sync_id for sc in source_conns if sc.sync_id]
         if not sync_ids:

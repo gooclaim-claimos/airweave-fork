@@ -76,33 +76,25 @@ interface OrganizationState {
   hasFeature: (flag: string) => boolean;
 }
 
-// Helper function to select the best organization
+// Helper function to select the best organization.
+//
+// Gooclaim fork — `currentOrgId` (persisted from a prior session) is
+// intentionally ignored. nginx auth-request injects the canonical
+// tenant via X-Organization-Id on every request; whatever the user
+// previously selected client-side would just fight with that header
+// and produce mismatched-org "Failed to fetch" cascades on screens
+// like Sources / API Keys / Billing. The backend's "primary" flag is
+// the source of truth.
 const selectBestOrganization = (
   organizations: Organization[],
-  currentOrgId?: string | null
+  _currentOrgId?: string | null
 ): Organization | null => {
   if (organizations.length === 0) return null;
+  void _currentOrgId;
 
-  // Priority:
-  // 1. Current organization (if it still exists and is valid)
-  // 2. Primary organization
-  // 3. First organization
-
-  // Check if current org is still valid
-  if (currentOrgId) {
-    const currentOrg = organizations.find(org => org.id === currentOrgId);
-    if (currentOrg) {
-      return currentOrg;
-    }
-  }
-
-  // Find primary organization
   const primaryOrg = organizations.find(org => org.is_primary);
-  if (primaryOrg) {
-    return primaryOrg;
-  }
+  if (primaryOrg) return primaryOrg;
 
-  // Fallback to first organization
   return organizations[0];
 };
 
@@ -359,7 +351,7 @@ export const useOrganizationStore = create<OrganizationState>()(
           if (gracePeriodExpired) {
             return {
               requiresAction: true,
-              message: 'Your grace period has expired. Please add a payment method to continue using Airweave.',
+              message: 'Your grace period has expired. Please add a payment method to continue using Gooclaim OS.',
               redirectUrl: '/billing/setup'
             };
           } else if (billingInfo.in_grace_period) {
@@ -393,7 +385,7 @@ export const useOrganizationStore = create<OrganizationState>()(
           if (isExpired) {
             return {
               requiresAction: true,
-              message: 'Your subscription has ended. Please reactivate to continue using Airweave.',
+              message: 'Your subscription has ended. Please reactivate to continue using Gooclaim OS.',
               redirectUrl: '/billing/setup'
             };
           }
@@ -491,9 +483,14 @@ export const useOrganizationStore = create<OrganizationState>()(
     }),
     {
       name: 'organization-storage',
-      partialize: (state) => ({
-        currentOrganization: state.currentOrganization
-      }),
+      // Gooclaim fork — DO NOT persist currentOrganization. nginx
+      // auth-request validates the bridge JWT cookie and the tenant
+      // is derived from that JWT on every request. Persisting the
+      // client-side selection caused stale orgs (from prior logins
+      // under a different identity) to be used across reloads,
+      // mismatching the nginx-injected X-Organization-Id and
+      // producing "Failed to fetch" on Sources / API Keys / Billing.
+      partialize: () => ({}),
     }
   )
 );

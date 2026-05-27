@@ -18,9 +18,9 @@ def create_activities() -> list:
 
     Future: This will evolve as we add more protocols to the container.
     """
-    from airweave import crud
-    from airweave.core.container import container
-    from airweave.domains.temporal.activities import (
+    from airweave import crud  # noqa: PLC0415
+    from airweave.core.container import container  # noqa: PLC0415
+    from airweave.domains.temporal.activities import (  # noqa: PLC0415
         CheckAndNotifyExpiringKeysActivity,
         CleanupStuckSyncJobsActivity,
         CleanupSyncDataActivity,
@@ -95,7 +95,7 @@ def get_workflows() -> list:
     Returns:
         List of workflow classes.
     """
-    from airweave.domains.temporal.workflows import (
+    from airweave.domains.temporal.workflows import (  # noqa: PLC0415
         APIKeyExpirationCheckWorkflow,
         CleanupStuckSyncJobsWorkflow,
         CleanupSyncDataWorkflow,

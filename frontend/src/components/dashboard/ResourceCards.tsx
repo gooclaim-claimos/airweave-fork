@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Code, Github, BarChart } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/discord-icon";
 import { cn } from "@/lib/utils";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 
 interface ResourceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
@@ -50,23 +51,27 @@ const ResourceCards = React.forwardRef<HTMLDivElement, ResourceCardsProps>(
       <ResourceCard
         title="API Reference"
         icon={<Code className="w-6 h-6" />}
-        href="https://docs.airweave.ai/api-reference"
+        href="https://docs.gooclaim.com/api-reference"
       />
-      <ResourceCard
-        title="Discord Community"
-        icon={<DiscordIcon className="w-6 h-6" />}
-        href="https://discord.gg/484HY9Ehxt"
-      />
-      <ResourceCard
-        title="Blog"
-        icon={<BarChart className="w-6 h-6" />}
-        href="https://airweave.ai"
-      />
-      <ResourceCard
-        title="GitHub"
-        icon={<Github className="w-6 h-6" />}
-        href="https://github.com/airweave-ai/airweave"
-      />
+      {!IS_GOOCLAIM_TENANT && (
+        <>
+          <ResourceCard
+            title="Discord Community"
+            icon={<DiscordIcon className="w-6 h-6" />}
+            href="https://discord.gg/484HY9Ehxt"
+          />
+          <ResourceCard
+            title="Blog"
+            icon={<BarChart className="w-6 h-6" />}
+            href="https://gooclaim.com"
+          />
+          <ResourceCard
+            title="GitHub"
+            icon={<Github className="w-6 h-6" />}
+            href="https://github.com/gooclaim.com/airweave"
+          />
+        </>
+      )}
     </div>
   )
 );

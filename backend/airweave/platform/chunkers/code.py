@@ -66,8 +66,8 @@ class CodeChunker(BaseChunker):
             return
 
         try:
-            from chonkie import CodeChunker as ChonkieCodeChunker
-            from chonkie import TokenChunker
+            from chonkie import CodeChunker as ChonkieCodeChunker  # noqa: PLC0415
+            from chonkie import TokenChunker  # noqa: PLC0415
 
             # Get tokenizer wrapper for our own token counting
             tokenizer = get_tokenizer(self.TOKENIZER)

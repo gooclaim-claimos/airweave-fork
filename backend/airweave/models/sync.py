@@ -156,7 +156,7 @@ def cleanup_temporal_schedules(sync_id: UUID) -> None:
 
         async def _cleanup() -> None:
             # [code blue] todo: replace ORM listener with EventBus subscriber
-            from airweave.core import container as container_mod
+            from airweave.core import container as container_mod  # noqa: PLC0415
 
             if container_mod.container is None:
                 return

@@ -175,7 +175,7 @@ def create_container(settings: Settings) -> Container:
     # -----------------------------------------------------------------
     # Context cache (Redis-backed, used by deps.py hot path)
     # -----------------------------------------------------------------
-    from airweave.adapters.cache.redis import RedisContextCache
+    from airweave.adapters.cache.redis import RedisContextCache  # noqa: PLC0415
 
     context_cache = RedisContextCache(redis_client=redis_client.client)
 
@@ -521,8 +521,10 @@ def create_container(settings: Settings) -> Container:
     # -----------------------------------------------------------------
     # Connect domain service (after oauth_callback_svc for DI)
     # -----------------------------------------------------------------
-    from airweave.domains.connect.service import ConnectService
-    from airweave.domains.organizations.repository import OrganizationRepository as ConnectOrgRepo
+    from airweave.domains.connect.service import ConnectService  # noqa: PLC0415
+    from airweave.domains.organizations.repository import (  # noqa: PLC0415
+        OrganizationRepository as ConnectOrgRepo,  # noqa: PLC0415
+    )
 
     connect_service = ConnectService(
         source_connection_service=source_connection_service,
@@ -723,7 +725,7 @@ def _create_event_bus(
         bus.subscribe(pattern, search_stream_relay.handle)
 
     # DonkeNotificationSubscriber — best-effort signup notification
-    from airweave.domains.organizations.subscribers.donke_notification import (
+    from airweave.domains.organizations.subscribers.donke_notification import (  # noqa: PLC0415
         DonkeNotificationSubscriber,
     )
 
@@ -791,9 +793,9 @@ def _create_dense_embedder(
     Uses the domain config constants (DENSE_EMBEDDER, EMBEDDING_DIMENSIONS)
     and the registry to look up the spec and construct the correct embedder.
     """
-    from airweave.domains.embedders.dense.local import LocalDenseEmbedder
-    from airweave.domains.embedders.dense.mistral import MistralDenseEmbedder
-    from airweave.domains.embedders.dense.openai import OpenAIDenseEmbedder
+    from airweave.domains.embedders.dense.local import LocalDenseEmbedder  # noqa: PLC0415
+    from airweave.domains.embedders.dense.mistral import MistralDenseEmbedder  # noqa: PLC0415
+    from airweave.domains.embedders.dense.openai import OpenAIDenseEmbedder  # noqa: PLC0415
 
     spec = registry.get(DENSE_EMBEDDER)
 
@@ -909,27 +911,27 @@ def _create_source_services(settings: Settings) -> dict:
 def _create_payment_gateway(settings: Settings) -> PaymentGatewayProtocol:
     """Create payment gateway: Stripe if enabled, otherwise a null implementation."""
     if settings.STRIPE_ENABLED:
-        from airweave.adapters.payment.stripe import StripePaymentGateway
+        from airweave.adapters.payment.stripe import StripePaymentGateway  # noqa: PLC0415
 
         return StripePaymentGateway()
 
-    from airweave.adapters.payment.null import NullPaymentGateway
+    from airweave.adapters.payment.null import NullPaymentGateway  # noqa: PLC0415
 
     return NullPaymentGateway()
 
 
 def _create_billing_services(settings: Settings) -> dict:
     """Create billing service and webhook processor with shared dependencies."""
-    from airweave.domains.billing.operations import BillingOperations
-    from airweave.domains.billing.repository import (
+    from airweave.domains.billing.operations import BillingOperations  # noqa: PLC0415
+    from airweave.domains.billing.repository import (  # noqa: PLC0415
         BillingPeriodRepository,
         OrganizationBillingRepository,
         WebhookEventRepository,
     )
-    from airweave.domains.billing.service import BillingService
-    from airweave.domains.billing.webhook_processor import BillingWebhookProcessor
-    from airweave.domains.organizations.repository import OrganizationRepository
-    from airweave.domains.usage.repository import UsageRepository
+    from airweave.domains.billing.service import BillingService  # noqa: PLC0415
+    from airweave.domains.billing.webhook_processor import BillingWebhookProcessor  # noqa: PLC0415
+    from airweave.domains.organizations.repository import OrganizationRepository  # noqa: PLC0415
+    from airweave.domains.usage.repository import UsageRepository  # noqa: PLC0415
 
     payment_gateway = _create_payment_gateway(settings)
     billing_repo = OrganizationBillingRepository()
@@ -1047,7 +1049,7 @@ def _create_usage_checker(
     user_org_repo: UserOrganizationRepositoryProtocol,
 ) -> UsageLimitCheckerProtocol:
     """Create the singleton UsageLimitChecker."""
-    from airweave.domains.usage.limit_checker import AlwaysAllowLimitChecker
+    from airweave.domains.usage.limit_checker import AlwaysAllowLimitChecker  # noqa: PLC0415
 
     if settings.LOCAL_DEVELOPMENT:
         return AlwaysAllowLimitChecker()
@@ -1063,8 +1065,8 @@ def _create_usage_checker(
 
 def _create_usage_ledger(settings: Settings, billing_deps: dict) -> UsageLedgerProtocol:
     """Create the singleton UsageLedger."""
-    from airweave.domains.usage.ledger import NullUsageLedger
-    from airweave.domains.usage.repository import UsageRepository
+    from airweave.domains.usage.ledger import NullUsageLedger  # noqa: PLC0415
+    from airweave.domains.usage.repository import UsageRepository  # noqa: PLC0415
 
     if settings.LOCAL_DEVELOPMENT:
         return NullUsageLedger()
@@ -1079,14 +1081,14 @@ def _create_usage_ledger(settings: Settings, billing_deps: dict) -> UsageLedgerP
 def _create_identity_provider(settings: Settings) -> IdentityProvider:
     """Create identity provider: Auth0 if enabled, otherwise null implementation."""
     if settings.AUTH_ENABLED:
-        from airweave.adapters.identity.auth0 import auth0_management_client
+        from airweave.adapters.identity.auth0 import auth0_management_client  # noqa: PLC0415
 
         if auth0_management_client:
-            from airweave.adapters.identity.auth0 import Auth0IdentityProvider
+            from airweave.adapters.identity.auth0 import Auth0IdentityProvider  # noqa: PLC0415
 
             return Auth0IdentityProvider(client=auth0_management_client)
 
-    from airweave.adapters.identity.null import NullIdentityProvider
+    from airweave.adapters.identity.null import NullIdentityProvider  # noqa: PLC0415
 
     return NullIdentityProvider()
 
@@ -1103,10 +1105,14 @@ def _create_organization_service(
     context_cache,
 ):
     """Build the organization service with lifecycle + provisioning sub-modules."""
-    from airweave.domains.organizations.operations import OrganizationLifecycleOperations
-    from airweave.domains.organizations.provisioning.operations import ProvisioningOperations
-    from airweave.domains.organizations.repository import OrganizationRepository
-    from airweave.domains.organizations.service import OrganizationService
+    from airweave.domains.organizations.operations import (  # noqa: PLC0415
+        OrganizationLifecycleOperations,  # noqa: PLC0415
+    )
+    from airweave.domains.organizations.provisioning.operations import (  # noqa: PLC0415
+        ProvisioningOperations,  # noqa: PLC0415
+    )
+    from airweave.domains.organizations.repository import OrganizationRepository  # noqa: PLC0415
+    from airweave.domains.organizations.service import OrganizationService  # noqa: PLC0415
 
     org_repo = OrganizationRepository()
 
@@ -1121,7 +1127,7 @@ def _create_organization_service(
         event_bus=event_bus,
         context_cache=context_cache,
     )
-    from airweave.domains.users.repository import UserRepository
+    from airweave.domains.users.repository import UserRepository  # noqa: PLC0415
 
     provisioning_ops = ProvisioningOperations(
         org_repo=org_repo,
@@ -1147,8 +1153,8 @@ def _create_user_service(  # type: ignore[no-untyped-def]
     email_service,
 ):
     """Build the user service with org service + repo + email dependencies."""
-    from airweave.domains.users.repository import UserRepository
-    from airweave.domains.users.service import UserService
+    from airweave.domains.users.repository import UserRepository  # noqa: PLC0415
+    from airweave.domains.users.service import UserService  # noqa: PLC0415
 
     return UserService(
         user_repo=UserRepository(),
@@ -1161,11 +1167,11 @@ def _create_user_service(  # type: ignore[no-untyped-def]
 def _create_email_service(settings):  # type: ignore[no-untyped-def]
     """Create email service: Resend if configured, otherwise null (no-op)."""
     if settings.RESEND_API_KEY and settings.RESEND_FROM_EMAIL:
-        from airweave.adapters.email.resend import ResendEmailService
+        from airweave.adapters.email.resend import ResendEmailService  # noqa: PLC0415
 
         return ResendEmailService()
 
-    from airweave.adapters.email.null import NullEmailService
+    from airweave.adapters.email.null import NullEmailService  # noqa: PLC0415
 
     return NullEmailService()
 
@@ -1173,11 +1179,11 @@ def _create_email_service(settings):  # type: ignore[no-untyped-def]
 def _create_rate_limiter(settings: Settings):
     """Create rate limiter: Redis if enabled, otherwise null (always allow)."""
     if settings.LOCAL_DEVELOPMENT or settings.DISABLE_RATE_LIMIT:
-        from airweave.adapters.rate_limiter.null import NullRateLimiter
+        from airweave.adapters.rate_limiter.null import NullRateLimiter  # noqa: PLC0415
 
         return NullRateLimiter()
 
-    from airweave.adapters.rate_limiter.redis import RedisRateLimiter
+    from airweave.adapters.rate_limiter.redis import RedisRateLimiter  # noqa: PLC0415
 
     return RedisRateLimiter(redis_client=redis_client.client)
 
@@ -1319,7 +1325,7 @@ def _create_search_services(
     )
 
     # 5. Vector DB + shared executor
-    from vespa.application import Vespa
+    from vespa.application import Vespa  # noqa: PLC0415
 
     vespa_app = Vespa(url=settings.VESPA_URL, port=settings.VESPA_PORT)
     filter_translator = FilterTranslator(logger=logger)
@@ -1375,21 +1381,21 @@ def _create_storage_backend(settings: Settings):  # -> StorageBackend
 
     Lazy-imports each adapter to avoid pulling in heavy cloud SDKs.
     """
-    from airweave.core.config import StorageBackendType
+    from airweave.core.config import StorageBackendType  # noqa: PLC0415
 
     backend_type = settings.STORAGE_BACKEND
 
     logger.info(f"Initializing storage backend: {backend_type}")
 
     if backend_type == StorageBackendType.FILESYSTEM:
-        from airweave.adapters.storage.filesystem import FilesystemBackend
+        from airweave.adapters.storage.filesystem import FilesystemBackend  # noqa: PLC0415
 
         return FilesystemBackend(base_path=settings.STORAGE_PATH)
 
     if backend_type == StorageBackendType.AZURE:
         if not settings.STORAGE_AZURE_ACCOUNT:
             raise ValueError("STORAGE_AZURE_ACCOUNT required for azure backend")
-        from airweave.adapters.storage.azure_blob import AzureBlobBackend
+        from airweave.adapters.storage.azure_blob import AzureBlobBackend  # noqa: PLC0415
 
         return AzureBlobBackend(
             storage_account=settings.STORAGE_AZURE_ACCOUNT,
@@ -1402,7 +1408,7 @@ def _create_storage_backend(settings: Settings):  # -> StorageBackend
             raise ValueError("STORAGE_AWS_BUCKET required for aws backend")
         if not settings.STORAGE_AWS_REGION:
             raise ValueError("STORAGE_AWS_REGION required for aws backend")
-        from airweave.adapters.storage.aws_s3 import S3Backend
+        from airweave.adapters.storage.aws_s3 import S3Backend  # noqa: PLC0415
 
         return S3Backend(
             bucket=settings.STORAGE_AWS_BUCKET,
@@ -1414,7 +1420,7 @@ def _create_storage_backend(settings: Settings):  # -> StorageBackend
     if backend_type == StorageBackendType.GCP:
         if not settings.STORAGE_GCP_BUCKET:
             raise ValueError("STORAGE_GCP_BUCKET required for gcp backend")
-        from airweave.adapters.storage.gcp_gcs import GCSBackend
+        from airweave.adapters.storage.gcp_gcs import GCSBackend  # noqa: PLC0415
 
         return GCSBackend(
             bucket=settings.STORAGE_GCP_BUCKET,

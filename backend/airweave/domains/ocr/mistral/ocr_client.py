@@ -82,7 +82,7 @@ class MistralOcrClient:
             raise SyncFailureError("MISTRAL_API_KEY required for document conversion")
 
         try:
-            from mistralai import Mistral
+            from mistralai import Mistral  # noqa: PLC0415
 
             self._client = Mistral(
                 api_key=settings.MISTRAL_API_KEY,
@@ -158,7 +158,7 @@ class MistralOcrClient:
             )
 
             # 3. Call direct OCR with file_id
-            from mistralai.models import FileChunk as MistralFileChunk
+            from mistralai.models import FileChunk as MistralFileChunk  # noqa: PLC0415
 
             ocr_resp = await self._api_call(
                 lambda: self._client.ocr.process_async(

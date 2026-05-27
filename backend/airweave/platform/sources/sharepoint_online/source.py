@@ -1573,14 +1573,14 @@ class SharePointOnlineAppSource(SharePointOnlineBase):
 
     async def _exchange_sp_token_with_certificate(self, hostname: str) -> str:
         """Exchange certificate credentials for a SharePoint REST API access token."""
-        import base64
-        import hashlib
-        import time as _time
+        import base64  # noqa: PLC0415
+        import hashlib  # noqa: PLC0415
+        import time as _time  # noqa: PLC0415
 
-        import jwt as pyjwt
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-        from cryptography.x509 import load_pem_x509_certificate
+        import jwt as pyjwt  # noqa: PLC0415
+        from cryptography.hazmat.primitives import serialization  # noqa: PLC0415
+        from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey  # noqa: PLC0415
+        from cryptography.x509 import load_pem_x509_certificate  # noqa: PLC0415
 
         token_url = f"https://login.microsoftonline.com/{self._tenant_id}/oauth2/v2.0/token"
 

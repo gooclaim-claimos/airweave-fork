@@ -150,7 +150,7 @@ class CodaSource(BaseSource):
 
     async def _get_page_content(self, doc_id: str, page_id: str) -> str:
         """Fetch page content as plain text (list content items)."""
-        from airweave.domains.sources.exceptions import (
+        from airweave.domains.sources.exceptions import (  # noqa: PLC0415
             SourceEntityForbiddenError,
             SourceEntityNotFoundError,
         )
