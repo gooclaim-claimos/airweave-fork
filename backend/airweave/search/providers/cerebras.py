@@ -125,7 +125,7 @@ class CerebrasProvider(BaseProvider):
         minItems/maxItems. Pydantic emits both for Tuple[...] schemas. This normalizer
         removes min/max everywhere and sets items:false when prefixItems is present.
         """
-        import copy
+        import copy  # noqa: PLC0415
 
         normalized = copy.deepcopy(schema_dict)
 

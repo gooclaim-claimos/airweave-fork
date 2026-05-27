@@ -45,7 +45,7 @@ class SSRFViolation(ValueError):
 def _get_allow_private_default() -> bool:
     """Return the global default for ``allow_private`` from settings."""
     try:
-        from airweave.core.config import settings
+        from airweave.core.config import settings  # noqa: PLC0415
 
         return getattr(settings, "SSRF_ALLOW_PRIVATE_NETWORKS", False)
     except Exception:

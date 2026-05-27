@@ -127,8 +127,8 @@ export default function BillingSetup() {
         {/* Header with logo */}
         <div className="mb-12 text-center">
           <img
-            src={isDark ? "/logo-airweave-darkbg.svg" : "/logo-airweave-lightbg.svg"}
-            alt="Airweave"
+            src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+            alt="Gooclaim"
             className="h-8 w-auto mx-auto mb-2"
             style={{ maxWidth: '180px' }}
           />
@@ -146,7 +146,7 @@ export default function BillingSetup() {
             <p className="text-muted-foreground">
               {isInitialSetup
                 ? 'Add a payment method to activate your subscription'
-                : 'Update your payment method to continue using Airweave'}
+                : 'Update your payment method to continue using Gooclaim OS'}
             </p>
           </div>
 

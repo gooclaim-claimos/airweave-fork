@@ -4,14 +4,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Airweave</title>
-  <meta name="description" content="Context Retrieval Layer for AI" />
-  <meta name="author" content="Airweave" />
-  <meta property="og:image" content="/thumbnail.png" />
+  <title>Gooclaim OS · Data Sources</title>
+  <meta name="description" content="Document sources and knowledge base for Gooclaim OS claims agents" />
+  <meta name="author" content="Gooclaim OS" />
+  <meta property="og:image" content="/gooclaim-thumbnail.png" />
+  <link rel="icon" type="image/svg+xml" href="/gooclaim-logo.svg" />
   <script>
     // On page load or when changing themes, best to add inline in `head` to avoid FOUC
     (function () {
-      const storageKey = "airweave-ui-theme";
+      const storageKey = "gooclaim-ui-theme";
       const theme = localStorage.getItem(storageKey);
 
       if (theme === "dark" || (theme === null && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -21,12 +22,6 @@
       }
     })();
   </script>
-  <!-- Reddit Pixel -->
-  <script>
-  !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
-  rdt('init','a2_ib2d0jv3vre5');
-  </script>
-  <!-- End Reddit Pixel -->
 </head>
 
 <body>

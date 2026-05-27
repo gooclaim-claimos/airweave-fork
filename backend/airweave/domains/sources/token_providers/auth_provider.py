@@ -72,7 +72,7 @@ class AuthProviderTokenProvider(TokenProviderProtocol):
         """Auth providers always support refresh (re-fetch from upstream)."""
         return True
 
-    async def _fetch_token(self) -> str:
+    async def _fetch_token(self) -> str:  # noqa: C901  # retry + multi-error-path translation
         """Call the auth provider and extract the access token.
 
         Retries up to 3 times on transient failures (5xx, rate limits)

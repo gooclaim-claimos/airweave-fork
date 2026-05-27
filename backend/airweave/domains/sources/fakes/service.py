@@ -30,7 +30,7 @@ class FakeSourceService:
         try:
             return self._sources[short_name]
         except KeyError:
-            from airweave.domains.sources.exceptions import SourceNotFoundError
+            from airweave.domains.sources.exceptions import SourceNotFoundError  # noqa: PLC0415
 
             raise SourceNotFoundError(short_name)
 

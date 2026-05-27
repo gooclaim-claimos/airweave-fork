@@ -89,4 +89,4 @@ class FallbackOcrProvider:
                 )
 
         logger.error("[FallbackOCR] All OCR providers unavailable or failed")
-        return {path: None for path in file_paths}
+        return dict.fromkeys(file_paths)

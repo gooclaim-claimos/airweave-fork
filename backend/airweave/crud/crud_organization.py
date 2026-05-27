@@ -73,7 +73,7 @@ class CRUDOrganization:
         Returns:
             Enriched Organization schema with billing and current period
         """
-        from airweave import crud
+        from airweave import crud  # noqa: PLC0415
 
         # Convert to schema first (this handles feature flags via model_validator)
         org_schema = schemas.Organization.model_validate(org, from_attributes=True)
@@ -364,13 +364,13 @@ class CRUDOrganization:
         if ctx.has_user_context:
             user_org_ids = [org.organization.id for org in ctx.user.user_organizations]
             if db_obj.id not in user_org_ids:
-                from airweave.core.exceptions import PermissionException
+                from airweave.core.exceptions import PermissionException  # noqa: PLC0415
 
                 raise PermissionException("User does not have access to organization")
         else:
             # For API key access, only allow access to the key's organization
             if db_obj.id != ctx.organization.id:
-                from airweave.core.exceptions import PermissionException
+                from airweave.core.exceptions import PermissionException  # noqa: PLC0415
 
                 raise PermissionException("API key does not have access to organization")
 
@@ -467,7 +467,7 @@ class CRUDOrganization:
         Raises:
             HTTPException: If user doesn't have admin access
         """
-        from fastapi import HTTPException
+        from fastapi import HTTPException  # noqa: PLC0415
 
         # First validate basic organization access
         await self._validate_organization_access(ctx, organization_id)
@@ -595,7 +595,7 @@ class CRUDOrganization:
         Raises:
             HTTPException: If current user doesn't have permission
         """
-        from fastapi import HTTPException
+        from fastapi import HTTPException  # noqa: PLC0415
 
         # If user is trying to remove themselves, we allow it with different validation
         if user_id == ctx.user.id:
@@ -725,7 +725,7 @@ class CRUDOrganization:
         org_to_delete = get_result.scalar_one_or_none()
 
         if org_to_delete is None:
-            from airweave.core.exceptions import NotFoundException
+            from airweave.core.exceptions import NotFoundException  # noqa: PLC0415
 
             raise NotFoundException(f"Organization with ID {id} not found")
 

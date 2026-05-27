@@ -36,7 +36,7 @@ export interface PlaygroundConfig {
 export const DEFAULT_DARK: ThemeColors = {
   background: "#060606",
   surface: "#141414",
-  primary: "#1692e5",
+  primary: "#0369a1",
   text: "#fafcfe",
   textMuted: "#b3b3b3",
   border: "#1f1f1f",
@@ -45,7 +45,7 @@ export const DEFAULT_DARK: ThemeColors = {
 export const DEFAULT_LIGHT: ThemeColors = {
   background: "#ffffff",
   surface: "#f5f5f7",
-  primary: "#1692e5",
+  primary: "#0369a1",
   text: "#1a1a1a",
   textMuted: "#6b7280",
   border: "#e5e7eb",

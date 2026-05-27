@@ -86,8 +86,8 @@ class SourceLifecycleService(SourceLifecycleServiceProtocol):
         self._credential_service = credential_service
         self._oauth2_service = oauth2_service
 
-        from airweave.core.redis_client import redis_client
-        from airweave.domains.sources.rate_limiting.config_provider import (
+        from airweave.core.redis_client import redis_client  # noqa: PLC0415
+        from airweave.domains.sources.rate_limiting.config_provider import (  # noqa: PLC0415
             DatabaseRateLimitConfigProvider,
         )
 
@@ -210,7 +210,7 @@ class SourceLifecycleService(SourceLifecycleServiceProtocol):
             SourceNotFoundError: If source short_name is not in the registry.
             Exception: If source_class.create() or source.validate() fails.
         """
-        from uuid import UUID as _UUID
+        from uuid import UUID as _UUID  # noqa: PLC0415
 
         try:
             entry = self._source_registry.get(short_name)
@@ -629,7 +629,9 @@ class SourceLifecycleService(SourceLifecycleServiceProtocol):
         Non-OAuth sources get a StaticTokenProvider (string creds) or
         DirectCredentialProvider (structured creds).
         """
-        from airweave.domains.sources.token_providers.credential import DirectCredentialProvider
+        from airweave.domains.sources.token_providers.credential import (  # noqa: PLC0415
+            DirectCredentialProvider,  # noqa: PLC0415
+        )
 
         auth_provider_instance: Optional[BaseAuthProvider] = auth_config.auth_provider_instance
         short_name = source_connection_data.short_name
@@ -733,7 +735,7 @@ class SourceLifecycleService(SourceLifecycleServiceProtocol):
         config_fields: Dict[str, Any],
     ) -> BaseModel:
         """Parse raw config_fields dict into the source's typed config class."""
-        from airweave.platform.configs.config import SourceConfig
+        from airweave.platform.configs.config import SourceConfig  # noqa: PLC0415
 
         config_class = entry.config_ref or SourceConfig
         return config_class.model_validate(config_fields or {})

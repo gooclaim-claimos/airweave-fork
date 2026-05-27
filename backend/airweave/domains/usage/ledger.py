@@ -136,7 +136,7 @@ class UsageLedger(UsageLedgerProtocol):
         if organization_id in self._billing_cache:
             return self._billing_cache[organization_id]
 
-        from airweave.db.session import get_db_context
+        from airweave.db.session import get_db_context  # noqa: PLC0415
 
         async with get_db_context() as db:
             record = await self._billing_repo.get_by_org_id(db, organization_id=organization_id)
@@ -151,7 +151,7 @@ class UsageLedger(UsageLedgerProtocol):
         if pending == 0:
             return
 
-        from airweave.db.session import get_db_context
+        from airweave.db.session import get_db_context  # noqa: PLC0415
 
         try:
             async with get_db_context() as db:
@@ -178,7 +178,7 @@ class UsageLedger(UsageLedgerProtocol):
         if not to_flush:
             return
 
-        from airweave.db.session import get_db_context
+        from airweave.db.session import get_db_context  # noqa: PLC0415
 
         try:
             async with get_db_context() as db:

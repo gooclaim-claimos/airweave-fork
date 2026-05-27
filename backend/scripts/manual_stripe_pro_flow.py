@@ -30,18 +30,22 @@ import stripe
 
 
 def log_step(title: str) -> None:
+    """Print a section header for the current step in the manual flow."""
     print(f"\n▶ {title}")
 
 
 def log_ok(message: str) -> None:
+    """Print a success line for the manual flow output."""
     print(f"  ✅ {message}")
 
 
 def log_info(message: str) -> None:
+    """Print an informational line for the manual flow output."""
     print(f"  • {message}")
 
 
 def log_error(message: str) -> None:
+    """Print an error line for the manual flow output."""
     print(f"  ❌ {message}")
 
 
@@ -234,8 +238,8 @@ async def db_snapshot(org_id: str, at_iso: Optional[str] = None) -> Dict[str, An
     if str(backend_dir) not in sys.path:
         sys.path.insert(0, str(backend_dir))
 
-    from airweave import crud  # type: ignore
-    from airweave.db.session import get_db_context  # type: ignore
+    from airweave import crud  # type: ignore  # noqa: PLC0415
+    from airweave.db.session import get_db_context  # type: ignore  # noqa: PLC0415
 
     snapshot: Dict[str, Any] = {}
     async with get_db_context() as db:
@@ -503,6 +507,7 @@ def _stripe_first_item_price_id(subscription: Any) -> Optional[str]:
 
 
 def assert_stripe_price(subscription_id: str, expected_price_id: str) -> None:
+    """Assert that the Stripe subscription's first item is on the expected price id."""
     sub = get_stripe_subscription(subscription_id)
     actual = _stripe_first_item_price_id(sub)
     assert actual == expected_price_id, f"Stripe price mismatch: {actual} != {expected_price_id}"
@@ -528,7 +533,8 @@ def assert_stripe_downgrade_scheduled(
     if expected_dev_price_id:
         current_price_id = _stripe_first_item_price_id(sub)
         assert current_price_id == expected_dev_price_id, (
-            f"Stripe: subscription item price {current_price_id} != developer {expected_dev_price_id}"
+            f"Stripe: subscription item price {current_price_id} != "
+            f"developer {expected_dev_price_id}"
         )
 
 
@@ -547,6 +553,7 @@ def create_stripe_test_clock(
 
 
 def advance_stripe_test_clock(clock_id: str, new_time: int) -> None:
+    """Advance a Stripe Test Clock to the given Unix timestamp."""
     api_key = os.environ.get("STRIPE_SECRET_KEY")
     if not api_key:
         raise RuntimeError("STRIPE_SECRET_KEY not set in environment")
@@ -688,7 +695,7 @@ def upgrade_existing_subscription_price(
     )
 
 
-def main() -> None:
+def main() -> None:  # noqa: C901  # orchestrator stepping through every billing transition
     """Run the local subscription flow tests (developer → pro → team)."""
     print("Manual local Stripe subscription flow test")
     print(f"API: {API_BASE}")
@@ -768,7 +775,8 @@ def main() -> None:
     assert current_sub_id, "Missing current Stripe subscription id in snapshot"
     upgrade_existing_subscription_price(current_sub_id, new_price_id=pro_price, plan="pro")
     print(
-        "\n> Upgraded existing Stripe subscription via API (developer → pro). Webhooks should follow..."
+        "\n> Upgraded existing Stripe subscription via API (developer → pro)."
+        " Webhooks should follow..."
     )
 
     # 4) Poll until Pro is active
@@ -942,7 +950,7 @@ def main() -> None:
                 "stripe_subscription_id"
             )
         if sub_id_team2:
-            # If you have STRIPE_DEVELOPER_MONTHLY configured, enforce price swap as proof of scheduling
+            # If STRIPE_DEVELOPER_MONTHLY is configured, enforce price swap as proof of scheduling
             dev_price_id = os.environ.get("STRIPE_DEVELOPER_MONTHLY")
             assert_stripe_downgrade_scheduled(sub_id_team2, expected_dev_price_id=dev_price_id)
             log_ok("Stripe: downgrade scheduled (active, price set for next period)")

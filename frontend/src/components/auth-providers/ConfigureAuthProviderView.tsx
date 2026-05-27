@@ -450,8 +450,8 @@ export const ConfigureAuthProviderView: React.FC<ConfigureAuthProviderViewProps>
                                             <AirweaveFallback isDark={isDark} />
                                         ) : (
                                             <img
-                                                src={isDark ? "/airweave-logo-svg-white-darkbg.svg" : "/airweave-logo-svg-lightbg-blacklogo.svg"}
-                                                alt="Airweave"
+                                                src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+                                                alt="Gooclaim"
                                                 className="w-full h-full object-contain"
                                                 onError={() => setAirweaveImageError(true)}
                                             />
@@ -631,7 +631,7 @@ export const ConfigureAuthProviderView: React.FC<ConfigureAuthProviderViewProps>
                                                             <p><span className="font-mono">GET {'{base_url}/{source_connection_id}'}</span> — return JSON credentials</p>
                                                             <p>Response: <span className="font-mono">{`{"access_token": "..."}`}</span> or <span className="font-mono">{`{"api_key": "..."}`}</span></p>
                                                             <p>Auth: <span className="font-mono">X-API-Key</span> header sent with every request</p>
-                                                            <p>No refresh_token needed — Airweave re-fetches automatically</p>
+                                                            <p>No refresh_token needed — Gooclaim OS re-fetches automatically</p>
                                                         </div>
                                                     </TooltipContent>
                                                 </Tooltip>

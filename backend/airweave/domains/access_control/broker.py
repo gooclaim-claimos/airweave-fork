@@ -98,10 +98,12 @@ class AccessBroker(AccessBrokerProtocol):
         organization_id: UUID,
     ) -> bool:
         """Check if a collection has any sources with access control enabled."""
-        from sqlalchemy import exists, select
+        from sqlalchemy import exists, select  # noqa: PLC0415
 
-        from airweave.models.access_control_membership import AccessControlMembership
-        from airweave.models.source_connection import SourceConnection
+        from airweave.models.access_control_membership import (  # noqa: PLC0415
+            AccessControlMembership,  # noqa: PLC0415
+        )
+        from airweave.models.source_connection import SourceConnection  # noqa: PLC0415
 
         stmt = select(
             exists(

@@ -46,7 +46,7 @@ def _extract_slide(slide: Any, slide_idx: int) -> str:
 async def extract_pptx_text(path: str) -> Optional[str]:
     """Extract text from a PPTX and return markdown."""
     try:
-        from pptx import Presentation
+        from pptx import Presentation  # noqa: PLC0415
     except ImportError:
         raise SyncFailureError("python-pptx required for PPTX text extraction but not installed")
 

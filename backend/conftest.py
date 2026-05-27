@@ -55,7 +55,7 @@ os.environ.setdefault("SPARSE_EMBEDDER", "fastembed_bm25")
 @pytest.fixture
 def fake_pubsub():
     """Fake PubSub that records published messages in memory."""
-    from airweave.adapters.pubsub.fake import FakePubSub
+    from airweave.adapters.pubsub.fake import FakePubSub  # noqa: PLC0415
 
     return FakePubSub()
 
@@ -63,7 +63,7 @@ def fake_pubsub():
 @pytest.fixture
 def fake_event_bus():
     """Fake EventBus that records published events."""
-    from airweave.adapters.event_bus.fake import FakeEventBus
+    from airweave.adapters.event_bus.fake import FakeEventBus  # noqa: PLC0415
 
     return FakeEventBus()
 
@@ -71,7 +71,7 @@ def fake_event_bus():
 @pytest.fixture
 def fake_webhook_publisher():
     """Fake WebhookPublisher that records published events."""
-    from airweave.adapters.webhooks.fake import FakeWebhookPublisher
+    from airweave.adapters.webhooks.fake import FakeWebhookPublisher  # noqa: PLC0415
 
     return FakeWebhookPublisher()
 
@@ -79,7 +79,7 @@ def fake_webhook_publisher():
 @pytest.fixture
 def fake_webhook_admin():
     """Fake WebhookAdmin that records all operations."""
-    from airweave.adapters.webhooks.fake import FakeWebhookAdmin
+    from airweave.adapters.webhooks.fake import FakeWebhookAdmin  # noqa: PLC0415
 
     return FakeWebhookAdmin()
 
@@ -87,7 +87,7 @@ def fake_webhook_admin():
 @pytest.fixture
 def fake_endpoint_verifier():
     """Fake EndpointVerifier that records verification calls."""
-    from airweave.adapters.webhooks.fake import FakeEndpointVerifier
+    from airweave.adapters.webhooks.fake import FakeEndpointVerifier  # noqa: PLC0415
 
     return FakeEndpointVerifier()
 
@@ -95,7 +95,7 @@ def fake_endpoint_verifier():
 @pytest.fixture
 def fake_webhook_service():
     """Fake WebhookService with in-memory state for assertions."""
-    from airweave.adapters.webhooks.fake import FakeWebhookService
+    from airweave.adapters.webhooks.fake import FakeWebhookService  # noqa: PLC0415
 
     return FakeWebhookService()
 
@@ -103,7 +103,7 @@ def fake_webhook_service():
 @pytest.fixture
 def fake_circuit_breaker():
     """Fake CircuitBreaker that tracks provider state."""
-    from airweave.adapters.circuit_breaker.fake import FakeCircuitBreaker
+    from airweave.adapters.circuit_breaker.fake import FakeCircuitBreaker  # noqa: PLC0415
 
     return FakeCircuitBreaker()
 
@@ -111,7 +111,7 @@ def fake_circuit_breaker():
 @pytest.fixture
 def fake_ocr_provider():
     """Fake OcrProvider that returns canned markdown."""
-    from airweave.domains.ocr.fakes.provider import FakeOcrProvider
+    from airweave.domains.ocr.fakes.provider import FakeOcrProvider  # noqa: PLC0415
 
     return FakeOcrProvider()
 
@@ -119,7 +119,7 @@ def fake_ocr_provider():
 @pytest.fixture
 def fake_http_metrics() -> FakeHttpMetrics:
     """Fake HttpMetrics that records calls in memory."""
-    from airweave.adapters.metrics import FakeHttpMetrics
+    from airweave.adapters.metrics import FakeHttpMetrics  # noqa: PLC0415
 
     return FakeHttpMetrics()
 
@@ -127,7 +127,7 @@ def fake_http_metrics() -> FakeHttpMetrics:
 @pytest.fixture
 def fake_agentic_search_metrics() -> FakeAgenticSearchMetrics:
     """Fake AgenticSearchMetrics that records calls in memory."""
-    from airweave.adapters.metrics import FakeAgenticSearchMetrics
+    from airweave.adapters.metrics import FakeAgenticSearchMetrics  # noqa: PLC0415
 
     return FakeAgenticSearchMetrics()
 
@@ -135,7 +135,7 @@ def fake_agentic_search_metrics() -> FakeAgenticSearchMetrics:
 @pytest.fixture
 def fake_db_pool_metrics() -> FakeDbPoolMetrics:
     """Fake DbPoolMetrics that records the latest update in memory."""
-    from airweave.adapters.metrics import FakeDbPoolMetrics
+    from airweave.adapters.metrics import FakeDbPoolMetrics  # noqa: PLC0415
 
     return FakeDbPoolMetrics()
 
@@ -143,7 +143,7 @@ def fake_db_pool_metrics() -> FakeDbPoolMetrics:
 @pytest.fixture
 def fake_source_service():
     """Fake SourceService that returns canned source schemas."""
-    from airweave.domains.sources.fakes.service import FakeSourceService
+    from airweave.domains.sources.fakes.service import FakeSourceService  # noqa: PLC0415
 
     return FakeSourceService()
 
@@ -151,7 +151,7 @@ def fake_source_service():
 @pytest.fixture
 def fake_source_registry():
     """Fake SourceRegistry for testing registry consumers."""
-    from airweave.domains.sources.fakes.registry import FakeSourceRegistry
+    from airweave.domains.sources.fakes.registry import FakeSourceRegistry  # noqa: PLC0415
 
     return FakeSourceRegistry()
 
@@ -159,7 +159,7 @@ def fake_source_registry():
 @pytest.fixture
 def fake_auth_provider_registry():
     """Fake AuthProviderRegistry for testing registry consumers."""
-    from airweave.domains.auth_provider.fake import FakeAuthProviderRegistry
+    from airweave.domains.auth_provider.fake import FakeAuthProviderRegistry  # noqa: PLC0415
 
     return FakeAuthProviderRegistry()
 
@@ -167,7 +167,7 @@ def fake_auth_provider_registry():
 @pytest.fixture
 def fake_auth_provider_service():
     """Fake AuthProviderService for testing endpoint DI."""
-    from airweave.domains.auth_provider.fake import FakeAuthProviderService
+    from airweave.domains.auth_provider.fake import FakeAuthProviderService  # noqa: PLC0415
 
     return FakeAuthProviderService()
 
@@ -175,7 +175,9 @@ def fake_auth_provider_service():
 @pytest.fixture
 def fake_entity_definition_registry():
     """Fake EntityDefinitionRegistry for testing registry consumers."""
-    from airweave.domains.entities.fakes.registry import FakeEntityDefinitionRegistry
+    from airweave.domains.entities.fakes.registry import (  # noqa: PLC0415
+        FakeEntityDefinitionRegistry,  # noqa: PLC0415
+    )
 
     return FakeEntityDefinitionRegistry()
 
@@ -187,7 +189,7 @@ def fake_metrics_service(
     fake_db_pool_metrics,
 ) -> FakeMetricsService:
     """FakeMetricsService wrapping individual metric fakes."""
-    from airweave.core.fakes.metrics_service import FakeMetricsService
+    from airweave.core.fakes.metrics_service import FakeMetricsService  # noqa: PLC0415
 
     return FakeMetricsService(
         http=fake_http_metrics,
@@ -204,7 +206,7 @@ def fake_metrics_service(
 @pytest.fixture
 def fake_health_service() -> FakeHealthService:
     """Fake HealthService with canned responses."""
-    from airweave.core.health.fakes import FakeHealthService
+    from airweave.core.health.fakes import FakeHealthService  # noqa: PLC0415
 
     return FakeHealthService()
 
@@ -212,7 +214,9 @@ def fake_health_service() -> FakeHealthService:
 @pytest.fixture
 def fake_source_connection_service(fake_sync_service):
     """Fake SourceConnectionService."""
-    from airweave.domains.source_connections.fakes.service import FakeSourceConnectionService
+    from airweave.domains.source_connections.fakes.service import (  # noqa: PLC0415
+        FakeSourceConnectionService,  # noqa: PLC0415
+    )
 
     return FakeSourceConnectionService(sync_service=fake_sync_service)
 
@@ -220,7 +224,7 @@ def fake_source_connection_service(fake_sync_service):
 @pytest.fixture
 def fake_source_lifecycle_service():
     """Fake SourceLifecycleService for testing lifecycle consumers."""
-    from airweave.domains.sources.fakes.lifecycle import FakeSourceLifecycleService
+    from airweave.domains.sources.fakes.lifecycle import FakeSourceLifecycleService  # noqa: PLC0415
 
     return FakeSourceLifecycleService()
 
@@ -228,7 +232,9 @@ def fake_source_lifecycle_service():
 @pytest.fixture
 def fake_sc_repo():
     """Fake SourceConnectionRepository."""
-    from airweave.domains.source_connections.fakes.repository import FakeSourceConnectionRepository
+    from airweave.domains.source_connections.fakes.repository import (  # noqa: PLC0415
+        FakeSourceConnectionRepository,  # noqa: PLC0415
+    )
 
     return FakeSourceConnectionRepository()
 
@@ -236,7 +242,9 @@ def fake_sc_repo():
 @pytest.fixture
 def fake_conn_repo():
     """Fake ConnectionRepository."""
-    from airweave.domains.connections.fakes.repository import FakeConnectionRepository
+    from airweave.domains.connections.fakes.repository import (  # noqa: PLC0415
+        FakeConnectionRepository,  # noqa: PLC0415
+    )
 
     return FakeConnectionRepository()
 
@@ -244,7 +252,9 @@ def fake_conn_repo():
 @pytest.fixture
 def fake_collection_repo():
     """Fake CollectionRepository."""
-    from airweave.domains.collections.fakes.repository import FakeCollectionRepository
+    from airweave.domains.collections.fakes.repository import (  # noqa: PLC0415
+        FakeCollectionRepository,  # noqa: PLC0415
+    )
 
     return FakeCollectionRepository()
 
@@ -252,7 +262,9 @@ def fake_collection_repo():
 @pytest.fixture
 def fake_cred_repo():
     """Fake IntegrationCredentialRepository."""
-    from airweave.domains.credentials.fakes.repository import FakeIntegrationCredentialRepository
+    from airweave.domains.credentials.fakes.repository import (  # noqa: PLC0415
+        FakeIntegrationCredentialRepository,  # noqa: PLC0415
+    )
 
     return FakeIntegrationCredentialRepository()
 
@@ -260,7 +272,9 @@ def fake_cred_repo():
 @pytest.fixture
 def fake_credential_service():
     """Fake IntegrationCredentialService."""
-    from airweave.domains.credentials.fakes.service import FakeIntegrationCredentialService
+    from airweave.domains.credentials.fakes.service import (  # noqa: PLC0415
+        FakeIntegrationCredentialService,  # noqa: PLC0415
+    )
 
     return FakeIntegrationCredentialService()
 
@@ -268,7 +282,9 @@ def fake_credential_service():
 @pytest.fixture
 def fake_user_org_repo():
     """Fake UserOrganizationRepository."""
-    from airweave.domains.organizations.fakes.repository import FakeUserOrganizationRepository
+    from airweave.domains.organizations.fakes.repository import (  # noqa: PLC0415
+        FakeUserOrganizationRepository,  # noqa: PLC0415
+    )
 
     return FakeUserOrganizationRepository()
 
@@ -276,7 +292,7 @@ def fake_user_org_repo():
 @pytest.fixture
 def fake_oauth2_service():
     """Fake OAuth2Service."""
-    from airweave.domains.oauth.fakes.oauth2_service import FakeOAuth2Service
+    from airweave.domains.oauth.fakes.oauth2_service import FakeOAuth2Service  # noqa: PLC0415
 
     return FakeOAuth2Service()
 
@@ -284,7 +300,7 @@ def fake_oauth2_service():
 @pytest.fixture
 def fake_oauth1_service():
     """Real OAuth1Service (no injected deps, safe for unit tests)."""
-    from airweave.domains.oauth.oauth1_service import OAuth1Service
+    from airweave.domains.oauth.oauth1_service import OAuth1Service  # noqa: PLC0415
 
     return OAuth1Service()
 
@@ -292,7 +308,9 @@ def fake_oauth1_service():
 @pytest.fixture
 def fake_redirect_session_repo():
     """Fake OAuthRedirectSessionRepository."""
-    from airweave.domains.oauth.fakes.repository import FakeOAuthRedirectSessionRepository
+    from airweave.domains.oauth.fakes.repository import (  # noqa: PLC0415
+        FakeOAuthRedirectSessionRepository,  # noqa: PLC0415
+    )
 
     return FakeOAuthRedirectSessionRepository()
 
@@ -300,7 +318,9 @@ def fake_redirect_session_repo():
 @pytest.fixture
 def fake_response_builder():
     """Fake ResponseBuilder."""
-    from airweave.domains.source_connections.fakes.response import FakeResponseBuilder
+    from airweave.domains.source_connections.fakes.response import (  # noqa: PLC0415
+        FakeResponseBuilder,  # noqa: PLC0415
+    )
 
     return FakeResponseBuilder()
 
@@ -308,7 +328,7 @@ def fake_response_builder():
 @pytest.fixture
 def fake_temporal_workflow_service():
     """Fake TemporalWorkflowService."""
-    from airweave.domains.temporal.fakes.service import FakeTemporalWorkflowService
+    from airweave.domains.temporal.fakes.service import FakeTemporalWorkflowService  # noqa: PLC0415
 
     return FakeTemporalWorkflowService()
 
@@ -316,7 +336,9 @@ def fake_temporal_workflow_service():
 @pytest.fixture
 def fake_temporal_schedule_service():
     """Fake TemporalScheduleService."""
-    from airweave.domains.temporal.fakes.schedule_service import FakeTemporalScheduleService
+    from airweave.domains.temporal.fakes.schedule_service import (  # noqa: PLC0415
+        FakeTemporalScheduleService,  # noqa: PLC0415
+    )
 
     return FakeTemporalScheduleService()
 
@@ -324,7 +346,7 @@ def fake_temporal_schedule_service():
 @pytest.fixture
 def fake_sync_repo():
     """Fake SyncRepository."""
-    from airweave.domains.syncs.fakes.repository import FakeSyncRepository
+    from airweave.domains.syncs.fakes.repository import FakeSyncRepository  # noqa: PLC0415
 
     return FakeSyncRepository()
 
@@ -332,7 +354,9 @@ def fake_sync_repo():
 @pytest.fixture
 def fake_sync_cursor_repo():
     """Fake SyncCursorRepository."""
-    from airweave.domains.syncs.fakes.cursor_repository import FakeSyncCursorRepository
+    from airweave.domains.syncs.fakes.cursor_repository import (  # noqa: PLC0415
+        FakeSyncCursorRepository,  # noqa: PLC0415
+    )
 
     return FakeSyncCursorRepository()
 
@@ -340,7 +364,7 @@ def fake_sync_cursor_repo():
 @pytest.fixture
 def fake_sync_cursor_service():
     """SyncCursorService instance (no constructor deps)."""
-    from airweave.domains.syncs.cursors.service import SyncCursorService
+    from airweave.domains.syncs.cursors.service import SyncCursorService  # noqa: PLC0415
 
     return SyncCursorService()
 
@@ -348,7 +372,7 @@ def fake_sync_cursor_service():
 @pytest.fixture
 def fake_sync_job_repo():
     """Fake SyncJobRepository."""
-    from airweave.domains.syncs.jobs.fakes.repository import FakeSyncJobRepository
+    from airweave.domains.syncs.jobs.fakes.repository import FakeSyncJobRepository  # noqa: PLC0415
 
     return FakeSyncJobRepository()
 
@@ -356,14 +380,16 @@ def fake_sync_job_repo():
 @pytest.fixture
 def fake_billing_service():
     """Fake BillingService."""
-    from airweave.adapters.payment.fake import FakePaymentGateway
-    from airweave.domains.billing.fakes.operations import FakeBillingOperations
-    from airweave.domains.billing.fakes.repository import (
+    from airweave.adapters.payment.fake import FakePaymentGateway  # noqa: PLC0415
+    from airweave.domains.billing.fakes.operations import FakeBillingOperations  # noqa: PLC0415
+    from airweave.domains.billing.fakes.repository import (  # noqa: PLC0415
         FakeBillingPeriodRepository,
         FakeOrganizationBillingRepository,
     )
-    from airweave.domains.billing.service import BillingService
-    from airweave.domains.organizations.fakes.repository import FakeOrganizationRepository
+    from airweave.domains.billing.service import BillingService  # noqa: PLC0415
+    from airweave.domains.organizations.fakes.repository import (  # noqa: PLC0415
+        FakeOrganizationRepository,  # noqa: PLC0415
+    )
 
     return BillingService(
         payment_gateway=FakePaymentGateway(),
@@ -383,7 +409,7 @@ def fake_sync_record_service(fake_sync_service):
 @pytest.fixture
 def fake_sync_job_service():
     """Fake SyncJobService."""
-    from airweave.domains.syncs.jobs.fakes.service import FakeSyncJobService
+    from airweave.domains.syncs.jobs.fakes.service import FakeSyncJobService  # noqa: PLC0415
 
     return FakeSyncJobService()
 
@@ -399,7 +425,7 @@ def fake_sync_job_state_machine() -> MagicMock:
 @pytest.fixture
 def fake_sync_service():
     """Fake SyncService."""
-    from airweave.domains.syncs.fakes.service import FakeSyncService
+    from airweave.domains.syncs.fakes.service import FakeSyncService  # noqa: PLC0415
 
     return FakeSyncService()
 
@@ -413,7 +439,7 @@ def fake_sync_lifecycle(fake_sync_service):
 @pytest.fixture
 def fake_sync_state_machine():
     """Fake SyncStateMachine."""
-    from airweave.domains.syncs.fakes.state_machine import FakeSyncStateMachine
+    from airweave.domains.syncs.fakes.state_machine import FakeSyncStateMachine  # noqa: PLC0415
 
     return FakeSyncStateMachine()
 
@@ -421,7 +447,7 @@ def fake_sync_state_machine():
 @pytest.fixture
 def fake_sync_factory():
     """Fake SyncFactory."""
-    from airweave.domains.sync_pipeline.fakes.factory import FakeSyncFactory
+    from airweave.domains.sync_pipeline.fakes.factory import FakeSyncFactory  # noqa: PLC0415
 
     return FakeSyncFactory()
 
@@ -429,7 +455,9 @@ def fake_sync_factory():
 @pytest.fixture
 def fake_entity_repo():
     """Fake EntityRepository."""
-    from airweave.domains.sync_pipeline.fakes.entity_repository import FakeEntityRepository
+    from airweave.domains.sync_pipeline.fakes.entity_repository import (  # noqa: PLC0415
+        FakeEntityRepository,  # noqa: PLC0415
+    )
 
     return FakeEntityRepository()
 
@@ -437,7 +465,7 @@ def fake_entity_repo():
 @pytest.fixture
 def fake_access_broker():
     """Fake AccessBroker."""
-    from airweave.domains.access_control.fakes.broker import FakeAccessBroker
+    from airweave.domains.access_control.fakes.broker import FakeAccessBroker  # noqa: PLC0415
 
     return FakeAccessBroker()
 
@@ -445,7 +473,7 @@ def fake_access_broker():
 @pytest.fixture
 def fake_converter_registry():
     """Fake ConverterRegistry."""
-    from airweave.domains.converters.fakes.registry import FakeConverterRegistry
+    from airweave.domains.converters.fakes.registry import FakeConverterRegistry  # noqa: PLC0415
 
     return FakeConverterRegistry()
 
@@ -453,14 +481,16 @@ def fake_converter_registry():
 @pytest.fixture
 def fake_billing_webhook():
     """Fake BillingWebhookProcessor."""
-    from airweave.adapters.payment.fake import FakePaymentGateway
-    from airweave.domains.billing.fakes.operations import FakeBillingOperations
-    from airweave.domains.billing.fakes.repository import (
+    from airweave.adapters.payment.fake import FakePaymentGateway  # noqa: PLC0415
+    from airweave.domains.billing.fakes.operations import FakeBillingOperations  # noqa: PLC0415
+    from airweave.domains.billing.fakes.repository import (  # noqa: PLC0415
         FakeBillingPeriodRepository,
         FakeOrganizationBillingRepository,
     )
-    from airweave.domains.billing.webhook_processor import BillingWebhookProcessor
-    from airweave.domains.organizations.fakes.repository import FakeOrganizationRepository
+    from airweave.domains.billing.webhook_processor import BillingWebhookProcessor  # noqa: PLC0415
+    from airweave.domains.organizations.fakes.repository import (  # noqa: PLC0415
+        FakeOrganizationRepository,  # noqa: PLC0415
+    )
 
     return BillingWebhookProcessor(
         payment_gateway=FakePaymentGateway(),
@@ -474,7 +504,7 @@ def fake_billing_webhook():
 @pytest.fixture
 def fake_payment_gateway():
     """Fake PaymentGateway."""
-    from airweave.adapters.payment.fake import FakePaymentGateway
+    from airweave.adapters.payment.fake import FakePaymentGateway  # noqa: PLC0415
 
     return FakePaymentGateway()
 
@@ -482,7 +512,7 @@ def fake_payment_gateway():
 @pytest.fixture
 def fake_collection_service():
     """Fake CollectionService."""
-    from airweave.domains.collections.fakes.service import FakeCollectionService
+    from airweave.domains.collections.fakes.service import FakeCollectionService  # noqa: PLC0415
 
     return FakeCollectionService()
 
@@ -490,7 +520,7 @@ def fake_collection_service():
 @pytest.fixture
 def fake_dense_embedder_registry():
     """Fake DenseEmbedderRegistry for testing registry consumers."""
-    from airweave.domains.embedders.fakes.registry import FakeDenseEmbedderRegistry
+    from airweave.domains.embedders.fakes.registry import FakeDenseEmbedderRegistry  # noqa: PLC0415
 
     return FakeDenseEmbedderRegistry()
 
@@ -498,7 +528,9 @@ def fake_dense_embedder_registry():
 @pytest.fixture
 def fake_sparse_embedder_registry():
     """Fake SparseEmbedderRegistry for testing registry consumers."""
-    from airweave.domains.embedders.fakes.registry import FakeSparseEmbedderRegistry
+    from airweave.domains.embedders.fakes.registry import (  # noqa: PLC0415
+        FakeSparseEmbedderRegistry,  # noqa: PLC0415
+    )
 
     return FakeSparseEmbedderRegistry()
 
@@ -506,7 +538,7 @@ def fake_sparse_embedder_registry():
 @pytest.fixture
 def fake_dense_embedder():
     """Fake DenseEmbedder that returns zero-vectors."""
-    from airweave.domains.embedders.fakes.embedder import FakeDenseEmbedder
+    from airweave.domains.embedders.fakes.embedder import FakeDenseEmbedder  # noqa: PLC0415
 
     return FakeDenseEmbedder()
 
@@ -514,7 +546,7 @@ def fake_dense_embedder():
 @pytest.fixture
 def fake_sparse_embedder():
     """Fake SparseEmbedder that returns empty sparse vectors."""
-    from airweave.domains.embedders.fakes.embedder import FakeSparseEmbedder
+    from airweave.domains.embedders.fakes.embedder import FakeSparseEmbedder  # noqa: PLC0415
 
     return FakeSparseEmbedder()
 
@@ -522,7 +554,7 @@ def fake_sparse_embedder():
 @pytest.fixture
 def fake_usage_checker():
     """Fake UsageLimitChecker that allows all actions by default."""
-    from airweave.domains.usage.fakes.limit_checker import FakeUsageLimitChecker
+    from airweave.domains.usage.fakes.limit_checker import FakeUsageLimitChecker  # noqa: PLC0415
 
     return FakeUsageLimitChecker()
 
@@ -530,7 +562,7 @@ def fake_usage_checker():
 @pytest.fixture
 def fake_usage_ledger():
     """Fake UsageLedger that records calls in memory."""
-    from airweave.domains.usage.fakes.ledger import FakeUsageLedger
+    from airweave.domains.usage.fakes.ledger import FakeUsageLedger  # noqa: PLC0415
 
     return FakeUsageLedger()
 
@@ -538,7 +570,7 @@ def fake_usage_ledger():
 @pytest.fixture
 def fake_context_cache():
     """Fake ContextCache backed by in-memory dicts."""
-    from airweave.adapters.cache.fake import FakeContextCache
+    from airweave.adapters.cache.fake import FakeContextCache  # noqa: PLC0415
 
     return FakeContextCache()
 
@@ -546,7 +578,7 @@ def fake_context_cache():
 @pytest.fixture
 def fake_rate_limiter():
     """Fake RateLimiter that records calls and never rejects by default."""
-    from airweave.adapters.rate_limiter.fake import FakeRateLimiter
+    from airweave.adapters.rate_limiter.fake import FakeRateLimiter  # noqa: PLC0415
 
     return FakeRateLimiter()
 
@@ -554,7 +586,7 @@ def fake_rate_limiter():
 @pytest.fixture
 def fake_identity_provider():
     """Fake IdentityProvider with in-memory state."""
-    from airweave.adapters.identity.fake import FakeIdentityProvider
+    from airweave.adapters.identity.fake import FakeIdentityProvider  # noqa: PLC0415
 
     return FakeIdentityProvider()
 
@@ -562,7 +594,9 @@ def fake_identity_provider():
 @pytest.fixture
 def fake_organization_service():
     """Fake OrganizationService that records calls."""
-    from airweave.domains.organizations.fakes.service import FakeOrganizationService
+    from airweave.domains.organizations.fakes.service import (  # noqa: PLC0415
+        FakeOrganizationService,  # noqa: PLC0415
+    )
 
     return FakeOrganizationService()
 
@@ -570,7 +604,7 @@ def fake_organization_service():
 @pytest.fixture
 def fake_email_service():
     """Fake EmailService that records calls."""
-    from airweave.adapters.email.fake import FakeEmailService
+    from airweave.adapters.email.fake import FakeEmailService  # noqa: PLC0415
 
     return FakeEmailService()
 
@@ -578,7 +612,7 @@ def fake_email_service():
 @pytest.fixture
 def fake_user_service():
     """Fake UserService that records calls."""
-    from airweave.domains.users.fakes.service import FakeUserService
+    from airweave.domains.users.fakes.service import FakeUserService  # noqa: PLC0415
 
     return FakeUserService()
 
@@ -586,7 +620,7 @@ def fake_user_service():
 @pytest.fixture
 def fake_oauth_flow_service():
     """Fake OAuthFlowService."""
-    from airweave.domains.oauth.fakes.flow_service import FakeOAuthFlowService
+    from airweave.domains.oauth.fakes.flow_service import FakeOAuthFlowService  # noqa: PLC0415
 
     return FakeOAuthFlowService()
 
@@ -594,7 +628,9 @@ def fake_oauth_flow_service():
 @pytest.fixture
 def fake_oauth_callback_service():
     """Fake OAuthCallbackService."""
-    from airweave.domains.oauth.fakes.callback_service import FakeOAuthCallbackService
+    from airweave.domains.oauth.fakes.callback_service import (  # noqa: PLC0415
+        FakeOAuthCallbackService,  # noqa: PLC0415
+    )
 
     return FakeOAuthCallbackService()
 
@@ -602,7 +638,9 @@ def fake_oauth_callback_service():
 @pytest.fixture
 def fake_init_session_repo():
     """Fake OAuthInitSessionRepository."""
-    from airweave.domains.oauth.fakes.repository import FakeOAuthInitSessionRepository
+    from airweave.domains.oauth.fakes.repository import (  # noqa: PLC0415
+        FakeOAuthInitSessionRepository,  # noqa: PLC0415
+    )
 
     return FakeOAuthInitSessionRepository()
 
@@ -610,7 +648,7 @@ def fake_init_session_repo():
 @pytest.fixture
 def fake_connect_service():
     """Fake ConnectService for testing."""
-    from airweave.domains.connect.fakes.service import FakeConnectService
+    from airweave.domains.connect.fakes.service import FakeConnectService  # noqa: PLC0415
 
     return FakeConnectService()
 
@@ -618,7 +656,7 @@ def fake_connect_service():
 @pytest.fixture
 def fake_browse_tree_service():
     """Fake BrowseTreeService (MagicMock)."""
-    from unittest.mock import MagicMock
+    from unittest.mock import MagicMock  # noqa: PLC0415
 
     return MagicMock()
 
@@ -626,7 +664,7 @@ def fake_browse_tree_service():
 @pytest.fixture
 def fake_selection_repo():
     """Fake NodeSelectionRepository (MagicMock)."""
-    from unittest.mock import MagicMock
+    from unittest.mock import MagicMock  # noqa: PLC0415
 
     return MagicMock()
 
@@ -634,7 +672,7 @@ def fake_selection_repo():
 @pytest.fixture
 def fake_instant_search():
     """Fake InstantSearchService."""
-    from airweave.domains.search.fakes.instant import FakeInstantSearchService
+    from airweave.domains.search.fakes.instant import FakeInstantSearchService  # noqa: PLC0415
 
     return FakeInstantSearchService()
 
@@ -642,7 +680,7 @@ def fake_instant_search():
 @pytest.fixture
 def fake_classic_search():
     """Fake ClassicSearchService."""
-    from airweave.domains.search.fakes.classic import FakeClassicSearchService
+    from airweave.domains.search.fakes.classic import FakeClassicSearchService  # noqa: PLC0415
 
     return FakeClassicSearchService()
 
@@ -650,7 +688,7 @@ def fake_classic_search():
 @pytest.fixture
 def fake_agentic_search_v2():
     """Fake AgenticSearchService (v2)."""
-    from airweave.domains.search.fakes.agentic import FakeAgenticSearchService
+    from airweave.domains.search.fakes.agentic import FakeAgenticSearchService  # noqa: PLC0415
 
     return FakeAgenticSearchService()
 
@@ -658,7 +696,7 @@ def fake_agentic_search_v2():
 @pytest.fixture
 def fake_browse_service():
     """Fake BrowseService."""
-    from airweave.domains.search.fakes.browse import FakeBrowseService
+    from airweave.domains.search.fakes.browse import FakeBrowseService  # noqa: PLC0415
 
     return FakeBrowseService()
 
@@ -666,7 +704,7 @@ def fake_browse_service():
 @pytest.fixture
 def fake_storage_backend():
     """Fake StorageBackend for testing storage consumers."""
-    from airweave.domains.storage.fakes import FakeStorageBackend
+    from airweave.domains.storage.fakes import FakeStorageBackend  # noqa: PLC0415
 
     return FakeStorageBackend()
 
@@ -674,7 +712,7 @@ def fake_storage_backend():
 @pytest.fixture
 def fake_arf_service():
     """Fake ArfService for testing ARF consumers."""
-    from airweave.domains.arf.fakes.service import FakeArfService
+    from airweave.domains.arf.fakes.service import FakeArfService  # noqa: PLC0415
 
     return FakeArfService()
 
@@ -759,8 +797,8 @@ def test_container(
     For partial overrides, use container.replace():
         real_bus_container = test_container.replace(event_bus=InMemoryEventBus())
     """
-    from airweave.core.container import Container
-    from airweave.domains.storage.sync_file_manager import SyncFileManager
+    from airweave.core.container import Container  # noqa: PLC0415
+    from airweave.domains.storage.sync_file_manager import SyncFileManager  # noqa: PLC0415
 
     return Container(
         storage_backend=fake_storage_backend,

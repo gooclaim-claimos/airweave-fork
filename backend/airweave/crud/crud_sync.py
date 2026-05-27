@@ -546,9 +546,9 @@ class CRUDSync(CRUDBaseOrganization[Sync, SyncCreate, SyncUpdate]):
             cron_schedule = obj_in["cron_schedule"]
             if cron_schedule is not None:
                 try:
-                    from datetime import datetime, timezone
+                    from datetime import datetime, timezone  # noqa: PLC0415
 
-                    from croniter import croniter
+                    from croniter import croniter  # noqa: PLC0415
 
                     # Create a croniter instance with the cron expression
                     # Use timezone-aware UTC datetime as base
@@ -561,7 +561,7 @@ class CRUDSync(CRUDBaseOrganization[Sync, SyncCreate, SyncUpdate]):
                     next_run = next_run_aware.replace(tzinfo=None)
                     obj_in["next_scheduled_run"] = next_run
                 except Exception as e:
-                    import logging
+                    import logging  # noqa: PLC0415
 
                     logging.error(f"Error calculating next run time: {e}")
             else:

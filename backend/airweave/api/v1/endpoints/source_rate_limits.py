@@ -9,11 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from airweave import crud, schemas
 from airweave.api import deps
 from airweave.api.context import ApiContext
-from airweave.domains.organizations import logic
 from airweave.api.inject import Inject
 from airweave.api.router import TrailingSlashRouter
 from airweave.core.shared_models import FeatureFlag
 from airweave.db.session import get_db
+from airweave.domains.organizations import logic
 from airweave.domains.sources.protocols import SourceRegistryProtocol
 from airweave.domains.sources.rate_limiting.helpers import (
     set_source_rate_limit as _set_source_rate_limit,

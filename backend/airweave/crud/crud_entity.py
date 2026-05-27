@@ -163,7 +163,7 @@ class CRUDEntity(CRUDBaseOrganization[Entity, EntityCreate, EntityUpdate]):
         if not entity_requests:
             return {}
 
-        from sqlalchemy import and_, or_
+        from sqlalchemy import and_, or_  # noqa: PLC0415
 
         CHUNK_SIZE = 1000
         result_map: dict[tuple[str, str], Entity] = {}

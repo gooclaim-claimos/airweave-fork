@@ -80,7 +80,7 @@ class FakeOrganizationRepository:
         owner_user: User,
         uow: Optional[UnitOfWork] = None,
     ) -> Organization:
-        from uuid import uuid4
+        from uuid import uuid4  # noqa: PLC0415
 
         org = Organization(id=uuid4(), name=obj_in.name, description=obj_in.description)
         self._store[org.id] = org
@@ -171,7 +171,7 @@ class FakeUserOrganizationRepository:
         results = []
         for m in self._memberships:
             if m["user_id"] == user_id:
-                from airweave.models.user_organization import UserOrganization
+                from airweave.models.user_organization import UserOrganization  # noqa: PLC0415
 
                 uo = UserOrganization()
                 uo.user_id = m["user_id"]

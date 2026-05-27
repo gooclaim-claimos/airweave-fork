@@ -31,8 +31,8 @@
     --popover-solid: 0 0% 100%;
     --popover-foreground: 0 0% 2.4%;
 
-    --primary: 207 83% 49%;
-    /* #1692E5 - Blue primary color */
+    --primary: 200 96% 32%;
+    /* #0369A1 - Gooclaim OS sky-blue (matches Portal + Console primary) */
     --primary-foreground: 0 0% 100%;
     /* White text on blue primary */
 
@@ -49,20 +49,20 @@
     --accent-solid: 0 0% 96%;
     --accent-foreground: 0 0% 2.4%;
 
-    /* Blue accent colors using #1692E5 */
-    --blue: 207 83% 49%;
-    /* #1692E5 converted to HSL */
+    /* Blue accent colors using #0369A1 — mirror primary hue for visual consistency */
+    --blue: 200 96% 32%;
+    /* #0369A1 converted to HSL */
     --blue-foreground: 0 0% 100%;
-    --blue-50: 207 83% 95%;
-    --blue-100: 207 83% 90%;
-    --blue-200: 207 83% 80%;
-    --blue-300: 207 83% 70%;
-    --blue-400: 207 83% 60%;
-    --blue-500: 207 83% 49%;
-    --blue-600: 207 83% 40%;
-    --blue-700: 207 83% 30%;
-    --blue-800: 207 83% 20%;
-    --blue-900: 207 83% 10%;
+    --blue-50: 200 96% 95%;
+    --blue-100: 200 96% 90%;
+    --blue-200: 200 96% 80%;
+    --blue-300: 200 96% 70%;
+    --blue-400: 200 96% 60%;
+    --blue-500: 200 96% 32%;
+    --blue-600: 200 96% 28%;
+    --blue-700: 200 96% 22%;
+    --blue-800: 200 96% 16%;
+    --blue-900: 200 96% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 67% 98.8%;
@@ -128,8 +128,8 @@
     --popover-solid: 0 0% 5%;
     --popover-foreground: 210 67% 98.8%;
 
-    --primary: 207 83% 49%;
-    /* #1692E5 - Same blue primary in dark mode */
+    --primary: 200 96% 45%;
+    /* #0369A1 lifted for dark mode readability — Gooclaim OS sky-blue */
     --primary-foreground: 0 0% 100%;
     /* White text on blue primary */
 
@@ -146,20 +146,20 @@
     --accent-solid: 0 0% 10%;
     --accent-foreground: 210 67% 98.8%;
 
-    /* Blue accent colors using #1692E5 - same blue in dark mode */
-    --blue: 207 83% 49%;
-    /* #1692E5 converted to HSL */
+    /* Blue accent colors using #0369A1 — Gooclaim OS sky-blue (dark mode inverts the scale) */
+    --blue: 200 96% 45%;
+    /* lifted lightness for dark mode */
     --blue-foreground: 0 0% 100%;
-    --blue-50: 207 83% 10%;
-    --blue-100: 207 83% 15%;
-    --blue-200: 207 83% 20%;
-    --blue-300: 207 83% 30%;
-    --blue-400: 207 83% 40%;
-    --blue-500: 207 83% 49%;
-    --blue-600: 207 83% 60%;
-    --blue-700: 207 83% 70%;
-    --blue-800: 207 83% 80%;
-    --blue-900: 207 83% 90%;
+    --blue-50: 200 96% 10%;
+    --blue-100: 200 96% 15%;
+    --blue-200: 200 96% 20%;
+    --blue-300: 200 96% 30%;
+    --blue-400: 200 96% 40%;
+    --blue-500: 200 96% 45%;
+    --blue-600: 200 96% 60%;
+    --blue-700: 200 96% 70%;
+    --blue-800: 200 96% 80%;
+    --blue-900: 200 96% 90%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 67% 98.8%;

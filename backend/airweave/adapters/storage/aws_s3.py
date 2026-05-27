@@ -58,7 +58,7 @@ class S3Backend(StorageBackend):
         """Lazy-load async S3 client."""
         if self._client is None:
             try:
-                from aiobotocore.session import get_session
+                from aiobotocore.session import get_session  # noqa: PLC0415
 
                 self._session = get_session()
                 self._client = await self._session.create_client(

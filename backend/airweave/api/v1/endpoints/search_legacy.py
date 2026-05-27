@@ -335,7 +335,7 @@ async def stream_search_collection_advanced(  # noqa: C901 - streaming orchestra
 
     async def event_stream():  # noqa: C901 - complex loop acceptable
         try:
-            import datetime as _dt
+            import datetime as _dt  # noqa: PLC0415
 
             connected_event = {
                 "type": "connected",
@@ -394,7 +394,7 @@ async def stream_search_collection_advanced(  # noqa: C901 - streaming orchestra
             ctx.logger.info(f"[SearchStream] Cancelled stream id={request_id}")
         except Exception as e:  # noqa: BLE001 - emit error event
             ctx.logger.error(f"[SearchStream] Error id={request_id}: {str(e)}")
-            import datetime as _dt
+            import datetime as _dt  # noqa: PLC0415
 
             error_event = {
                 "type": "error",

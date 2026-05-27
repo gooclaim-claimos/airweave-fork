@@ -44,7 +44,7 @@ async def compress_image(path: str, max_bytes: int) -> CompressionResult:
         return CompressionResult(path=path, is_temp=False)
 
     try:
-        from PIL import Image
+        from PIL import Image  # noqa: PLC0415
     except ImportError:
         raise SyncFailureError("Pillow package required for image compression but not installed")
 
@@ -73,7 +73,7 @@ def _compress_png_as_jpeg(
     max_bytes: int,
 ) -> str:
     """Convert PNG to JPEG and compress."""
-    from PIL import Image
+    from PIL import Image  # noqa: PLC0415
 
     # Convert RGBA / palette modes to RGB.
     if img.mode in ("RGBA", "LA", "P"):

@@ -29,7 +29,7 @@ export const OAuthRedirectView: React.FC<OAuthRedirectViewProps> = ({ context })
             </div>
             <h3 className="text-lg font-semibold mb-2">Complete Authentication</h3>
             <p className="text-muted-foreground mb-6">
-                You need to authorize Airweave to access your {sourceName} account.
+                You need to authorize Gooclaim OS to access your {sourceName} account.
                 You'll be redirected to a secure page to continue.
             </p>
             <Button onClick={handleRedirect} className="w-full">

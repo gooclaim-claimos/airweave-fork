@@ -303,7 +303,7 @@ class LoggerConfigurator:
         """
         logger = logging.getLogger(name)
 
-        from airweave.core.config import settings
+        from airweave.core.config import settings  # noqa: PLC0415
 
         log_level = settings.LOG_LEVEL.upper()
         logger.setLevel(getattr(logging, log_level, logging.INFO))

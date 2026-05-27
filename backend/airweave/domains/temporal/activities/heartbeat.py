@@ -207,7 +207,7 @@ async def check_redis_snapshot(sync_job_id: UUID) -> dict[str, Any] | None:
             result: dict[str, Any] = json.loads(snapshot_raw)
             return result
     except Exception as exc:
-        from airweave.core.logging import logger as _hb_logger
+        from airweave.core.logging import logger as _hb_logger  # noqa: PLC0415
 
         _hb_logger.debug(
             f"Redis snapshot read failed for job {sync_job_id}: {exc}",

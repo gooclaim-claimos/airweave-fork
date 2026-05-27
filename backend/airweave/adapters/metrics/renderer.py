@@ -30,17 +30,30 @@ class PrometheusMetricsRenderer(MetricsRenderer):
     """Render all metrics in a shared CollectorRegistry."""
 
     def __init__(self, registry: CollectorRegistry) -> None:
+        """Wrap a CollectorRegistry for later text-format serialization.
+
+        Args:
+            registry: The Prometheus CollectorRegistry whose metrics will be
+                rendered by :meth:`generate`.
+        """
         self._registry = registry
 
     @property
     def content_type(self) -> str:
+        """Return the Prometheus exposition-format media type (no charset)."""
         return _CONTENT_TYPE
 
     @property
     def charset(self) -> str:
+        """Return the charset associated with the exposition format."""
         return _CHARSET
 
     def generate(self) -> bytes:
+        """Serialize the wrapped registry to Prometheus text exposition bytes.
+
+        Returns:
+            UTF-8 encoded Prometheus text-format payload.
+        """
         return generate_latest(self._registry)
 
 
@@ -53,16 +66,24 @@ class FakeMetricsRenderer(MetricsRenderer):
     """In-memory spy implementing the MetricsRenderer protocol."""
 
     def __init__(self) -> None:
+        """Initialize the fake renderer with a zeroed call counter."""
         self.generate_calls: int = 0
 
     @property
     def content_type(self) -> str:
+        """Return a fixed ``text/plain`` content type for tests."""
         return "text/plain"
 
     @property
     def charset(self) -> str:
+        """Return a fixed ``utf-8`` charset for tests."""
         return "utf-8"
 
     def generate(self) -> bytes:
+        """Return a stub Prometheus payload and record the invocation.
+
+        Returns:
+            A small constant byte string standing in for real metrics.
+        """
         self.generate_calls += 1
         return b"# fake metrics\n"

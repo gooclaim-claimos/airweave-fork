@@ -611,7 +611,7 @@ class GoogleDriveSource(BaseSource):
 
     def _extract_name_token_from_glob(self, pattern: str) -> Optional[str]:
         """Extract a coarse token for name contains from a glob (best-effort)."""
-        import re
+        import re  # noqa: PLC0415
 
         # '*.pdf' -> '.pdf', 'report*' -> 'report'
         if pattern.startswith("*."):
@@ -749,8 +749,8 @@ class GoogleDriveSource(BaseSource):
 
         Final match is performed by filename glob.
         """
-        import fnmatch
-        from collections import deque
+        import fnmatch  # noqa: PLC0415
+        from collections import deque  # noqa: PLC0415
 
         name_token = self._extract_name_token_from_glob(filename_glob) if filename_glob else None
 
@@ -1153,7 +1153,7 @@ class GoogleDriveSource(BaseSource):
                                             continue
 
                         filename_only_patterns = [p for p in patterns if "/" not in p]
-                        import fnmatch as _fn
+                        import fnmatch as _fn  # noqa: PLC0415
 
                         for pat in filename_only_patterns:
                             if getattr(self, "batch_generation", False):
@@ -1282,7 +1282,7 @@ class GoogleDriveSource(BaseSource):
                                         continue
 
                     filename_only_patterns = [p for p in patterns if "/" not in p]
-                    import fnmatch as _fn
+                    import fnmatch as _fn  # noqa: PLC0415
 
                     for pat in filename_only_patterns:
                         if getattr(self, "batch_generation", False):
@@ -1352,6 +1352,6 @@ class GoogleDriveSource(BaseSource):
             raise
         except Exception as e:
             self.logger.warning(f"Critical error in generate_entities: {str(e)}")
-            from airweave.domains.sync_pipeline.exceptions import SyncFailureError
+            from airweave.domains.sync_pipeline.exceptions import SyncFailureError  # noqa: PLC0415
 
             raise SyncFailureError(f"Google Drive sync failed: {str(e)}") from e

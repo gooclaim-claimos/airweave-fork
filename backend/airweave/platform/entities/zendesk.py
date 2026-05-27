@@ -527,7 +527,7 @@ class ZendeskAttachmentEntity(FileEntity):
         if mime_type and "/" in mime_type:
             file_type = mime_type.split("/")[0]
         else:
-            import os
+            import os  # noqa: PLC0415
 
             ext = os.path.splitext(data.get("file_name", ""))[1].lower().lstrip(".")
             file_type = ext if ext else "file"

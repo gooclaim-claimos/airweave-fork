@@ -13,13 +13,24 @@ class PostgresHealthProbe(HealthProbe):
     """Probes Postgres by executing ``SELECT 1`` on a dedicated engine."""
 
     def __init__(self, engine: AsyncEngine) -> None:
+        """Initialize the probe with a SQLAlchemy async engine.
+
+        Args:
+            engine: Async engine used to acquire a connection for the health check.
+        """
         self._engine = engine
 
     @property
     def name(self) -> str:
+        """Return the probe identifier used in health reports."""
         return "postgres"
 
     async def check(self) -> DependencyCheck:
+        """Execute ``SELECT 1`` against Postgres and measure round-trip latency.
+
+        Returns:
+            A ``DependencyCheck`` reporting status ``up`` and measured latency in ms.
+        """
         start = time.perf_counter()
         async with self._engine.connect() as conn:
             await conn.execute(text("SELECT 1"))

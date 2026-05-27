@@ -275,7 +275,7 @@ class QueryInterpretation(SearchOperation):
     def _get_source_fields(self, source_entry: Any) -> Dict[str, str]:
         """Get fields for a specific source from its entity definitions."""
         # [code blue] todo: remove container import
-        from airweave.core.container import container as app_container
+        from airweave.core.container import container as app_container  # noqa: PLC0415
 
         entries = app_container.entity_definition_registry.list_for_source(source_entry.short_name)
 

@@ -29,7 +29,7 @@ class BusinessEventTracker:
         """
         # Extract domain from URL for privacy
         try:
-            from urllib.parse import urlparse
+            from urllib.parse import urlparse  # noqa: PLC0415
 
             domain = urlparse(url).netloc
         except Exception:

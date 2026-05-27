@@ -253,7 +253,7 @@ class FakeEndpointVerifier:
     async def verify(self, url: str, timeout: float = 5.0) -> None:
         """Record the verification call. Optionally fail."""
         if self.should_fail:
-            from airweave.domains.webhooks.types import WebhooksError
+            from airweave.domains.webhooks.types import WebhooksError  # noqa: PLC0415
 
             raise WebhooksError(self.fail_message, 400)
         self.verified_urls.append(url)

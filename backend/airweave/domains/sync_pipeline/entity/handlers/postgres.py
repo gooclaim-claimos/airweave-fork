@@ -119,7 +119,7 @@ class EntityPostgresHandler(EntityActionHandler):
         max_retries: int = 3,
     ) -> None:
         """Execute batch with deadlock retry."""
-        from sqlalchemy.exc import DBAPIError
+        from sqlalchemy.exc import DBAPIError  # noqa: PLC0415
 
         for attempt in range(max_retries + 1):
             try:

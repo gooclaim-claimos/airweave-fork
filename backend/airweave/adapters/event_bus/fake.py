@@ -45,7 +45,7 @@ class FakeEventBus:
         self.events.append(event)
 
         if self._call_subscribers:
-            import fnmatch
+            import fnmatch  # noqa: PLC0415
 
             for pattern, handler in self._subscribers:
                 if fnmatch.fnmatch(event.event_type, pattern):

@@ -316,7 +316,7 @@ console.log(response.results${tier === "agentic" ? ", response.answer" : ""});`;
                 isDark ? "border-gray-800" : "border-gray-200"
             )}>
                 <a
-                    href="https://docs.airweave.ai"
+                    href="https://docs.gooclaim.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={cn("inline-flex items-center gap-1 transition-colors", linkColor)}

@@ -1087,13 +1087,13 @@ const Collections = () => {
                                     "text-base font-medium mb-1",
                                     isDark ? "text-gray-200" : "text-gray-900"
                                 )}>
-                                    No sources connected
+                                    This collection has no sources yet
                                 </h3>
                                 <p className={cn(
                                     "text-sm mb-6 max-w-sm text-center",
                                     isDark ? "text-gray-400" : "text-gray-600"
                                 )}>
-                                    Connect your first data source to start syncing and searching your data
+                                    Connect SharePoint, Google Drive, or another source to start indexing.
                                 </p>
 
                                 <TooltipProvider delayDuration={100}>

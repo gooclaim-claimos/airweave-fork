@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, Loader2, FolderPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CollectionCard } from "@/components/dashboard";
 import { useCollectionsStore } from "@/lib/stores";
@@ -256,8 +256,29 @@ const CollectionsView = () => {
               />
             ))
           ) : collections.length === 0 ? (
-            <div className="col-span-full text-center py-20 text-muted-foreground">
-              {searchQuery ? `No collections found matching "${searchQuery}"` : "No collections found"}
+            <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 text-center max-w-[480px] mx-auto">
+              {searchQuery ? (
+                <p className="text-sm text-muted-foreground">
+                  No collections found matching "{searchQuery}"
+                </p>
+              ) : (
+                <>
+                  <FolderPlus className="h-14 w-14 text-muted-foreground/60 mb-4" strokeWidth={1.5} />
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    No knowledge collections yet
+                  </h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+                    Group your synced data into searchable collections — start with one.
+                  </p>
+                  <Button
+                    onClick={handleCreateCollection}
+                    className="mt-6 h-10 px-5 font-medium"
+                  >
+                    <Plus className="h-4 w-4 mr-1.5" />
+                    Create your first collection
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
             collections.map((collection) => (

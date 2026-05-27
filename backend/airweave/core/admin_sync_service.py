@@ -368,7 +368,7 @@ class AdminSyncService:
 
         start = time.monotonic()
         # [code blue] todo: inject arf_service once admin domain is extracted
-        from airweave.core import container as container_mod
+        from airweave.core import container as container_mod  # noqa: PLC0415
 
         arf_service = container_mod.container.arf_service
 
@@ -447,7 +447,7 @@ class AdminSyncService:
                     all_tags_map[row.sync_id].update(tags)
 
         # Convert to sorted lists
-        all_tags_map = {sync_id: sorted(list(tag_set)) for sync_id, tag_set in all_tags_map.items()}
+        all_tags_map = {sync_id: sorted(tag_set) for sync_id, tag_set in all_tags_map.items()}
         timings["all_tags"] = (time.monotonic() - start) * 1000
         return all_tags_map
 
@@ -570,7 +570,7 @@ class AdminSyncService:
         self, collection_id: UUID, syncs: List[Sync], ctx: ApiContext
     ) -> Dict[UUID, Optional[int]]:
         """Count Vespa documents for all syncs in a collection (reuse client)."""
-        from airweave.platform.destinations.vespa import VespaDestination
+        from airweave.platform.destinations.vespa import VespaDestination  # noqa: PLC0415
 
         try:
             # Create destination once for the collection
@@ -593,7 +593,8 @@ class AdminSyncService:
                         yql = (
                             f"select * from sources {schemas} "
                             f"where airweave_system_metadata_sync_id contains '{sync.id}' "
-                            f"and airweave_system_metadata_collection_id contains '{collection_id}' "
+                            f"and airweave_system_metadata_collection_id "
+                            f"contains '{collection_id}' "
                             f"limit 0"
                         )
 

@@ -61,7 +61,7 @@ export const OAuthRedirectView: React.FC = () => {
 
             <div>
               <p className="text-gray-600 dark:text-gray-400">
-                Click below to authorize Airweave to access your {sourceName} data
+                Click below to authorize Gooclaim OS to access your {sourceName} data
               </p>
             </div>
 

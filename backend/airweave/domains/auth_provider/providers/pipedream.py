@@ -287,6 +287,7 @@ class PipedreamAuthProvider(BaseAuthProvider):
             source_short_name: The short name of the source to get credentials for
             source_auth_config_fields: The fields required for the source auth config
             optional_fields: Fields that can be skipped if not available in Pipedream
+            source_connection_id: Optional source connection ID for scoped lookup/logging.
 
         Returns:
             Credentials dictionary for the source

@@ -135,7 +135,7 @@ class ApiContext(BaseContext):
         Returns:
             Dict containing all fields needed to reconstruct context in activities.
         """
-        from airweave.core.config import settings
+        from airweave.core.config import settings  # noqa: PLC0415
 
         return {
             "request_id": self.request_id,

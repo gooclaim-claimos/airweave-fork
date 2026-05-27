@@ -90,13 +90,13 @@ class OrganizationRepository(OrganizationRepositoryProtocol):
 
     async def delete(self, db: AsyncSession, *, organization_id: UUID) -> Organization:
         """Delete org without auto-commit (safe inside UoW)."""
-        from sqlalchemy import delete as sa_delete
+        from sqlalchemy import delete as sa_delete  # noqa: PLC0415
 
         stmt = select(Organization).where(Organization.id == organization_id)
         result = await db.execute(stmt)
         org = result.scalar_one_or_none()
         if not org:
-            from airweave.core.exceptions import NotFoundException
+            from airweave.core.exceptions import NotFoundException  # noqa: PLC0415
 
             raise NotFoundException(f"Organization with ID {organization_id} not found")
 
@@ -168,7 +168,7 @@ class UserOrganizationRepository(UserOrganizationRepositoryProtocol):
         self, db: AsyncSession, *, user_id: UUID
     ) -> list[tuple[UserOrganization, str | None]]:
         """Return ``(UserOrganization, auth0_org_id)`` for all of a user's memberships."""
-        from airweave.models.organization import Organization as OrgModel
+        from airweave.models.organization import Organization as OrgModel  # noqa: PLC0415
 
         stmt = (
             select(UserOrganization, OrgModel.auth0_org_id)

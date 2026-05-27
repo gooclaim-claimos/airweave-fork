@@ -467,7 +467,7 @@ class BillingService(BillingServiceProtocol):
                 update_price_immediately=update_price,
             )
 
-            from airweave.schemas.billing_period import BillingTransition
+            from airweave.schemas.billing_period import BillingTransition  # noqa: PLC0415
 
             now = datetime.now(timezone.utc)
 
@@ -571,7 +571,7 @@ class BillingService(BillingServiceProtocol):
                     ctx=ctx,
                 )
 
-                from airweave.schemas.billing_period import BillingTransition
+                from airweave.schemas.billing_period import BillingTransition  # noqa: PLC0415
 
                 now = datetime.now(timezone.utc)
                 period_end = now + relativedelta(months=1)

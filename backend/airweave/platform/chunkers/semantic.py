@@ -99,8 +99,8 @@ class SemanticChunker(BaseChunker):
             return
 
         try:
-            from chonkie import SemanticChunker as ChonkieSemanticChunker
-            from chonkie import TokenChunker
+            from chonkie import SemanticChunker as ChonkieSemanticChunker  # noqa: PLC0415
+            from chonkie import TokenChunker  # noqa: PLC0415
 
             # Get tokenizer wrapper for our own token counting
             tokenizer = get_tokenizer(self.TOKENIZER)

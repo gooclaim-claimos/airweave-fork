@@ -3,9 +3,7 @@ FROM python:3.13.12-slim@sha256:8bc60ca09afaa8ea0d6d1220bde073bacfedd66a4bf8129c
 WORKDIR /app
 
 # Install system dependencies and poetry in one optimized layer
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     g++ \
@@ -25,11 +23,11 @@ RUN poetry config virtualenvs.create false \
 COPY pyproject.toml poetry.lock ./
 
 # Install dependencies with cache mount
-RUN --mount=type=cache,target=/opt/poetry-cache \
-    poetry install --only=main --no-interaction --no-ansi --no-root
+RUN poetry install --only=main --no-interaction --no-ansi --no-root
 
 # Copy entrypoint script with proper permissions
-COPY --chmod=755 entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod 755 /app/entrypoint.sh
 
 # Copy application code
 COPY . .

@@ -522,7 +522,7 @@ class SharePoint2019V2Source(BaseSource):
         files: FileService | None,
     ) -> AsyncGenerator[BaseEntity, None]:
         """Full crawl of the SharePoint site hierarchy."""
-        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
         ldap_client = LDAPClient(
             server=self._ad_server,
@@ -677,7 +677,7 @@ class SharePoint2019V2Source(BaseSource):
         files: FileService | None,
     ) -> AsyncGenerator[BaseEntity, None]:
         """Incremental sync using SharePoint GetChanges API."""
-        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
         cursor_data = cursor.data if cursor else {}
         change_token = cursor_data.get("site_collection_change_token", "")
@@ -805,7 +805,7 @@ class SharePoint2019V2Source(BaseSource):
         node_selections: list[NodeSelectionData],
     ) -> AsyncGenerator[BaseEntity, None]:
         """Targeted sync: fetch only the nodes specified in node_selections."""
-        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
         ldap_client = LDAPClient(
             server=self._ad_server,
@@ -1032,7 +1032,7 @@ class SharePoint2019V2Source(BaseSource):
             raise
 
         try:
-            from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+            from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
             ldap_client = LDAPClient(
                 server=self._ad_server,
@@ -1097,7 +1097,7 @@ class SharePoint2019V2Source(BaseSource):
             )
             return None
 
-        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
         self.logger.info("AD configuration found - will expand AD groups via LDAP")
         return LDAPClient(
@@ -1214,7 +1214,7 @@ class SharePoint2019V2Source(BaseSource):
 
     async def get_acl_changes(self, dirsync_cookie: str = ""):
         """Get incremental ACL membership changes via AD DirSync."""
-        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient
+        from airweave.platform.sources.sharepoint2019v2.ldap import LDAPClient  # noqa: PLC0415
 
         if not dirsync_cookie:
             cursor_data = self.cursor.data if self.cursor else {}

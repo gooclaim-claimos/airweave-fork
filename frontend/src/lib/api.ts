@@ -129,28 +129,26 @@ const getPostHogSessionId = (): string | undefined => {
   return undefined;
 };
 
-// Get headers with optional organization context
+// Get headers — Gooclaim fork uses cookie-only auth.
 const getHeaders = async (): Promise<Record<string, string>> => {
-  const token = await tokenProvider.getToken();
   const { currentOrganization } = useOrganizationStore.getState();
 
-  const headers: Record<string, string> = {
-    ...API_CONFIG.headers,
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
+  // Gooclaim fork — do NOT send `Authorization: Bearer <token>`. In
+  // local-dev mode (which the Gooclaim bundle ships with — auth.ts
+  // resolves authConfig.authEnabled from window.ENV.AUTH_ENABLED=false)
+  // auth-context.getToken() returns the literal string "dev-mode-token".
+  // That value would land in the Authorization header and
+  // gooclaim-auth's `_extract_bridge_token` prioritizes Authorization
+  // over the cookie — so a request that *would* have validated by
+  // cookie gets a 401 instead, racing with not-yet-ready getToken()
+  // calls that returned null. The browser sees alternating
+  // 200/401/Failed-to-fetch on Sources / Billing / API Keys / etc.
+  //
+  // Same reasoning for X-Organization-ID — nginx auth-request injects
+  // the canonical X-Organization-Id from the bridge JWT.
+  void currentOrganization;
 
-  // Add organization context header if available
-  if (currentOrganization) {
-    headers['X-Organization-ID'] = currentOrganization.id;
-  }
-
-  // Add PostHog session ID if available
-  const sessionId = getPostHogSessionId();
-  if (sessionId) {
-    headers['X-Airweave-Session-ID'] = sessionId;
-  }
-
-  return headers;
+  return { ...API_CONFIG.headers };
 };
 
 // Helper function to clear organization-specific state when auto-switching
@@ -253,6 +251,11 @@ const makeRequest = async <T>(
       method,
       headers,
       signal: options?.signal,
+      // Send cookies on every request — required for the Gooclaim bridge
+      // JWT flow (cookie 'gooclaim_airweave_bridge' set by gooclaim-auth's
+      // /v1/auth/airweave-sso-mint). Without this, browser strips the
+      // cookie from XHR and nginx auth-request 401s every API call.
+      credentials: 'include',
     };
 
     // Add body for methods that support it
@@ -446,12 +449,12 @@ export const apiClient = {
       // Ensure each (re)connect uses fresh headers and one-shot token refresh
       fetch: async (input, init) => {
         let headers = await getHeaders();
-        let res = await fetch(input, { ...init, headers });
+        let res = await fetch(input, { ...init, headers, credentials: 'include' });
 
         if ((res.status === 401 || res.status === 403) && tokenProvider.clearToken) {
           tokenProvider.clearToken();
           headers = await getHeaders();
-          res = await fetch(input, { ...init, headers });
+          res = await fetch(input, { ...init, headers, credentials: 'include' });
         }
         return res;
       },

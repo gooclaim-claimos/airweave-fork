@@ -176,7 +176,7 @@ class FakeBillingPeriodRepository:
                 range_end,
             )
         )
-        from airweave.schemas.billing_period import BillingPeriodStatus
+        from airweave.schemas.billing_period import BillingPeriodStatus  # noqa: PLC0415
 
         results = []
         for p in self._store:

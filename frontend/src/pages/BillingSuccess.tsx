@@ -98,8 +98,8 @@ export const BillingSuccess = () => {
         {/* Logo header */}
         <div className="mb-12 text-center">
           <img
-            src={isDark ? "/logo-airweave-darkbg.svg" : "/logo-airweave-lightbg.svg"}
-            alt="Airweave"
+            src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+            alt="Gooclaim"
             className="h-8 w-auto mx-auto mb-2"
             style={{ maxWidth: '180px' }}
           />
@@ -126,7 +126,7 @@ export const BillingSuccess = () => {
                 <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-500" />
               </div>
               <div className="space-y-3">
-                <h1 className="text-2xl font-normal">Welcome to Airweave!</h1>
+                <h1 className="text-2xl font-normal">Welcome to Gooclaim Knowledge Sources!</h1>
                 <p className="text-muted-foreground">
                   Your subscription is now active
                 </p>

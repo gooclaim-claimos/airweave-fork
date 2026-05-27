@@ -16,7 +16,7 @@ const AuthProviders = () => {
                     <div className="flex space-x-2">
                         <Button
                             variant="outline"
-                            onClick={() => window.open("https://docs.airweave.ai/auth-providers", "_blank")}
+                            onClick={() => window.open("https://docs.gooclaim.com/auth-providers", "_blank")}
                         >
                             <Lightbulb className="h-4 w-4" />
                             Learn More

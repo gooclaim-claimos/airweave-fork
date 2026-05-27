@@ -14,8 +14,8 @@ export const BillingCancel = () => {
         {/* Logo header */}
         <div className="mb-12 text-center">
           <img
-            src={isDark ? "/logo-airweave-darkbg.svg" : "/logo-airweave-lightbg.svg"}
-            alt="Airweave"
+            src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+            alt="Gooclaim"
             className="h-8 w-auto mx-auto mb-2"
             style={{ maxWidth: '180px' }}
           />
@@ -39,7 +39,7 @@ export const BillingCancel = () => {
 
           <div className="space-y-6">
             <p className="text-sm text-muted-foreground">
-              You can still use Airweave with limited features, or complete your subscription setup anytime from your organization settings.
+              You can still use Gooclaim OS with limited features, or complete your subscription setup anytime from your organization settings.
             </p>
 
             <button

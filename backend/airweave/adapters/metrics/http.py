@@ -32,6 +32,13 @@ class PrometheusHttpMetrics(HttpMetrics):
     """Prometheus-backed HTTP metrics collection."""
 
     def __init__(self, registry: CollectorRegistry | None = None) -> None:
+        """Initialize Prometheus HTTP metric collectors on a dedicated registry.
+
+        Args:
+            registry: Optional CollectorRegistry to attach metrics to. If not
+                provided, a fresh CollectorRegistry is created so API metrics
+                stay isolated from the default global registry.
+        """
         self._registry = registry or CollectorRegistry()
 
         self._requests_total = Counter(
@@ -66,9 +73,19 @@ class PrometheusHttpMetrics(HttpMetrics):
     # -- HttpMetrics protocol methods --
 
     def inc_in_progress(self, method: str) -> None:
+        """Increment the in-progress gauge for the given HTTP method.
+
+        Args:
+            method: HTTP method label (e.g. ``GET``, ``POST``).
+        """
         self._in_progress.labels(method=method).inc()
 
     def dec_in_progress(self, method: str) -> None:
+        """Decrement the in-progress gauge for the given HTTP method.
+
+        Args:
+            method: HTTP method label (e.g. ``GET``, ``POST``).
+        """
         self._in_progress.labels(method=method).dec()
 
     def observe_request(
@@ -78,6 +95,17 @@ class PrometheusHttpMetrics(HttpMetrics):
         status_code: str,
         duration: float,
     ) -> None:
+        """Record a completed HTTP request.
+
+        Increments the request counter and observes the request duration
+        histogram with the supplied labels.
+
+        Args:
+            method: HTTP method label.
+            endpoint: Normalized route/endpoint label.
+            status_code: HTTP status code as a string label.
+            duration: Request duration in seconds.
+        """
         self._requests_total.labels(
             method=method,
             endpoint=endpoint,
@@ -86,6 +114,13 @@ class PrometheusHttpMetrics(HttpMetrics):
         self._request_duration.labels(method=method, endpoint=endpoint).observe(duration)
 
     def observe_response_size(self, method: str, endpoint: str, size: int) -> None:
+        """Observe an HTTP response size in the response-size histogram.
+
+        Args:
+            method: HTTP method label.
+            endpoint: Normalized route/endpoint label.
+            size: Response size in bytes.
+        """
         self._response_size.labels(method=method, endpoint=endpoint).observe(size)
 
 
@@ -117,14 +152,25 @@ class FakeHttpMetrics(HttpMetrics):
     """In-memory spy implementing the HttpMetrics protocol."""
 
     def __init__(self) -> None:
+        """Initialize empty in-memory stores for recorded HTTP metrics."""
         self.in_progress: dict[str, int] = {}
         self.requests: list[RequestRecord] = []
         self.response_sizes: list[ResponseSizeRecord] = []
 
     def inc_in_progress(self, method: str) -> None:
+        """Increment the in-progress counter for the given HTTP method.
+
+        Args:
+            method: HTTP method label.
+        """
         self.in_progress[method] = self.in_progress.get(method, 0) + 1
 
     def dec_in_progress(self, method: str) -> None:
+        """Decrement the in-progress counter for the given HTTP method.
+
+        Args:
+            method: HTTP method label.
+        """
         self.in_progress[method] = self.in_progress.get(method, 0) - 1
 
     def observe_request(
@@ -134,9 +180,24 @@ class FakeHttpMetrics(HttpMetrics):
         status_code: str,
         duration: float,
     ) -> None:
+        """Record an observed HTTP request for later inspection in tests.
+
+        Args:
+            method: HTTP method label.
+            endpoint: Normalized route/endpoint label.
+            status_code: HTTP status code as a string label.
+            duration: Request duration in seconds.
+        """
         self.requests.append(RequestRecord(method, endpoint, status_code, duration))
 
     def observe_response_size(self, method: str, endpoint: str, size: int) -> None:
+        """Record an observed HTTP response size for later inspection in tests.
+
+        Args:
+            method: HTTP method label.
+            endpoint: Normalized route/endpoint label.
+            size: Response size in bytes.
+        """
         self.response_sizes.append(ResponseSizeRecord(method, endpoint, size))
 
     # -- test helpers --

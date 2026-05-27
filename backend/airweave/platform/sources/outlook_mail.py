@@ -205,7 +205,7 @@ class OutlookMailSource(BaseSource):
         try:
             received_date = datetime.fromisoformat(received_date_str.replace("Z", "+00:00"))
             after_dt = datetime.strptime(after_date, "%Y/%m/%d")
-            from datetime import timezone
+            from datetime import timezone  # noqa: PLC0415
 
             after_dt = after_dt.replace(tzinfo=timezone.utc)
 

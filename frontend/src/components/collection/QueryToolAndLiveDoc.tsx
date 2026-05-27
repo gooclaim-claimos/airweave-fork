@@ -320,7 +320,7 @@ airweave-mcp-search`;
         <div className="text-xs flex items-center gap-2">
             <span className={isDark ? "text-gray-400" : "text-gray-500"}>→</span>
             <a
-                href="https://docs.airweave.ai/api-reference/collections/search-collection-advanced-collections-readable-id-search-post?explorer=true"
+                href="https://docs.gooclaim.com/api-reference/collections/search-collection-advanced-collections-readable-id-search-post?explorer=true"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
@@ -364,7 +364,7 @@ airweave-mcp-search`;
                         <h2 className="text-xl font-medium text-foreground">
                             Query your collection
                             <a
-                                href="https://docs.airweave.ai/search"
+                                href="https://docs.gooclaim.com/search"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={cn(
@@ -970,7 +970,7 @@ airweave-mcp-search`;
                                                 language="python"
                                                 badgeText="SDK"
                                                 badgeColor="bg-blue-600 hover:bg-blue-600"
-                                                title="AirweaveSDK"
+                                                title="Python"
                                                 footerContent={docLinkFooter}
                                                 height="100%"
                                                 className="h-full rounded-none border-none"
@@ -983,7 +983,7 @@ airweave-mcp-search`;
                                                 language="javascript"
                                                 badgeText="SDK"
                                                 badgeColor="bg-blue-600 hover:bg-blue-600"
-                                                title="AirweaveSDKClient"
+                                                title="Node.js"
                                                 footerContent={docLinkFooter}
                                                 height="100%"
                                                 className="h-full rounded-none border-none"

@@ -1,3 +1,10 @@
+"""Type definitions for the auth provider domain.
+
+Holds the registry entry and metadata dataclasses used by the auth
+provider registry to describe every registered provider implementation
+(class references, config schema, and runtime metadata).
+"""
+
 from airweave.core.protocols.registry import BaseRegistryEntry
 from airweave.platform.configs._base import Fields
 

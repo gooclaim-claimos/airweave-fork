@@ -451,7 +451,7 @@ export const repoNameValidation: FieldValidation<string> = {
     if (!trimmed.includes('/')) {
       return {
         isValid: false,
-        hint: 'Repository must be in owner/repo format (e.g., airweave-ai/airweave)',
+        hint: 'Repository must be in owner/repo format (e.g., gooclaim.com/airweave)',
         severity: 'warning'
       };
     }
@@ -460,7 +460,7 @@ export const repoNameValidation: FieldValidation<string> = {
     if (parts.length !== 2) {
       return {
         isValid: false,
-        hint: 'Repository must be in owner/repo format (e.g., airweave-ai/airweave)',
+        hint: 'Repository must be in owner/repo format (e.g., gooclaim.com/airweave)',
         severity: 'warning'
       };
     }

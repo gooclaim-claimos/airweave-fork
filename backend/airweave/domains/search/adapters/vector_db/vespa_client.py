@@ -60,7 +60,7 @@ class VespaVectorDB:
     @classmethod
     async def create(cls, ctx: ApiContext) -> VespaVectorDB:
         """Create and connect to Vespa."""
-        from vespa.application import Vespa
+        from vespa.application import Vespa  # noqa: PLC0415
 
         vespa_url = settings.VESPA_URL
         vespa_port = settings.VESPA_PORT

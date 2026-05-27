@@ -308,7 +308,7 @@ class BaseSource:
         max_queue_size: int = 100,
     ) -> AsyncGenerator[BaseEntity, None]:
         """Generic bounded-concurrency driver."""
-        import asyncio as _asyncio
+        import asyncio as _asyncio  # noqa: PLC0415
 
         pool = self._create_bounded_pool(
             items, worker, batch_size=batch_size, max_queue_size=max_queue_size
@@ -349,7 +349,7 @@ class BaseSource:
         max_queue_size: int,
     ) -> Dict[str, Any]:
         """Create a bounded producer + fixed worker pool."""
-        import asyncio as _asyncio
+        import asyncio as _asyncio  # noqa: PLC0415
 
         results: _asyncio.Queue = _asyncio.Queue(maxsize=max_queue_size)
         items_queue: _asyncio.Queue = _asyncio.Queue(maxsize=batch_size)
@@ -359,7 +359,7 @@ class BaseSource:
         total_items_cell: list[int] = [0]
 
         async def _producer() -> None:
-            import time as _time
+            import time as _time  # noqa: PLC0415
 
             try:
                 idx = 0

@@ -15,7 +15,7 @@ class HtmlConverter(BaseTextConverter):
     async def convert_batch(self, file_paths: List[str]) -> Dict[str, str]:
         """Convert HTML files to markdown text."""
         try:
-            from html_to_markdown import convert
+            from html_to_markdown import convert  # noqa: PLC0415
         except ImportError:
             logger.error("html-to-markdown package not installed for HTML conversion")
             raise EntityProcessingError(

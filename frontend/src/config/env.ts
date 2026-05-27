@@ -25,3 +25,9 @@ export const env: Env = {
     (import.meta.env.MODE === 'development'),
   VITE_ENABLE_AUTH: window.ENV?.ENABLE_AUTH || import.meta.env.VITE_ENABLE_AUTH || 'true',
 };
+
+// Gooclaim-mode flag. When VITE_GOOCLAIM_MODE=true, the Airweave fork renders
+// as the Gooclaim Sources surface — wordmark, nav, and copy adapt per
+// tasks/Review-Task/Gooclaim-Airweave-Sources/Frontend/. In open-source
+// Airweave builds this stays false and the original UX is preserved.
+export const IS_GOOCLAIM_TENANT = import.meta.env.VITE_GOOCLAIM_MODE === 'true';

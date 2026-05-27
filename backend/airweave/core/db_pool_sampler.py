@@ -32,6 +32,13 @@ class DbPoolSampler:
         metrics: DbPoolMetrics,
         interval: float = 5.0,
     ) -> None:
+        """Store pool/metrics references and prepare the sampling task slot.
+
+        Args:
+            pool: SQLAlchemy pool exposing size/checkedout/checkedin/overflow.
+            metrics: ``DbPoolMetrics`` implementation that receives samples.
+            interval: Seconds between successive pool samples.
+        """
         self._pool = pool
         self._metrics = metrics
         self._interval = interval

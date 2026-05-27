@@ -104,7 +104,7 @@ def _load_truetype_font(size: int):
     (requires Pillow >= 10.1) so CI environments always get a real
     sized font instead of a tiny bitmap.
     """
-    from PIL import ImageFont
+    from PIL import ImageFont  # noqa: PLC0415
 
     # Common TrueType font paths by platform
     _FONT_CANDIDATES = [
@@ -140,7 +140,7 @@ def _build_ole2_doc(text_bytes: bytes) -> bytes:
     and data sectors. The resulting file is a valid OLE2 container with a
     ``WordDocument`` stream that our extractor can parse.
     """
-    import struct
+    import struct  # noqa: PLC0415
 
     SECTOR_SIZE = 512
     ENDOFCHAIN = 0xFFFFFFFE
@@ -344,7 +344,7 @@ class ContentGenerator:
         Returns:
             Tuple of (pdf_bytes, page_count).
         """
-        from fpdf import FPDF
+        from fpdf import FPDF  # noqa: PLC0415
 
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
@@ -387,8 +387,8 @@ class ContentGenerator:
         Returns:
             Tuple of (pdf_bytes, page_count).
         """
-        from fpdf import FPDF
-        from PIL import Image, ImageDraw
+        from fpdf import FPDF  # noqa: PLC0415
+        from PIL import Image, ImageDraw  # noqa: PLC0415
 
         pdf = FPDF()
         pdf.set_auto_page_break(auto=False)
@@ -452,7 +452,7 @@ class ContentGenerator:
         Returns:
             Tuple of (pptx_bytes, slide_count).
         """
-        from pptx import Presentation
+        from pptx import Presentation  # noqa: PLC0415
 
         prs = Presentation()
 
@@ -516,7 +516,7 @@ class ContentGenerator:
         Returns:
             Tuple of (docx_bytes, approximate_page_count).
         """
-        from docx import Document
+        from docx import Document  # noqa: PLC0415
 
         doc = Document()
 

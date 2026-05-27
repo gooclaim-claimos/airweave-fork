@@ -78,7 +78,7 @@ class FakeConnectService(ConnectServiceProtocol):
         self._calls.append(("get_source", short_name, session))
         source = self._source_by_name.get(short_name)
         if not source:
-            from fastapi import HTTPException
+            from fastapi import HTTPException  # noqa: PLC0415
 
             raise HTTPException(status_code=404, detail=f"Source not found: {short_name}")
         return source
@@ -100,7 +100,7 @@ class FakeConnectService(ConnectServiceProtocol):
         self._calls.append(("get_source_connection", connection_id, session))
         conn = self._connection_by_id.get(connection_id)
         if not conn:
-            from fastapi import HTTPException
+            from fastapi import HTTPException  # noqa: PLC0415
 
             raise HTTPException(status_code=404, detail="Source connection not found")
         return conn
@@ -114,7 +114,7 @@ class FakeConnectService(ConnectServiceProtocol):
         self._calls.append(("delete_source_connection", connection_id, session))
         conn = self._connection_by_id.pop(connection_id, None)
         if not conn:
-            from fastapi import HTTPException
+            from fastapi import HTTPException  # noqa: PLC0415
 
             raise HTTPException(status_code=404, detail="Source connection not found")
         return conn
