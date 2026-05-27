@@ -5,6 +5,7 @@
 .env
 .env.*
 !.env.example
+!frontend/.env.production
 .cursor/mcp.json
 
 # Agentic search debug dump
