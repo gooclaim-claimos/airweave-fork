@@ -829,7 +829,7 @@ export const BillingSettings = ({ organizationId }: BillingSettingsProps) => {
                     </Button>
                   ) : isEnterprise ? (
                     <Button
-                      onClick={() => window.open('https://cal.com/lennert-airweave/airweave-demo', '_blank')}
+                      onClick={() => window.open('https://cal.com/lennert-gooclaim.comrweave-demo', '_blank')}
                       variant="outline"
                       className="w-full h-9 text-xs border-border mt-auto hover:border-primary/80 hover:bg-primary/10 hover:text-primary"
                     >
@@ -863,7 +863,7 @@ export const BillingSettings = ({ organizationId }: BillingSettingsProps) => {
       <div className="border-t border-border pt-6">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <HelpCircle className="w-3.5 h-3.5" />
-          <span>Questions about billing? Contact us at <a href="mailto:hello@airweave.ai" className="text-foreground hover:underline">hello@airweave.ai</a></span>
+          <span>Questions about billing? Contact us at <a href="mailto:hello@gooclaim.com" className="text-foreground hover:underline">hello@gooclaim.com</a></span>
         </div>
       </div>
 

@@ -53,7 +53,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <PostHogProvider>
-        <ThemeProvider defaultTheme="dark" storageKey="airweave-ui-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="gooclaim-ui-theme">
           <BrowserRouter>
             <Auth0ProviderWithNavigation>
               <AuthProvider>

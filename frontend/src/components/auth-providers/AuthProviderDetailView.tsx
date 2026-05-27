@@ -210,7 +210,7 @@ export const AuthProviderDetailView: React.FC<AuthProviderDetailViewProps> = ({
     const { canManageOrganization } = useOrganizationContext();
     const canManage = canManageOrganization();
 
-    const awLogoSrc = isDark ? "/airweave-logo-svg-white-darkbg.svg" : "/airweave-logo-svg-lightbg-blacklogo.svg";
+    const awLogoSrc = isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg";
     const { error: awLogoError, onError: onAwLogoError } = useImageFallback(awLogoSrc);
 
     const providerIconSrc = getAuthProviderIconUrl(authProviderShortName || "", resolvedTheme);
@@ -566,7 +566,7 @@ export const AuthProviderDetailView: React.FC<AuthProviderDetailViewProps> = ({
                                             ) : (
                                                 <img
                                                     src={awLogoSrc}
-                                                    alt="Airweave"
+                                                    alt="Gooclaim"
                                                     className="w-full h-full object-contain"
                                                     onError={onAwLogoError}
                                                 />

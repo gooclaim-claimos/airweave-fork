@@ -820,9 +820,9 @@ export const SourceConfigView: React.FC<SourceConfigViewProps> = ({ humanReadabl
                                     isDark ? "text-gray-400" : "text-gray-600"
                                   )}>
                                     {isOAuth1() ? (
-                                      <>OAuth1 credentials (Consumer Key and Consumer Secret) are like a special key that allows Airweave to securely access your {sourceName} data on your behalf. You create these in {sourceName}'s developer settings, and they ensure only authorized applications can connect to your account.</>
+                                      <>OAuth1 credentials (Consumer Key and Consumer Secret) are like a special key that allows Gooclaim OS to securely access your {sourceName} data on your behalf. You create these in {sourceName}'s developer settings, and they ensure only authorized applications can connect to your account.</>
                                     ) : (
-                                      <>OAuth credentials (Client ID and Client Secret) are like a special key that allows Airweave to securely access your {sourceName} data on your behalf. You create these in {sourceName}'s developer settings, and they ensure only authorized applications can connect to your account.</>
+                                      <>OAuth credentials (Client ID and Client Secret) are like a special key that allows Gooclaim OS to securely access your {sourceName} data on your behalf. You create these in {sourceName}'s developer settings, and they ensure only authorized applications can connect to your account.</>
                                     )}
                                   </p>
                                   <div className={cn(
@@ -861,7 +861,7 @@ export const SourceConfigView: React.FC<SourceConfigViewProps> = ({ humanReadabl
                                 Need help setting up OAuth?
                               </span>
                               <a
-                                href={`https://docs.airweave.ai/docs/connectors/${selectedSource.replace(/_/g, '-')}`}
+                                href={`https://docs.gooclaim.com/docs/connectors/${selectedSource.replace(/_/g, '-')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={cn(
@@ -956,7 +956,7 @@ export const SourceConfigView: React.FC<SourceConfigViewProps> = ({ humanReadabl
                                     "text-xs leading-relaxed",
                                     isDark ? "text-gray-400" : "text-gray-600"
                                   )}>
-                                    By default, Airweave uses its own OAuth app to connect. Enable this if you want to use your own OAuth application to show your own name and logo.
+                                    By default, Gooclaim OS uses its own OAuth app to connect. Enable this if you want to use your own OAuth application to show your own name and logo.
                                   </p>
                                 </div>
                               </div>
@@ -967,7 +967,7 @@ export const SourceConfigView: React.FC<SourceConfigViewProps> = ({ humanReadabl
                               )}>
                                 Optional: Use your own OAuth app for enhanced control.{' '}
                                 <a
-                                  href="https://docs.airweave.ai/direct-oauth#byoc-bring-your-own-credentials"
+                                  href="https://docs.gooclaim.com/direct-oauth#byoc-bring-your-own-credentials"
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={cn(
@@ -1121,7 +1121,7 @@ export const SourceConfigView: React.FC<SourceConfigViewProps> = ({ humanReadabl
                       ? "bg-gray-900/50 text-gray-500 border border-gray-800"
                       : "bg-gray-50 text-gray-400 border border-gray-100"
                   )}>
-                    Default (managed by Airweave)
+                    Default (managed by Gooclaim)
                   </div>
                 )}
               </div>

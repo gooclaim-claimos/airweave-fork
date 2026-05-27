@@ -1,5 +1,5 @@
 /**
- * Available feature flags in Airweave.
+ * Available feature flags in Gooclaim.
  * Must match backend FeatureFlag enum exactly.
  */
 export const FeatureFlags = {

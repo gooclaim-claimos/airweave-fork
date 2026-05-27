@@ -193,8 +193,18 @@ const Dashboard = () => {
                   </div>
                 </div>
               ) : sources.length === 0 ? (
-                <div className="col-span-full text-center py-10 text-muted-foreground">
-                  No sources found
+                <div className="col-span-full flex flex-col items-center justify-center py-16 px-6 text-center max-w-[480px] mx-auto">
+                  <img
+                    src="/gooclaim-logo.svg"
+                    alt="Gooclaim"
+                    className="h-14 w-14 mb-4 object-contain"
+                  />
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    Welcome to Gooclaim OS · Data Sources
+                  </h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+                    Start by connecting a source (SharePoint, Google Drive, or any of 50+ others) — synced docs become searchable across all collections.
+                  </p>
                 </div>
               ) : (
                 <>
@@ -228,46 +238,35 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold">Learn & Explore</h3>
             <div className="space-y-3">
               <ExampleProjectCard
-                id="quickstart-guide"
-                title="Quickstart Guide"
-                description="Get started with Airweave in minutes. Learn how to create collections, connect data sources, and search your data."
+                id="knowledge-sources-quickstart"
+                title="Knowledge Sources Quickstart"
+                description="Connect your first source in 4 steps — SharePoint, Drive, Confluence, S3, or custom APIs — and verify queries from your workflows."
                 tags={["Documentation", "Getting Started"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://docs.airweave.ai/quickstart', '_blank');
-                }}
-              />
-
-              <ExampleProjectCard
-                id="mcp-server"
-                title="MCP Server Integration"
-                description="Serve your Airweave collection over an MCP server so clients like Cursor or Claude can query it."
-                tags={["Documentation"]}
-                icon={<FileText className="h-5 w-5 text-primary" />}
-                onClick={() => {
-                  window.open('https://docs.airweave.ai/mcp-server', '_blank');
+                  window.open('https://api.docs.gooclaim.com/home/knowledge-layer/knowledge-sources-quickstart', '_blank');
                 }}
               />
 
               <ExampleProjectCard
                 id="advanced-search"
                 title="Advanced Search Guide"
-                description="Master Airweave's powerful search capabilities including AI-powered query expansion, hybrid search, metadata filtering, and AI-generated answers."
+                description="Hybrid search, AI query expansion, metadata filtering, and AI-generated answers across your Knowledge Layer."
                 tags={["Documentation", "Search"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://docs.airweave.ai/search', '_blank');
+                  window.open('https://api.docs.gooclaim.com/home/knowledge-layer/advanced-search', '_blank');
                 }}
               />
 
               <ExampleProjectCard
-                id="auth-providers"
-                title="Authentication Providers"
-                description="Reuse existing connections from third-party platforms instead of requiring users to authenticate again."
+                id="authentication"
+                title="Authentication"
+                description="How Gooclaim signs requests, how the bridge cookie binds Sources to your Portal session, and where machine tokens fit in."
                 tags={["Documentation"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://docs.airweave.ai/auth-providers', '_blank');
+                  window.open('https://api.docs.gooclaim.com/home/get-started/authentication', '_blank');
                 }}
               />
 

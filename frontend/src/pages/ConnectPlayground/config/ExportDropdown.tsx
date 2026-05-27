@@ -15,7 +15,7 @@ interface ExportDropdownProps {
 }
 
 function buildMarkdown(config: PlaygroundConfig): string {
-  return `# Airweave Connect Integration
+  return `# Gooclaim OS Connect Integration
 
 ## Server-side (Python)
 
@@ -45,11 +45,11 @@ ${generateVanillaClient(config)}
 
 function buildCursorRules(config: PlaygroundConfig): string {
   return `---
-description: Airweave Connect integration guide
+description: Gooclaim OS Connect integration guide
 globs: "**/*.{ts,tsx,py}"
 ---
 
-# Airweave Connect
+# Gooclaim OS Connect
 
 Use the @airweave/connect-react SDK to embed the Connect widget.
 

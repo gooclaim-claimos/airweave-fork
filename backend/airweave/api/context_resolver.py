@@ -257,9 +257,20 @@ class ContextResolver:
     ) -> schemas.Organization:
         org = await self._cache.get_organization(uuid.UUID(organization_id))
         if not org:
-            org = await self._orgs.get(
-                db, id=uuid.UUID(organization_id), skip_access_validation=True, enrich=True
-            )
+            # crud.organization.get() raises NotFoundException when missing
+            # (NOT returns None), so we must catch the exception here to
+            # reach the gooclaim auto-provision path below — otherwise the
+            # exception propagates straight up as 404 to the caller and
+            # the EXTERNAL_ORG_ID_PROVISIONING flag becomes a no-op.
+            try:
+                org = await self._orgs.get(
+                    db,
+                    id=uuid.UUID(organization_id),
+                    skip_access_validation=True,
+                    enrich=True,
+                )
+            except NotFoundException:
+                org = None
             if not org:
                 # Gooclaim fork — auto-provision org for trusted external
                 # callers when EXTERNAL_ORG_ID_PROVISIONING is on. The nginx

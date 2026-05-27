@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import {
   Building2,
   Users,
@@ -26,6 +26,7 @@ import { useOrganizationStore } from '@/lib/stores/organizations';
 import { useAuth } from '@/lib/auth-context';
 import authConfig from '@/config/auth';
 import { posthog } from '@/lib/posthog-provider';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 // Reddit Pixel type declaration
 declare global {
@@ -153,6 +154,13 @@ const SUBSCRIPTION_PLANS = [
 ];
 
 export const Onboarding = () => {
+  // Gooclaim tenants skip the Airweave onboarding wizard entirely — they arrive
+  // via Portal/Console launchers with org + role already provisioned. Defense
+  // in depth alongside the App.tsx route guard.
+  if (IS_GOOCLAIM_TENANT) {
+    return <Navigate to="/" replace />;
+  }
+
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
   const { setCurrentOrganization } = useOrganizationStore();
@@ -356,8 +364,8 @@ export const Onboarding = () => {
       setCurrentOrganization(organization);
 
       // Step 3: Handle billing based on environment
-      if (!authConfig.authEnabled) {
-        // In local development, skip billing and go straight to dashboard
+      // Gooclaim mode: billing managed in Portal Usage tab — skip Stripe checkout entirely.
+      if (IS_GOOCLAIM_TENANT || !authConfig.authEnabled) {
         toast.success('Organization created successfully!');
         navigate('/');
         return;
@@ -865,7 +873,7 @@ export const Onboarding = () => {
                   key={plan.value}
                   onClick={() => {
                     if (plan.value === 'enterprise') {
-                      window.open('https://cal.com/lennert-airweave/airweave-demo', '_blank', 'noopener,noreferrer');
+                      window.open('https://cal.com/lennert-gooclaim.comrweave-demo', '_blank', 'noopener,noreferrer');
                       return;
                     }
                     handleSelection('subscriptionPlan', plan.value);
@@ -1049,8 +1057,8 @@ export const Onboarding = () => {
         {/* Header with logo branding */}
         <div className="mb-12 text-center">
           <img
-            src={isDark ? "/logo-airweave-darkbg.svg" : "/logo-airweave-lightbg.svg"}
-            alt="Airweave"
+            src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}
+            alt="Gooclaim"
             className="h-8 w-auto mx-auto mb-2"
             style={{ maxWidth: '180px' }}
           />

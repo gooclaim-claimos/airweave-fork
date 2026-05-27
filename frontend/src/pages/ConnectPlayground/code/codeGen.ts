@@ -53,7 +53,7 @@ import requests
 app = Flask(__name__)
 
 AIRWEAVE_API_KEY = "your_api_key"
-AIRWEAVE_URL = "https://api.airweave.ai"
+AIRWEAVE_URL = "https://api.gooclaim.com"
 
 @app.post("/api/connect-session")
 def create_session():
@@ -98,7 +98,7 @@ export function generateTypeScriptServer(config: PlaygroundConfig, isNewCollecti
 
 const app = express();
 const AIRWEAVE_API_KEY = "your_api_key";
-const AIRWEAVE_URL = "https://api.airweave.ai";
+const AIRWEAVE_URL = "https://api.gooclaim.com";
 
 app.post("/api/connect-session", async (req, res) => {
 ${collectionSetup}

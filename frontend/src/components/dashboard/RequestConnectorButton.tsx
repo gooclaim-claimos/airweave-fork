@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Plug, Plus } from "lucide-react";
 import { useTheme } from "@/lib/theme-provider";
 import { cn } from "@/lib/utils";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 import {
     Tooltip,
     TooltipContent,
@@ -20,9 +21,10 @@ export const RequestConnectorButton = ({ onClick }: RequestConnectorButtonProps)
     const handleClick = () => {
         if (onClick) {
             onClick();
+        } else if (IS_GOOCLAIM_TENANT) {
+            window.open('mailto:support@gooclaim.com?subject=Connector%20Request', '_blank');
         } else {
-            // Default action: open GitHub issues page for connector requests
-            window.open('https://github.com/airweave-ai/airweave/issues/new?labels=connector-request&template=connector_request.md&title=[Connector%20Request]%20', '_blank');
+            window.open('https://github.com/gooclaim.com/airweave/issues/new?labels=connector-request&template=connector_request.md&title=[Connector%20Request]%20', '_blank');
         }
     };
 
@@ -74,7 +76,9 @@ export const RequestConnectorButton = ({ onClick }: RequestConnectorButtonProps)
                 <TooltipContent side="right" className="max-w-sm p-3">
                     <div className="space-y-1">
                         <p className="font-medium text-sm">Request New Connector</p>
-                        <p className="text-xs text-muted-foreground">Opens GitHub to submit your request</p>
+                        <p className="text-xs text-muted-foreground">
+                            {IS_GOOCLAIM_TENANT ? 'Opens email to submit your request' : 'Opens GitHub to submit your request'}
+                        </p>
                     </div>
                 </TooltipContent>
             </Tooltip>

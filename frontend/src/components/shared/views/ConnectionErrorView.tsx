@@ -169,7 +169,7 @@ export const ConnectionErrorView: React.FC<ConnectionErrorViewProps> = ({
 
                     {/* Error description */}
                     <DialogDescription className="text-center text-lg mb-6 max-w-md">
-                        Airweave wasn't able to connect to <span className="font-semibold">{serviceName}</span>.
+                        Gooclaim OS wasn't able to connect to <span className="font-semibold">{serviceName}</span>.
                     </DialogDescription>
 
                     {/* Spacer to push error box down */}

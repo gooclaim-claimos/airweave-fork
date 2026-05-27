@@ -122,7 +122,7 @@ mcp-cli query search --collection-id ${collectionReadableId} --query "${lastUser
         <div className="text-xs flex items-center gap-2">
             <span className={isDark ? "text-gray-400" : "text-gray-500"}>→</span>
             <a
-                href="https://docs.airweave.ai/api-reference/collections/search-collection"
+                href="https://docs.gooclaim.com/api-reference/collections/search-collection"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
@@ -343,7 +343,7 @@ mcp-cli query search --collection-id ${collectionReadableId} --query "${lastUser
                                             language="python"
                                             badgeText="SDK"
                                             badgeColor="bg-blue-600 hover:bg-blue-600"
-                                            title="AirweaveSDK"
+                                            title="Python"
                                             footerContent={docLinkFooter}
                                             height="100%"
                                             className="h-full rounded-none border-none"
@@ -356,7 +356,7 @@ mcp-cli query search --collection-id ${collectionReadableId} --query "${lastUser
                                             language="javascript"
                                             badgeText="SDK"
                                             badgeColor="bg-blue-600 hover:bg-blue-600"
-                                            title="AirweaveSDKClient"
+                                            title="Node.js"
                                             footerContent={docLinkFooter}
                                             height="100%"
                                             className="h-full rounded-none border-none"

@@ -19,6 +19,7 @@ import { apiClient } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme-provider';
 import { BillingInfo } from '@/types';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 // Consistent styling for all menu items
 const menuItemClass = "flex items-center gap-2 px-2 py-1.5 text-sm cursor-pointer";
@@ -364,8 +365,8 @@ export function UserProfileDropdown() {
                 Organization Settings
               </InternalMenuLink>
 
-              {/* Billing Link */}
-              {billingInfo && !billingInfo.has_active_subscription && (
+              {/* Billing Link — hidden in Gooclaim mode (billing lives in Portal Usage tab) */}
+              {!IS_GOOCLAIM_TENANT && billingInfo && !billingInfo.has_active_subscription && (
                 <InternalMenuLink
                   to="/organization/settings?tab=billing"
                   icon={<CreditCard className="h-4 w-4" />}
@@ -392,18 +393,22 @@ export function UserProfileDropdown() {
             </>
           )}
 
-          {/* External Links */}
-          <ExternalMenuLink href="https://airweave.ai">
-            Blog
-          </ExternalMenuLink>
+          {/* External Links — Blog + Discord hidden in Gooclaim mode (brand leak + DPDP risk) */}
+          {!IS_GOOCLAIM_TENANT && (
+            <ExternalMenuLink href="https://gooclaim.com">
+              Blog
+            </ExternalMenuLink>
+          )}
 
-          <ExternalMenuLink href="https://docs.airweave.ai">
+          <ExternalMenuLink href="https://docs.gooclaim.com">
             Documentation
           </ExternalMenuLink>
 
-          <ExternalMenuLink href="https://discord.gg/484HY9Ehxt">
-            Join Discord
-          </ExternalMenuLink>
+          {!IS_GOOCLAIM_TENANT && (
+            <ExternalMenuLink href="https://discord.gg/484HY9Ehxt">
+              Join Discord
+            </ExternalMenuLink>
+          )}
 
           <MenuSeparator />
 
