@@ -98,7 +98,7 @@ class EnronSource(BaseSource):
         """Read parquet files and yield EnronEmailEntity instances."""
         # Lazy import: pyarrow is a heavy optional dependency only needed by this
         # benchmark source and is not guaranteed to be in the Docker image.
-        import pyarrow.parquet as pq  # type: ignore[import-untyped]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped]  # noqa: PLC0415
 
         data_dir = os.path.join(self.data_dir, "data")
         parquet_files = sorted(f for f in os.listdir(data_dir) if f.endswith(".parquet"))

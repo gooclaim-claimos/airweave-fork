@@ -229,7 +229,7 @@ class WorkerControlServer:
     def _get_process_metrics(self) -> tuple[float, int]:
         """Get CPU and memory usage."""
         try:
-            import psutil
+            import psutil  # noqa: PLC0415
 
             process = psutil.Process()
             cpu_percent = round(process.cpu_percent(interval=0.1), 1)

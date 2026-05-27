@@ -68,7 +68,7 @@ class RedisPubSub:
         channel = self.make_channel(namespace, str(id_value))
 
         if settings.REDIS_PASSWORD:
-            from urllib.parse import quote
+            from urllib.parse import quote  # noqa: PLC0415
 
             encoded_pwd = quote(settings.REDIS_PASSWORD, safe="")
             redis_url = (
@@ -81,7 +81,7 @@ class RedisPubSub:
         if platform.system() == "Darwin":
             socket_keepalive_options = {}
         else:
-            import socket
+            import socket  # noqa: PLC0415
 
             if hasattr(socket, "TCP_KEEPIDLE"):
                 socket_keepalive_options = {

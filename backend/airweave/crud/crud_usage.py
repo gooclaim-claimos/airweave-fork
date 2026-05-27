@@ -52,10 +52,10 @@ class CRUDUsage(CRUDBaseOrganization[Usage, UsageCreate, UsageUpdate]):
         Returns:
             Current usage record or None if no active period
         """
-        from datetime import datetime
+        from datetime import datetime  # noqa: PLC0415
 
-        from airweave.models.billing_period import BillingPeriod
-        from airweave.schemas.billing_period import BillingPeriodStatus
+        from airweave.models.billing_period import BillingPeriod  # noqa: PLC0415
+        from airweave.schemas.billing_period import BillingPeriodStatus  # noqa: PLC0415
 
         now = datetime.utcnow()
 
@@ -102,7 +102,7 @@ class CRUDUsage(CRUDBaseOrganization[Usage, UsageCreate, UsageUpdate]):
         Returns:
             The updated usage record after increment, or None if no active period
         """
-        from airweave.core.logging import logger
+        from airweave.core.logging import logger  # noqa: PLC0415
 
         current_usage = await self.get_current_usage(db, organization_id=organization_id)
         if not current_usage:
@@ -167,7 +167,7 @@ class CRUDUsage(CRUDBaseOrganization[Usage, UsageCreate, UsageUpdate]):
                 )
 
                 # Convert to Pydantic schema and add computed fields
-                from airweave.schemas.usage import Usage as UsageSchema
+                from airweave.schemas.usage import Usage as UsageSchema  # noqa: PLC0415
 
                 updated = UsageSchema.model_validate(updated_model)
                 # Computed fields not stored in DB, populated separately by usage service
@@ -218,10 +218,10 @@ class CRUDUsage(CRUDBaseOrganization[Usage, UsageCreate, UsageUpdate]):
         Returns:
             Dictionary mapping organization_id to current Usage record
         """
-        from datetime import datetime
+        from datetime import datetime  # noqa: PLC0415
 
-        from airweave.models.billing_period import BillingPeriod
-        from airweave.schemas.billing_period import BillingPeriodStatus
+        from airweave.models.billing_period import BillingPeriod  # noqa: PLC0415
+        from airweave.schemas.billing_period import BillingPeriodStatus  # noqa: PLC0415
 
         if not organization_ids:
             return {}

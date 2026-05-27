@@ -1,3 +1,10 @@
+"""Utilities for producing filesystem-safe filenames.
+
+Provides ``safe_filename`` which normalizes Unicode input, strips
+characters that are unsafe on common filesystems, and guarantees a
+non-empty filename with a valid extension.
+"""
+
 import os
 import re
 import unicodedata

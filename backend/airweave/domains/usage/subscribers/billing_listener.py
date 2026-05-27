@@ -91,8 +91,8 @@ class UsageBillingListener(EventSubscriber):
             # Price factors from the primary model in the fallback chain.
             # Lazy imports to avoid circular dependency through SearchConfig's
             # deep import chain (search types → embedders → core protocols).
-            from airweave.adapters.llm.registry import get_model_spec
-            from airweave.domains.search.config import SearchConfig
+            from airweave.adapters.llm.registry import get_model_spec  # noqa: PLC0415
+            from airweave.domains.search.config import SearchConfig  # noqa: PLC0415
 
             provider, model = SearchConfig.LLM_FALLBACK_CHAIN[0]
             spec = get_model_spec(provider, model)

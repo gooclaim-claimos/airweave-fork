@@ -131,7 +131,7 @@ class FakeSyncService(SyncServiceProtocol):
             raise self._should_raise
         if self._resolve_dest_ids is not None:
             return self._resolve_dest_ids
-        from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID
+        from airweave.core.constants.reserved_ids import NATIVE_VESPA_UUID  # noqa: PLC0415
 
         return [NATIVE_VESPA_UUID]
 

@@ -22,6 +22,7 @@ import argparse
 import asyncio
 from uuid import UUID
 
+from airweave.platform.temporal.client import temporal_client
 from sqlalchemy import select
 from temporalio.client import ScheduleUpdate
 from temporalio.common import SearchAttributePair, TypedSearchAttributes
@@ -33,7 +34,6 @@ from airweave.domains.temporal.schedule_service import (
     SYNC_ID_SEARCH_ATTRIBUTE,
 )
 from airweave.models.sync import Sync
-from airweave.platform.temporal.client import temporal_client
 
 MAX_CONCURRENCY = 10
 

@@ -288,7 +288,7 @@ class EntityPipeline:
 
     async def _identify_orphans(self, sync_context: SyncContext) -> Dict[str, List[str]]:
         """Identify orphaned entity IDs (in DB but not encountered), grouped by definition."""
-        from airweave.db.session import get_db_context
+        from airweave.db.session import get_db_context  # noqa: PLC0415
 
         encountered_ids = self._tracker.get_all_encountered_ids_flat()
 
@@ -373,7 +373,7 @@ class EntityPipeline:
         sync_context: SyncContext,
     ) -> None:
         """Set early metadata fields from sync_context."""
-        from airweave.platform.entities._base import AirweaveSystemMetadata
+        from airweave.platform.entities._base import AirweaveSystemMetadata  # noqa: PLC0415
 
         for entity in entities:
             if entity.airweave_system_metadata is None:

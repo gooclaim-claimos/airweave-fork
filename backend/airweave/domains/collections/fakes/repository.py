@@ -89,10 +89,10 @@ class FakeCollectionRepository:
     ) -> Collection:
         """Create and store a fake collection."""
         self._calls.append(("create", db, obj_in, ctx, uow))
-        from datetime import datetime, timezone
-        from unittest.mock import MagicMock
+        from datetime import datetime, timezone  # noqa: PLC0415
+        from unittest.mock import MagicMock  # noqa: PLC0415
 
-        from airweave.domains.embedders.config import (
+        from airweave.domains.embedders.config import (  # noqa: PLC0415
             DENSE_EMBEDDER,
             EMBEDDING_DIMENSIONS,
         )
@@ -106,7 +106,7 @@ class FakeCollectionRepository:
         col.modified_at = datetime.now(timezone.utc)
         col.created_by_email = None
         col.modified_by_email = None
-        from airweave.core.shared_models import CollectionStatus
+        from airweave.core.shared_models import CollectionStatus  # noqa: PLC0415
 
         col.status = CollectionStatus.NEEDS_SOURCE
 

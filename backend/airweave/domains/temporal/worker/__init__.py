@@ -53,11 +53,16 @@ class TemporalWorker:
         the Container would pollute its dependency graph with adapters that
         only make sense inside a Temporal worker OS process.
         """
-        from prometheus_client import CollectorRegistry
-        from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
+        from prometheus_client import CollectorRegistry  # noqa: PLC0415
+        from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig  # noqa: PLC0415
 
-        from airweave.adapters.metrics import PrometheusMetricsRenderer, PrometheusWorkerMetrics
-        from airweave.domains.temporal.metrics import worker_metrics as metrics_registry
+        from airweave.adapters.metrics import (  # noqa: PLC0415
+            PrometheusMetricsRenderer,
+            PrometheusWorkerMetrics,
+        )
+        from airweave.domains.temporal.metrics import (  # noqa: PLC0415
+            worker_metrics as metrics_registry,  # noqa: PLC0415
+        )
 
         self._config = config
         self._runtime = Runtime(
@@ -87,7 +92,9 @@ class TemporalWorker:
         except Exception as e:
             logger.warning(f"Failed to start control server (metrics unavailable): {e}")
 
-        from airweave.domains.temporal.client import get_client as get_temporal_client
+        from airweave.domains.temporal.client import (  # noqa: PLC0415
+            get_client as get_temporal_client,  # noqa: PLC0415
+        )
 
         client = await get_temporal_client(runtime=self._runtime)
         logger.info(f"Starting Temporal worker on task queue: {self._config.task_queue}")
@@ -130,7 +137,7 @@ class TemporalWorker:
 
         await self._control_server.stop()
 
-        from airweave.domains.temporal.client import close as close_temporal_client
+        from airweave.domains.temporal.client import close as close_temporal_client  # noqa: PLC0415
 
         await close_temporal_client()
 
@@ -147,12 +154,12 @@ class TemporalWorker:
     def _get_sandbox_runner(self):
         """Get the appropriate sandbox configuration."""
         if self._config.disable_sandbox:
-            from temporalio.worker import UnsandboxedWorkflowRunner
+            from temporalio.worker import UnsandboxedWorkflowRunner  # noqa: PLC0415
 
             logger.warning("TEMPORAL SANDBOX DISABLED - Use only for debugging!")
             return UnsandboxedWorkflowRunner()
 
-        from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner
+        from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner  # noqa: PLC0415
 
         logger.info("Using default sandboxed workflow runner")
         return SandboxedWorkflowRunner()
@@ -166,8 +173,8 @@ class TemporalWorker:
 async def main() -> None:
     """Main entry point for the worker process."""
     # 1. Initialize DI container (fail fast if wiring is broken)
-    from airweave.core import container as container_mod
-    from airweave.core.container import initialize_container
+    from airweave.core import container as container_mod  # noqa: PLC0415
+    from airweave.core.container import initialize_container  # noqa: PLC0415
 
     logger.info("Initializing dependency injection container...")
     initialize_container(settings)

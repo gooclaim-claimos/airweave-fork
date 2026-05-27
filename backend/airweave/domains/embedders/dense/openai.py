@@ -186,7 +186,7 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
             EmbedderConnectionError: On connection failure.
             EmbedderProviderError: On other API errors.
         """
-        import openai
+        import openai  # noqa: PLC0415
 
         try:
             return await self._client.embeddings.create(

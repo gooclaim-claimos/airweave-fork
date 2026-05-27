@@ -46,8 +46,8 @@ def _make_fake_context() -> ApiContext:
 @pytest_asyncio.fixture
 async def client(test_container):
     """Async HTTP client with faked DI container and auth context."""
-    from airweave.core import container as container_mod
-    from airweave.main import app
+    from airweave.core import container as container_mod  # noqa: PLC0415
+    from airweave.main import app  # noqa: PLC0415
 
     fake_ctx = _make_fake_context()
 

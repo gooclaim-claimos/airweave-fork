@@ -543,7 +543,7 @@ class StubSource(BaseSource):
 
         total_weight = sum(instance.weights.values())
         if total_weight == 0:
-            instance.weights = {k: 1 for k in instance.weights}
+            instance.weights = dict.fromkeys(instance.weights, 1)
 
         instance.generator = ContentGenerator(
             seed=instance.seed,

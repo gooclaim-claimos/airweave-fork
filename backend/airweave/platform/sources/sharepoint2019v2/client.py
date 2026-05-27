@@ -68,7 +68,7 @@ class SharePointClient:
         if self._logger:
             return self._logger
         # Minimal fallback logger
-        from airweave.core.logging import logger
+        from airweave.core.logging import logger  # noqa: PLC0415
 
         return logger
 
@@ -349,7 +349,7 @@ class SharePointClient:
         Returns:
             Parsed JSON response.
         """
-        import json
+        import json  # noqa: PLC0415
 
         auth = self._create_ntlm_auth()
         digest = await self._get_request_digest(client, site_url)

@@ -385,7 +385,7 @@ class SyncFactory(SyncFactoryProtocol):
         logger: ContextualLogger,
     ) -> SourceBuildResult:
         """Build source context for ARF replay mode."""
-        from airweave.domains.arf.replay_source import ArfReplaySource
+        from airweave.domains.arf.replay_source import ArfReplaySource  # noqa: PLC0415
 
         source_connection = await crud.source_connection.get_by_sync_id(
             db, sync_id=sync.id, ctx=ctx
@@ -414,13 +414,15 @@ class SyncFactory(SyncFactoryProtocol):
     def _validate_not_completed_snapshot(source_connection_obj: SourceConnection) -> None:
         """Guard: completed snapshots that had their short_name restored cannot re-sync."""
         if source_connection_obj.short_name != "snapshot":
-            from pydantic import ValidationError
+            from pydantic import ValidationError  # noqa: PLC0415
 
-            from airweave.platform.configs.config import SnapshotConfig
+            from airweave.platform.configs.config import SnapshotConfig  # noqa: PLC0415
 
             try:
                 SnapshotConfig(**(source_connection_obj.config_fields or {}))
-                from airweave.domains.sync_pipeline.exceptions import SyncFailureError
+                from airweave.domains.sync_pipeline.exceptions import (  # noqa: PLC0415
+                    SyncFailureError,  # noqa: PLC0415
+                )
 
                 raise SyncFailureError(
                     f"Cannot re-sync a completed snapshot source connection "

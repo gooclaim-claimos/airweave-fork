@@ -177,7 +177,7 @@ class DropboxSource(BaseSource):
 
         if entry.get("client_modified"):
             try:
-                from datetime import datetime
+                from datetime import datetime  # noqa: PLC0415
 
                 client_modified = datetime.strptime(
                     entry.get("client_modified"), "%Y-%m-%dT%H:%M:%SZ"
@@ -187,7 +187,7 @@ class DropboxSource(BaseSource):
 
         if entry.get("server_modified"):
             try:
-                from datetime import datetime
+                from datetime import datetime  # noqa: PLC0415
 
                 server_modified = datetime.strptime(
                     entry.get("server_modified"), "%Y-%m-%dT%H:%M:%SZ"

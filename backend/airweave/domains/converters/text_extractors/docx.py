@@ -53,7 +53,7 @@ def _format_table(table: Any) -> str:
 async def extract_docx_text(path: str) -> Optional[str]:
     """Extract text from a DOCX and return markdown."""
     try:
-        from docx import Document
+        from docx import Document  # noqa: PLC0415
     except ImportError:
         raise SyncFailureError("python-docx required for DOCX text extraction but not installed")
 

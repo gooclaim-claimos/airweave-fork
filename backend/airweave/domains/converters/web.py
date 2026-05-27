@@ -44,7 +44,7 @@ class WebConverter(BaseTextConverter):
             raise SyncFailureError("FIRECRAWL_API_KEY required for web conversion")
 
         try:
-            from firecrawl import AsyncFirecrawl
+            from firecrawl import AsyncFirecrawl  # noqa: PLC0415
 
             self._firecrawl_client = AsyncFirecrawl(api_key=api_key)
             self._initialized = True
@@ -59,7 +59,7 @@ class WebConverter(BaseTextConverter):
 
         self._ensure_client()
 
-        results: Dict[str, str] = {url: None for url in urls}
+        results: Dict[str, str] = dict.fromkeys(urls)
 
         try:
             await self.rate_limiter.acquire()

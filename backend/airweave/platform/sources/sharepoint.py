@@ -560,7 +560,7 @@ class SharePointSource(BaseSource):
 
     def _clean_html_text(self, html: str) -> str:
         """Strip HTML tags and clean text content."""
-        import re
+        import re  # noqa: PLC0415
 
         text = re.sub(r"<[^>]+>", " ", html)
         return text.strip()

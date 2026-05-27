@@ -179,7 +179,7 @@ class BillingWebhookProcessor(BillingWebhookProtocol):
 
         Returns (ctx, log). ctx is None when the organization cannot be resolved.
         """
-        from airweave.core.shared_models import AuthMethod
+        from airweave.core.shared_models import AuthMethod  # noqa: PLC0415
 
         organization_id = None
 
@@ -704,7 +704,7 @@ class BillingWebhookProcessor(BillingWebhookProtocol):
         # Check if renewal failure
         if hasattr(invoice, "billing_reason") and invoice.billing_reason == "subscription_cycle":
             # Create grace period
-            from datetime import timedelta
+            from datetime import timedelta  # noqa: PLC0415
 
             current_period = await self._period_repo.get_current_period(db, organization_id=org_id)
             if current_period:
@@ -988,7 +988,7 @@ class BillingWebhookProcessor(BillingWebhookProtocol):
                     log.info(f"Created new subscription for {plan_str} yearly")
 
                 # Update DB: set subscription and finalize prepay window
-                from datetime import timedelta
+                from datetime import timedelta  # noqa: PLC0415
 
                 sub_start = datetime.utcfromtimestamp(sub.current_period_start)
                 expires_at = sub_start + timedelta(days=365)
@@ -1057,9 +1057,9 @@ async def _notify_donke_subscription(
         is_yearly: Whether this is a yearly subscription
         log: Contextual logger
     """
-    import httpx
+    import httpx  # noqa: PLC0415
 
-    from airweave.core.config import settings
+    from airweave.core.config import settings  # noqa: PLC0415
 
     if not settings.DONKE_URL or not settings.DONKE_API_KEY:
         return
@@ -1104,12 +1104,12 @@ async def _send_team_welcome_email(
         is_yearly: Whether this is a yearly subscription
         log: Contextual logger
     """
-    import httpx
-    from sqlalchemy import select
+    import httpx  # noqa: PLC0415
+    from sqlalchemy import select  # noqa: PLC0415
 
-    from airweave.core.config import settings
-    from airweave.models.user import User
-    from airweave.models.user_organization import UserOrganization
+    from airweave.core.config import settings  # noqa: PLC0415
+    from airweave.models.user import User  # noqa: PLC0415
+    from airweave.models.user_organization import UserOrganization  # noqa: PLC0415
 
     # Only send for Team plans
     if plan != BillingPlan.TEAM:

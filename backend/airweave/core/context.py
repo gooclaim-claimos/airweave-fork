@@ -40,7 +40,7 @@ class BaseContext:
     def __post_init__(self):
         """Auto-derive logger from organization identity if not provided."""
         if self.logger is None:
-            from airweave.core.logging import logger as base_logger
+            from airweave.core.logging import logger as base_logger  # noqa: PLC0415
 
             dims: Dict[str, str] = {
                 "organization_id": str(self.organization.id),

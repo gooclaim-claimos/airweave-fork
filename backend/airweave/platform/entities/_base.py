@@ -126,7 +126,7 @@ class BaseEntity(BaseModel):
         This enforces composition over inheritance by ensuring entity definitions
         properly flag their fields (is_entity_id, is_name, etc.).
         """
-        from airweave.core.shared_models import AirweaveFieldFlag
+        from airweave.core.shared_models import AirweaveFieldFlag  # noqa: PLC0415
 
         # Define which flags must be unique (and validate their presence)
         unique_flags = [

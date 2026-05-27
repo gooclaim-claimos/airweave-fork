@@ -15,7 +15,7 @@ class _StubConverter(BaseTextConverter):
         self._text = text
 
     async def convert_batch(self, file_paths: List[str]) -> Dict[str, str]:
-        return {p: self._text for p in file_paths}
+        return dict.fromkeys(file_paths, self._text)
 
 
 class FakeConverterRegistry(ConverterRegistryProtocol):

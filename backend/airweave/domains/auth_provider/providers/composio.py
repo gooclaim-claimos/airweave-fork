@@ -132,7 +132,7 @@ class ComposioAuthProvider(BaseAuthProvider):
             AuthProviderRateLimitError: 429 from Composio.
             AuthProviderTemporaryError: 5xx or network error.
         """
-        from airweave.domains.auth_provider.exceptions import AuthProviderAuthError
+        from airweave.domains.auth_provider.exceptions import AuthProviderAuthError  # noqa: PLC0415
 
         headers = {"x-api-key": self.api_key}
 
@@ -220,6 +220,7 @@ class ComposioAuthProvider(BaseAuthProvider):
             source_short_name: The short name of the source to get credentials for
             source_auth_config_fields: The fields required for the source auth config
             optional_fields: Fields that can be skipped if not available in Composio
+            source_connection_id: Optional source connection ID for scoped lookup/logging.
 
         Returns:
             Credentials dictionary for the source
@@ -525,7 +526,7 @@ class ComposioAuthProvider(BaseAuthProvider):
             AuthProviderTemporaryError: Transient failure from Composio.
             AuthProviderConfigError: Other non-transient failure.
         """
-        from airweave.domains.auth_provider.exceptions import (
+        from airweave.domains.auth_provider.exceptions import (  # noqa: PLC0415
             AuthProviderAuthError,
             AuthProviderConfigError,
         )

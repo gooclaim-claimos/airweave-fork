@@ -36,7 +36,7 @@ async def init_db(db: AsyncSession) -> None:
         user, organization = await crud.user.create_with_organization(db, obj_in=user_in)
 
         # Grant superuser privileges at DB level for admin operations and tests
-        from airweave.models.user import User as UserModel
+        from airweave.models.user import User as UserModel  # noqa: PLC0415
 
         db_user = await db.get(UserModel, user.id)
         if db_user:

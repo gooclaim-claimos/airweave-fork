@@ -170,7 +170,7 @@ class AccessControlPipeline:
                         f"{stats.encountered} unique, "
                         f"{upserted_count} written to DB"
                     )
-                    from airweave.core.events.sync import (
+                    from airweave.core.events.sync import (  # noqa: PLC0415
                         AccessControlMembershipBatchProcessedEvent,
                     )
 

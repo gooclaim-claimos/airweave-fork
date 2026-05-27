@@ -122,7 +122,7 @@ class SnapshotSource(BaseSource):
         """Get storage backend from container."""
         if self._storage is None:
             # [code blue] todo: inject via constructor once sources receive container
-            from airweave.core import container as container_mod
+            from airweave.core import container as container_mod  # noqa: PLC0415
 
             self._storage = container_mod.container.storage_backend
         return self._storage
@@ -218,8 +218,8 @@ class SnapshotSource(BaseSource):
     def _get_azure_client(self) -> Any:
         """Get or create Azure BlobServiceClient using DefaultAzureCredential."""
         if self._azure_client is None:
-            from azure.identity.aio import DefaultAzureCredential
-            from azure.storage.blob.aio import BlobServiceClient
+            from azure.identity.aio import DefaultAzureCredential  # noqa: PLC0415
+            from azure.storage.blob.aio import BlobServiceClient  # noqa: PLC0415
 
             credential = DefaultAzureCredential()
             account_url = f"https://{self._azure_account}.blob.core.windows.net"
@@ -530,7 +530,7 @@ class SnapshotSource(BaseSource):
     def cleanup(self) -> None:
         """Clean up temp files and close Azure client."""
         if self._temp_dir and self._temp_dir.exists():
-            import shutil
+            import shutil  # noqa: PLC0415
 
             try:
                 shutil.rmtree(self._temp_dir)

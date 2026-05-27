@@ -58,7 +58,7 @@ class TxtConverter(BaseTextConverter):
     @staticmethod
     def _try_chardet_decode(raw_bytes: bytes, path: str) -> str | None:
         try:
-            import chardet
+            import chardet  # noqa: PLC0415
 
             detection = chardet.detect(raw_bytes[:100000])
             if not detection or detection.get("confidence", 0) <= 0.7:

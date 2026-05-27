@@ -224,7 +224,7 @@ class OrganizationLifecycleOperations:
                 )
 
             api_key_ctx = BaseContext(organization=organization)
-            from airweave import crud
+            from airweave import crud  # noqa: PLC0415
 
             await crud.api_key.create(db=db, obj_in=APIKeyCreate(), ctx=api_key_ctx, uow=uow)
 

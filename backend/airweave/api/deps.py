@@ -145,7 +145,7 @@ async def get_user_from_token(token: str, db: AsyncSession) -> Optional[schemas.
                 return schemas.User.model_validate(user)
             return None
 
-        from airweave.api.auth import get_user_from_token as auth_get_user
+        from airweave.api.auth import get_user_from_token as auth_get_user  # noqa: PLC0415
 
         auth0_user = await auth_get_user(token)
         if not auth0_user:
@@ -199,11 +199,14 @@ async def get_connect_session(
     Raises:
         HTTPException: If token is missing, malformed, invalid, or expired
     """
-    import uuid
-    from datetime import datetime, timezone
+    import uuid  # noqa: PLC0415
+    from datetime import datetime, timezone  # noqa: PLC0415
 
-    from airweave.platform.auth.state import verify_state
-    from airweave.schemas.connect_session import ConnectSessionContext, ConnectSessionMode
+    from airweave.platform.auth.state import verify_state  # noqa: PLC0415
+    from airweave.schemas.connect_session import (  # noqa: PLC0415
+        ConnectSessionContext,
+        ConnectSessionMode,
+    )
 
     token = _extract_bearer_token(authorization)
 

@@ -1,3 +1,10 @@
+"""Protocol definitions for the auth provider domain.
+
+Defines the registry and service protocols implemented by auth provider
+components (Composio, Pipedream, etc.) so the rest of the platform can
+depend on stable abstractions rather than concrete classes.
+"""
+
 from typing import Any, Optional, Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession

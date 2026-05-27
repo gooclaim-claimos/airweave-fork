@@ -38,7 +38,7 @@ class FakeIntegrationCredentialService(IntegrationCredentialServiceProtocol):
         self._calls.append(("get", credential_id))
         cred = self._store.get(credential_id)
         if cred is None:
-            from airweave.core.exceptions import NotFoundException
+            from airweave.core.exceptions import NotFoundException  # noqa: PLC0415
 
             raise NotFoundException("Integration credential not found")
         return cred
@@ -58,9 +58,9 @@ class FakeIntegrationCredentialService(IntegrationCredentialServiceProtocol):
     ) -> IntegrationCredential:
         """Create and store a fake credential record."""
         self._calls.append(("create", short_name, auth_payload))
-        from uuid import uuid4
+        from uuid import uuid4  # noqa: PLC0415
 
-        from airweave.core.shared_models import IntegrationType
+        from airweave.core.shared_models import IntegrationType  # noqa: PLC0415
 
         record = IntegrationCredential(
             id=uuid4(),
@@ -94,7 +94,7 @@ class FakeIntegrationCredentialService(IntegrationCredentialServiceProtocol):
         self._calls.append(("update", credential.credential_id, credential.raw))
         record = self._records.get(credential.credential_id)
         if record is None:
-            from airweave.core.exceptions import NotFoundException
+            from airweave.core.exceptions import NotFoundException  # noqa: PLC0415
 
             raise NotFoundException("Integration credential not found")
         self._store[credential.credential_id] = credential

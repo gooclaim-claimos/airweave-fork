@@ -110,7 +110,7 @@ class OrganizationService(OrganizationServiceProtocol):
         If the DB delete fails after Auth0 succeeds, we compensate by
         re-adding the user to Auth0.
         """
-        from airweave.models.user import User as UserModel
+        from airweave.models.user import User as UserModel  # noqa: PLC0415
 
         user_q = select(UserModel).where(UserModel.id == user_id)
         user_result = await db.execute(user_q)
@@ -175,7 +175,7 @@ class OrganizationService(OrganizationServiceProtocol):
         If the DB update fails after Auth0 succeeds, we compensate by
         restoring the old Auth0 role.
         """
-        from airweave.models.user import User as UserModel
+        from airweave.models.user import User as UserModel  # noqa: PLC0415
 
         user_q = select(UserModel).where(UserModel.id == user_id)
         user_result = await db.execute(user_q)

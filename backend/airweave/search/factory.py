@@ -110,7 +110,7 @@ class SearchFactory:
 
         # Get collection - with or without organization filtering
         if skip_organization_check:
-            from airweave.models.collection import Collection
+            from airweave.models.collection import Collection  # noqa: PLC0415
 
             result = await db.execute(sa_select(Collection).where(Collection.id == collection_id))
             collection = result.scalar_one_or_none()
@@ -592,7 +592,7 @@ class SearchFactory:
             Destination instance (Qdrant or Vespa)
         """
         if destination_override == "vespa":
-            from airweave.platform.destinations.vespa import VespaDestination
+            from airweave.platform.destinations.vespa import VespaDestination  # noqa: PLC0415
 
             ctx.logger.info(
                 f"[SearchFactory] Using Vespa destination (override) for "
@@ -614,7 +614,7 @@ class SearchFactory:
 
         Uses Vespa as the sole vector database destination.
         """
-        from airweave.platform.destinations.vespa import VespaDestination
+        from airweave.platform.destinations.vespa import VespaDestination  # noqa: PLC0415
 
         ctx.logger.info(f"[SearchFactory] Collection {collection.readable_id} uses Vespa")
         return await VespaDestination.create(

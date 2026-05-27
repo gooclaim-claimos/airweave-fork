@@ -165,7 +165,7 @@ class CRUDAPIKey(CRUDBaseOrganization[APIKey, APIKeyCreate, APIKeyUpdate]):
             list[APIKey]: List of API keys expiring in the range.
 
         """
-        from sqlalchemy import and_, select
+        from sqlalchemy import and_, select  # noqa: PLC0415
 
         query = select(self.model).where(
             and_(

@@ -15,7 +15,7 @@ class XlsxConverter(BaseTextConverter):
     async def convert_batch(self, file_paths: List[str]) -> Dict[str, str]:
         """Convert XLSX files to markdown text using openpyxl."""
         try:
-            import openpyxl  # noqa: F401
+            import openpyxl  # noqa: F401, PLC0415
         except ImportError:
             raise SyncFailureError(
                 "openpyxl package required for XLSX conversion but not installed"
@@ -54,7 +54,7 @@ class XlsxConverter(BaseTextConverter):
 
     async def _extract_xlsx_to_markdown(self, xlsx_path: str) -> str:  # noqa: C901
         def _extract() -> str:  # noqa: C901
-            from openpyxl import load_workbook
+            from openpyxl import load_workbook  # noqa: PLC0415
 
             try:
                 wb = load_workbook(xlsx_path, data_only=False)
