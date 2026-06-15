@@ -182,13 +182,132 @@ async def show_docs_reference() -> HTMLResponse:
     """
     html_content = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
-        <title>Airweave API</title>
+        <meta charset="utf-8" />
+        <title>Gooclaim OS Data Connector — API</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+            :root {
+                color-scheme: light dark;
+                --bg: #f8fafc;
+                --card: #ffffff;
+                --ink: #0f172a;
+                --muted: #475569;
+                --brand: #0369A1;
+                --brand-hover: #075985;
+                --border: #e2e8f0;
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg: #020617;
+                    --card: #0f172a;
+                    --ink: #f1f5f9;
+                    --muted: #94a3b8;
+                    --brand: #38bdf8;
+                    --brand-hover: #7dd3fc;
+                    --border: #1e293b;
+                }
+            }
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                             Roboto, "Helvetica Neue", Arial, sans-serif;
+                background: var(--bg);
+                color: var(--ink);
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 32px;
+            }
+            .card {
+                width: min(560px, 100%);
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                padding: 40px 36px;
+                box-shadow: 0 1px 2px rgba(15,23,42,0.04),
+                            0 12px 32px rgba(15,23,42,0.08);
+            }
+            .eyebrow {
+                font-size: 12px;
+                font-weight: 600;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--muted);
+                margin-bottom: 12px;
+            }
+            h1 {
+                font-size: 28px;
+                line-height: 1.2;
+                margin: 0 0 8px;
+                font-weight: 700;
+            }
+            p {
+                margin: 0 0 20px;
+                color: var(--muted);
+                line-height: 1.55;
+            }
+            .links {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-top: 24px;
+            }
+            a.btn {
+                display: block;
+                padding: 12px 16px;
+                border-radius: 10px;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 600;
+                text-align: center;
+                transition: background 0.15s ease, color 0.15s ease;
+            }
+            a.btn.primary {
+                background: var(--brand);
+                color: #ffffff;
+            }
+            a.btn.primary:hover { background: var(--brand-hover); }
+            a.btn.ghost {
+                background: transparent;
+                color: var(--brand);
+                border: 1px solid var(--border);
+            }
+            a.btn.ghost:hover {
+                color: var(--brand-hover);
+                border-color: var(--brand);
+            }
+            .meta {
+                margin-top: 24px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                justify-content: space-between;
+                font-size: 12px;
+                color: var(--muted);
+            }
+        </style>
     </head>
     <body>
-        <h1>Welcome to the Airweave API</h1>
-        <p>Please visit the <a href="https://docs.airweave.ai">docs</a> for more information.</p>
+        <div class="card">
+            <div class="eyebrow">Gooclaim OS</div>
+            <h1>Data Connector API</h1>
+            <p>
+                The unified retrieval surface behind Gooclaim Data Sources —
+                connect any system, index its content, query it from anywhere
+                in the platform.
+            </p>
+            <div class="links">
+                <a class="btn primary" href="/api/docs">Interactive API (Swagger)</a>
+                <a class="btn ghost" href="/api/redoc">Reference (ReDoc)</a>
+            </div>
+            <div class="meta">
+                <span>docs.gooclaim.com</span>
+                <span>v1</span>
+            </div>
+        </div>
     </body>
 </html>
     """

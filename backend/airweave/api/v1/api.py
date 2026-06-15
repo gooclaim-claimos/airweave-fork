@@ -20,6 +20,7 @@ from airweave.api.v1.endpoints import (
     source_rate_limits,
     sources,
     sync,
+    uploads,
     usage,
     users,
     webhooks,
@@ -59,3 +60,4 @@ api_router.include_router(
 )
 api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(connect.router, prefix="/connect", tags=["connect"])
+api_router.include_router(uploads.router, prefix="/uploads", tags=["gooclaim-uploads"])

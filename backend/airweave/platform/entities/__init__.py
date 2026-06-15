@@ -136,6 +136,10 @@ from .gmail import (
     GmailMessageEntity,
     GmailThreadEntity,
 )
+from .gooclaim_upload import (
+    GooclaimUploadConnectionEntity,
+    GooclaimUploadFileEntity,
+)
 from .google_calendar import (
     GoogleCalendarCalendarEntity,
     GoogleCalendarEventEntity,
@@ -456,6 +460,10 @@ ENTITIES_BY_SOURCE: dict[str, list[type]] = {
     ],
     "fireflies": [
         FirefliesTranscriptEntity,
+    ],
+    "gooclaim_upload": [
+        GooclaimUploadConnectionEntity,
+        GooclaimUploadFileEntity,
     ],
     "freshdesk": [
         FreshdeskCompanyEntity,
