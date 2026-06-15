@@ -99,8 +99,11 @@ class SemanticChunker(BaseChunker):
             return
 
         try:
+            import os  # noqa: PLC0415
+
             from chonkie import SemanticChunker as ChonkieSemanticChunker  # noqa: PLC0415
             from chonkie import TokenChunker  # noqa: PLC0415
+            from chonkie.embeddings import OpenAIEmbeddings  # noqa: PLC0415
 
             # Get tokenizer wrapper for our own token counting
             tokenizer = get_tokenizer(self.TOKENIZER)
@@ -115,10 +118,36 @@ class SemanticChunker(BaseChunker):
             # that may appear in user content (e.g., AI-generated text pasted into Linear)
             safe_encoding = SafeEncoding(tokenizer.encoding)
 
-            # Initialize Chonkie's SemanticChunker
-            # NOTE: Uses local embedding model for chunking decisions (fast, no API calls)
+            # Gooclaim patch — `CHUNKER_EMBEDDER=openai` (or unset OPENAI_API_KEY
+            # → fall back to model2vec) lets us reuse the OpenAI key we already
+            # have for the final search embeddings as the chunker's
+            # boundary-detection embedder too. Avoids needing the 8 MB
+            # `minishlab/potion-base-8M` model2vec download (which fails when
+            # the pod runs as a non-root user and `/.cache` is read-only).
+            embedder_choice = os.getenv("CHUNKER_EMBEDDER", "model2vec").lower()
+            openai_key = os.getenv("OPENAI_API_KEY")
+            openai_base = os.getenv("OPENAI_BASE_URL")
+
+            if embedder_choice == "openai" and openai_key:
+                openai_model = os.getenv("CHUNKER_OPENAI_MODEL", "text-embedding-3-small")
+                embedding_model = OpenAIEmbeddings(
+                    model=openai_model,
+                    api_key=openai_key,
+                    base_url=openai_base,
+                )
+                logger.info(
+                    f"SemanticChunker using OpenAIEmbeddings(model={openai_model}, "
+                    f"base_url={openai_base or 'default'}) for chunking decisions"
+                )
+            else:
+                embedding_model = self.EMBEDDING_MODEL
+                logger.info(
+                    f"SemanticChunker using local Model2Vec ({embedding_model}) "
+                    "for chunking decisions"
+                )
+
             self._semantic_chunker = ChonkieSemanticChunker(
-                embedding_model=self.EMBEDDING_MODEL,
+                embedding_model=embedding_model,
                 chunk_size=self.SEMANTIC_CHUNK_SIZE,
                 threshold=self.SIMILARITY_THRESHOLD,
                 similarity_window=self.SIMILARITY_WINDOW,

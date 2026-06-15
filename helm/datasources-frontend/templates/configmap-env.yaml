@@ -1,0 +1,19 @@
+{{/*
+Runtime env config — mounted into /app/dist/env-config.js so index.html can
+populate window.ENV before the bundle loads. This pattern lets us change
+API_URL without rebuilding the frontend image.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "datasources-frontend.name" . }}-env
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-frontend.labels" . | nindent 4 }}
+data:
+  env-config.js: |
+    window.ENV = {
+    {{- range $key, $value := .Values.runtimeEnv }}
+      {{ $key }}: {{ $value | quote }},
+    {{- end }}
+    };

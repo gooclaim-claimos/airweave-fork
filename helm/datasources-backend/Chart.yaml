@@ -1,0 +1,6 @@
+apiVersion: v2
+name: datasources-backend
+description: Gooclaim Data Sources backend — Airweave fork (v0.9.73-gck.1) wired for Marketriangle AKV + Postgres + Redis + Vespa + native OpenAI.
+type: application
+version: 0.1.0
+appVersion: "v0.9.73-gck.1"

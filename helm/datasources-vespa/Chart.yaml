@@ -1,0 +1,6 @@
+apiVersion: v2
+name: datasources-vespa
+description: Vespa vector DB for Gooclaim Data Sources (Airweave fork) — single-node dev topology.
+type: application
+version: 0.1.0
+appVersion: "8"

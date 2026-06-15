@@ -1,0 +1,35 @@
+{{/*
+ConfigMap holds the Vespa application package files (hosts.xml + services.xml +
+validation-overrides.xml + 5 schemas + 2 query-profiles).
+
+Mounted into the init Job at /raw/. The init Job's wrapper script lays them
+out into the correct directory structure under /app/ before calling
+`vespa deploy /app`.
+
+Flat-key convention with `__` as the directory separator:
+   root__hosts.xml             → /app/hosts.xml
+   schemas__base_entity.sd     → /app/schemas/base_entity.sd
+   qp__default.xml             → /app/search/query-profiles/default.xml
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "datasources-vespa.name" . }}-appkg
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-vespa.labels" . | nindent 4 }}
+data:
+  root__hosts.xml: |
+{{ .Files.Get "files/app/hosts.xml" | indent 4 }}
+  root__services.xml: |
+{{ .Files.Get "files/app/services.xml" | indent 4 }}
+  root__validation-overrides.xml: |
+{{ .Files.Get "files/app/validation-overrides.xml" | indent 4 }}
+{{- range $path, $bytes := .Files.Glob "files/app/schemas/*" }}
+  schemas__{{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+{{- range $path, $bytes := .Files.Glob "files/app/search/query-profiles/*" }}
+  qp__{{ base $path }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
