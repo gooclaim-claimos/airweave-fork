@@ -1,0 +1,86 @@
+{{/*
+Temporal worker — sibling deployment to the backend that polls the Temporal
+task queues and actually runs the sync workflows. Without it, jobs
+created by the backend's source-connection service sit in PENDING forever
+because no process is registered to execute them.
+
+Reuses the backend image, env, secrets, and PVC; the only differences are
+the command (no uvicorn — `python -m airweave.domains.temporal.worker`),
+the absence of a Service / Ingress, and lighter liveness probing.
+*/}}
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "datasources-backend.name" . }}-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-backend.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  # RWO PVC — Recreate so the old worker releases the volume before the new
+  # one tries to attach. See deployment.yaml's matching note.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "datasources-backend.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "datasources-backend.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "datasources-backend.serviceAccountName" . }}
+      {{- with .Values.deployment.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: worker
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # Skip the image's uvicorn entrypoint entirely — the worker is a
+          # long-running Python process polling Temporal, not a web server.
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              cd /app
+              exec poetry run python -m airweave.domains.temporal.worker
+          envFrom:
+            - configMapRef:
+                name: {{ include "datasources-backend.name" . }}-config
+            - secretRef:
+                name: {{ include "datasources-backend.name" . }}
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?ssl=require"
+          {{- with .Values.worker.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/datasources/storage
+      volumes:
+        - name: storage
+          # The worker reads the SAME upload bucket the backend wrote to —
+          # both pods must mount the same PVC.
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "datasources-backend.name" . }}-storage
+          {{- else }}
+          emptyDir:
+            sizeLimit: 5Gi
+          {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.worker.terminationGracePeriodSeconds | default 60 }}
+{{- end }}

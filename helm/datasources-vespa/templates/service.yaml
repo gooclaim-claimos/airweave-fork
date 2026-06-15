@@ -1,0 +1,27 @@
+{{/*
+Headless StatefulSet companion Service — needed for stable DNS within
+the StatefulSet, and exposes the two Vespa ports cluster-internally:
+  8081   — Query + Document API (backend talks here)
+  19071  — Config server (init Job + admin tools talk here)
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "datasources-vespa.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-vespa.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None    # headless for StatefulSet
+  ports:
+    - name: query
+      port: {{ .Values.service.queryPort }}
+      targetPort: query
+      protocol: TCP
+    - name: config
+      port: {{ .Values.service.configPort }}
+      targetPort: config
+      protocol: TCP
+  selector:
+    {{- include "datasources-vespa.selectorLabels" . | nindent 4 }}

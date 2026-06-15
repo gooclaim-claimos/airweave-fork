@@ -1,0 +1,32 @@
+{{- if .Values.persistence.enabled }}
+{{/*
+PersistentVolumeClaim — holds the filesystem storage backend's working
+directory ({{ .Values.config.STORAGE_PATH }}). Survives pod restarts and
+helm rollouts so previously uploaded files (and their sidecar JSONs)
+stay indexed in Vespa without a re-upload.
+
+ReadWriteMany so both the backend (which writes uploads) and the
+temporal worker (which reads them at sync time) can mount the same
+volume simultaneously. Backed by Azure Files via the azurefile-csi
+StorageClass — disk.csi.azure.com only offers RWO.
+*/}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "datasources-backend.name" . }}-storage
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-backend.labels" . | nindent 4 }}
+  # `helm.sh/resource-policy: keep` so the PVC (and the uploads on it)
+  # survive a `helm uninstall`. Delete it manually after confirming
+  # nothing depends on the data.
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ .Values.persistence.storageClass | default "azurefile-csi" }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+{{- end }}
