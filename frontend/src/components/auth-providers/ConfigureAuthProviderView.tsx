@@ -30,7 +30,7 @@ export interface ConfigureAuthProviderViewProps extends DialogViewProps {
 }
 
 // Secure fallback components for image errors
-const AirweaveFallback: React.FC<{ isDark: boolean }> = ({ isDark }) => (
+const GooclaimLogoFallback: React.FC<{ isDark: boolean }> = ({ isDark }) => (
     <div className={cn(
         "w-full h-full rounded flex items-center justify-center",
         isDark ? "bg-blue-900" : "bg-blue-100"
@@ -39,7 +39,7 @@ const AirweaveFallback: React.FC<{ isDark: boolean }> = ({ isDark }) => (
             "text-xl font-bold",
             isDark ? "text-blue-400" : "text-blue-600"
         )}>
-            AW
+            G
         </span>
     </div>
 );
@@ -447,7 +447,7 @@ export const ConfigureAuthProviderView: React.FC<ConfigureAuthProviderViewProps>
                                         "shadow-lg ring-2 ring-gray-400/30"
                                     )}>
                                         {airweaveImageError ? (
-                                            <AirweaveFallback isDark={isDark} />
+                                            <GooclaimLogoFallback isDark={isDark} />
                                         ) : (
                                             <img
                                                 src={isDark ? "/gooclaim-logo.svg" : "/gooclaim-logo.svg"}

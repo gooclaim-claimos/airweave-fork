@@ -68,8 +68,8 @@ function App() {
           <Route path="/billing/setup" element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingSetup />} />
           <Route path="/billing/portal" element={IS_GOOCLAIM_TENANT ? <Navigate to="/collections" replace /> : <BillingPortal />} />
 
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminDashboard />} />
+          {/* Admin routes — gated to / in Gooclaim mode (admin lives in Console) */}
+          <Route path="/admin" element={IS_GOOCLAIM_TENANT ? <Navigate to="/" replace /> : <AdminDashboard />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

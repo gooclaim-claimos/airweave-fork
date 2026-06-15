@@ -21,6 +21,47 @@ from ._base import BaseProvider, ProviderError
 from .schemas import ProviderModelSpec
 
 
+# ── Track 0 Blocker 4 — v1.0 audit log shim (2026-05-30) ───────────────────
+# Sources currently calls OpenAI directly with its own API key. CLAUDE.md
+# requires LLM calls to route through gooclaim-model-gateway; v1.1 will land
+# that migration (see V1-STABILIZATION-PLAN.md "Blocker 4 deferred").
+#
+# In the meantime we emit a structured log line after every LLM/embedding
+# call so:
+#   1. Ops can grep "data_sources_llm_call_completed" for spend/error visibility
+#   2. IRDAI auditors see a record of every AI call from Sources
+#   3. v1.1 migration can swap this log shim for a real audit event publish
+#      to gooclaim-audit without touching the call sites.
+def _log_llm_audit(
+    ctx: ApiContext,
+    *,
+    operation: str,
+    model: str,
+    response: Any = None,
+    error: Optional[str] = None,
+) -> None:
+    """Emit a structured audit log for a Sources LLM/embedding call."""
+    usage = getattr(response, "usage", None) if response is not None else None
+    payload: Dict[str, Any] = {
+        "event": "data_sources_llm_call_completed",
+        "provider": "openai",
+        "operation": operation,
+        "model": model,
+        "tenant_id": getattr(ctx, "tenant_id", None) or getattr(ctx, "organization_id", None),
+        "tokens_prompt": getattr(usage, "prompt_tokens", None) if usage else None,
+        "tokens_completion": getattr(usage, "completion_tokens", None) if usage else None,
+        "tokens_total": getattr(usage, "total_tokens", None) if usage else None,
+        "error": error,
+        "v1_1_note": (
+            "Will route via gooclaim-model-gateway + emit DATA_SOURCES_LLM_CALL_COMPLETED in v1.1"
+        ),
+    }
+    if error:
+        ctx.logger.warning(payload)
+    else:
+        ctx.logger.info(payload)
+
+
 class OpenAIProvider(BaseProvider):
     """OpenAI LLM provider."""
 
@@ -92,7 +133,20 @@ class OpenAIProvider(BaseProvider):
                 max_completion_tokens=self.MAX_COMPLETION_TOKENS,
             )
         except Exception as e:
+            _log_llm_audit(
+                self.ctx,
+                operation="chat.completions",
+                model=self.model_spec.llm_model.name,
+                error=str(e),
+            )
             raise RuntimeError(f"OpenAI completion API call failed: {e}") from e
+
+        _log_llm_audit(
+            self.ctx,
+            operation="chat.completions",
+            model=self.model_spec.llm_model.name,
+            response=response,
+        )
 
         content = response.choices[0].message.content
         if not content:
@@ -121,7 +175,20 @@ class OpenAIProvider(BaseProvider):
                 max_output_tokens=self.MAX_STRUCTURED_OUTPUT_TOKENS,
             )
         except Exception as e:
+            _log_llm_audit(
+                self.ctx,
+                operation="responses.parse",
+                model=self.model_spec.llm_model.name,
+                error=str(e),
+            )
             raise RuntimeError(f"OpenAI structured output API call failed: {e}") from e
+
+        _log_llm_audit(
+            self.ctx,
+            operation="responses.parse",
+            model=self.model_spec.llm_model.name,
+            response=response,
+        )
 
         parsed = response.output_parsed
         if not parsed:
@@ -209,9 +276,22 @@ class OpenAIProvider(BaseProvider):
 
             response = await self.client.embeddings.create(**api_params)
         except Exception as e:
+            _log_llm_audit(
+                self.ctx,
+                operation="embeddings",
+                model=self.model_spec.embedding_model.name,
+                error=str(e),
+            )
             raise RuntimeError(
                 f"OpenAI embeddings API call failed at index {batch_start}: {e}"
             ) from e
+
+        _log_llm_audit(
+            self.ctx,
+            operation="embeddings",
+            model=self.model_spec.embedding_model.name,
+            response=response,
+        )
 
         if not response.data:
             raise ProviderError(f"OpenAI returned no embeddings for batch at {batch_start}")

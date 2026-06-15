@@ -16,6 +16,7 @@ import { apiClient } from "@/lib/api";
 import type { SearchEvent, PartialStreamUpdate, StreamPhase } from "@/search/types";
 import { DESIGN_SYSTEM } from "@/lib/design-system";
 import { SingleActionCheckResponse } from "@/types";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 
 // Search tier — maps to the three backend endpoint tiers
 export type SearchTier = "instant" | "classic" | "agentic";
@@ -82,7 +83,13 @@ const TIER_CONFIG = {
     },
 } as const;
 
-const TIERS: SearchTier[] = ["instant", "classic", "agentic"];
+// Gooclaim mode hides the "agentic" tier — that tier calls Azure OpenAI
+// directly inside Airweave, which violates Gooclaim's CLAUDE.md hard rule
+// ("never call Azure OAI directly — always use ModelGatewayClient"). When
+// Gooclaim wires agentic through the gateway in v1.1, flip this back on.
+const TIERS: SearchTier[] = IS_GOOCLAIM_TENANT
+    ? ["instant", "classic"]
+    : ["instant", "classic", "agentic"];
 
 /**
  * SearchBox Component
@@ -517,23 +524,29 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
                 >
                     {/* Textarea + code button */}
                     <div className="relative px-2 pt-2 pb-1">
-                        {/* Code button (top-right) */}
+                        {/* Code button (top-right) — hidden in Gooclaim mode.
+                            The opened modal renders `from airweave import AirweaveSDK`
+                            style snippets which leak Airweave brand into a copy-pasteable
+                            integration surface. Gooclaim users (TPA admins) don't write
+                            code anyway; devs needing the SDK go through gooclaim-docs. */}
                         <TooltipProvider delayDuration={0}>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowCodeBlock(true)}
-                                        className={cn(
-                                            "absolute top-2 right-2 h-8 w-8 rounded-md border-dashed border shadow-sm flex items-center justify-center transition-all z-20",
-                                            isDark
-                                                ? "bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-400/40"
-                                                : "bg-blue-50/50 border-blue-400/40 hover:bg-blue-50/70 hover:border-blue-400/50"
-                                        )}
-                                        title="View integration code"
-                                    >
-                                        <CodeXml className={cn(DESIGN_SYSTEM.icons.button, isDark ? "text-blue-400" : "text-blue-500")} />
-                                    </button>
+                                    {IS_GOOCLAIM_TENANT ? <span /> : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowCodeBlock(true)}
+                                            className={cn(
+                                                "absolute top-2 right-2 h-8 w-8 rounded-md border-dashed border shadow-sm flex items-center justify-center transition-all z-20",
+                                                isDark
+                                                    ? "bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/15 hover:border-blue-400/40"
+                                                    : "bg-blue-50/50 border-blue-400/40 hover:bg-blue-50/70 hover:border-blue-400/50"
+                                            )}
+                                            title="View integration code"
+                                        >
+                                            <CodeXml className={cn(DESIGN_SYSTEM.icons.button, isDark ? "text-blue-400" : "text-blue-500")} />
+                                        </button>
+                                    )}
                                 </TooltipTrigger>
                                 <TooltipContent side="left" sideOffset={8} className={DESIGN_SYSTEM.tooltip.content} arrowClassName={DESIGN_SYSTEM.tooltip.arrow}>
                                     <div className="space-y-2">
