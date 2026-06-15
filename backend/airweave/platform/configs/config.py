@@ -991,6 +991,33 @@ class FileStubConfig(SourceConfig):
     )
 
 
+class GooclaimUploadConfig(SourceConfig):
+    """Gooclaim native upload source configuration.
+
+    Each source connection of this type owns a directory under the platform's
+    storage backend. Files uploaded via `POST /api/uploads/{connection_id}`
+    land in that directory and become entities on the next sync.
+    """
+
+    upload_dir: str = Field(
+        ...,
+        title="Upload Directory",
+        description=(
+            "Storage-relative path that holds this connection's uploads. "
+            "Set by the platform when the source connection is created — "
+            "users do not edit this directly."
+        ),
+    )
+    scope: Literal["global", "tenant"] = Field(
+        default="tenant",
+        title="Scope",
+        description=(
+            "global: visible to all tenants (platform admins only). "
+            "tenant: scoped to the connection's owning organization."
+        ),
+    )
+
+
 ExceptionType = Literal[
     "runtime_error",
     "source_auth_error",

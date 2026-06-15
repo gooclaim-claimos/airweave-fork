@@ -36,13 +36,21 @@ class RedisClient:
         Honours single-host vs. Sentinel mode based on settings — see
         ``airweave.core.redis_factory.make_redis_client``.
         """
+        # Gooclaim patch — Azure Cache for Redis enforces a 4-minute idle
+        # TCP timeout that silently kills long-poll connections (BRPOP,
+        # blocking subscribe). The TCP keepalive options below already
+        # nudge the kernel every 60s, but if `socket_timeout` is set the
+        # application-level read races the server-side timeout and the
+        # client raises `TimeoutError` mid-poll. Setting it to None lets
+        # the per-command timeout (e.g. BRPOP's own `timeout` arg) drive
+        # waits, matching the engine fix in gooclaim-engine PR #100.
         return make_redis_client(
             max_connections=max_connections,
             retry_on_timeout=True,
             socket_keepalive=True,
             socket_keepalive_options=get_socket_keepalive_options(),
-            socket_connect_timeout=5,
-            socket_timeout=5,
+            socket_connect_timeout=10,
+            socket_timeout=None,
             retry_on_error=[ConnectionError, TimeoutError],
         )
 

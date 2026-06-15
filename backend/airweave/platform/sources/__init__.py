@@ -21,6 +21,7 @@ from .freshdesk import FreshdeskSource
 from .github import GitHubSource
 from .gitlab import GitLabSource
 from .gmail import GmailSource
+from .gooclaim_upload import GooclaimUploadSource
 from .google_calendar import GoogleCalendarSource
 from .google_docs import GoogleDocsSource
 from .google_drive import GoogleDriveSource
@@ -95,6 +96,7 @@ ALL_SOURCES: list[type] = [
     HerbPeopleSource,
     HerbResourcesSource,
     GmailSource,
+    GooclaimUploadSource,
     GoogleCalendarSource,
     GoogleDocsSource,
     GoogleDriveSource,

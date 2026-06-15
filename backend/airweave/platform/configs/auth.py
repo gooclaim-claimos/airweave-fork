@@ -1126,6 +1126,27 @@ class FileStubAuthConfig(AuthConfig):
     )
 
 
+class GooclaimUploadAuthConfig(AuthConfig):
+    """Gooclaim native upload source — no external credentials needed.
+
+    Files are uploaded directly through the Gooclaim Console / Data Sources
+    UI into a server-side storage path that's namespaced per source
+    connection. The platform's own tenant + RBAC chain enforces who can
+    write; no per-source credentials apply.
+
+    The ``upload_tenant`` field is a non-secret placeholder so the platform's
+    DirectAuthentication.validate_credentials check (which rejects an empty
+    credentials dict) succeeds during source-connection creation. The value
+    is not used by the connector at runtime.
+    """
+
+    upload_tenant: str = Field(
+        default="gooclaim",
+        title="Upload Tenant",
+        description="Placeholder marker (no real auth required).",
+    )
+
+
 class SnapshotAuthConfig(BaseConfig):
     """Optional authentication for blob storage access.
 
