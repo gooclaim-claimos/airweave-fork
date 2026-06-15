@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { CollectionFormView } from './creation-views/CollectionFormView';
 import { SourceSelectView } from './creation-views/SourceSelectView';
 import { SourceConfigView } from './creation-views/SourceConfigView';
+import { NativeUploadView } from './creation-views/NativeUploadView';
 import { OAuthRedirectView } from './creation-views/OAuthRedirectView';
 import { SuccessView } from './creation-views/SuccessView';
 import { CollectionVisualization } from './creation-views/CollectionVisualization';
@@ -88,6 +89,8 @@ export const CollectionCreationModal: React.FC = () => {
           humanReadableId={humanReadableId}
           isAddingToExisting={isAddingToExistingCollection()}
         />;
+      case 'native-upload':
+        return <NativeUploadView humanReadableId={humanReadableId} />;
       case 'oauth-redirect':
         return <OAuthRedirectView />;
       case 'success':
@@ -108,7 +111,8 @@ export const CollectionCreationModal: React.FC = () => {
   // Determine column widths based on step
   const getColumnWidths = () => {
     // Use much wider form column for source-config (URL sharing needs more space)
-    if (currentStep === 'source-config') {
+    // and native-upload (drop zone + uploads list both want room).
+    if (currentStep === 'source-config' || currentStep === 'native-upload') {
       return { left: 'w-[640px]', right: 'flex-1' };
     }
     return { left: 'w-[440px]', right: 'flex-1' };
