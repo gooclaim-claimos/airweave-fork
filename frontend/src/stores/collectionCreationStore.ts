@@ -5,6 +5,7 @@ export type CreationStep =
   | 'collection-form'
   | 'source-select'
   | 'source-config'
+  | 'native-upload'   // Gooclaim native upload flow — replaces source-config for gooclaim_upload
   | 'oauth-redirect'
   | 'success';
 

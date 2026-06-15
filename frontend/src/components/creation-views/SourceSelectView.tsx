@@ -123,6 +123,15 @@ export const SourceSelectView: React.FC<SourceSelectViewProps> = ({ humanReadabl
       store.setAuthMode('direct_auth');
     }
 
+    // Gooclaim native upload uses its own step instead of the generic
+    // source-config form (no auth fields, files come in via a separate
+    // multipart endpoint).
+    if (source.short_name === 'gooclaim_upload') {
+      store.setAuthMode('direct_auth');
+      setStep('native-upload');
+      return;
+    }
+
     setStep('source-config');
   };
 

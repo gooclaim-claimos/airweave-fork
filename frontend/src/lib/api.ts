@@ -390,6 +390,24 @@ export const apiClient = {
     return makeRequest<T>('DELETE', endpoint, { params });
   },
 
+  // Multipart file uploads — used by the Gooclaim Native Upload flow.
+  // We can't go through makeRequest's body builder because it JSON-stringifies
+  // and forces a Content-Type header; for multipart we need the browser
+  // to set Content-Type with its own boundary.
+  async postFormData(endpoint: string, form: FormData, signal?: AbortSignal): Promise<Response> {
+    const url = new URL(`${API_CONFIG.baseURL}${endpoint}`);
+    const headers = await getHeaders();
+    // Drop Content-Type so fetch generates `multipart/form-data; boundary=…` itself.
+    delete (headers as Record<string, string>)['Content-Type'];
+    return fetch(url.toString(), {
+      method: 'POST',
+      headers,
+      body: form,
+      signal,
+      credentials: 'include',
+    });
+  },
+
   // New: SSE method that uses the same baseURL + headers + token refresh semantics
   async sse(
     endpoint: string,
