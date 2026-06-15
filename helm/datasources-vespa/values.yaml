@@ -1,0 +1,45 @@
+image:
+  repository: vespaengine/vespa
+  tag: "8"
+  pullPolicy: IfNotPresent
+
+# Single-node dev topology — admin + container + content all on one pod.
+replicaCount: 1
+
+service:
+  queryPort: 8081
+  configPort: 19071
+
+# Persistent volume for Vespa's /opt/vespa/var (indexes, logs, application state).
+# 20Gi is a comfortable starting size for the v1.0 demo dataset (≤ 1M chunks).
+persistence:
+  enabled: true
+  storageClass: ""    # use AKS default (managed-csi)
+  size: 20Gi
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 2Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+# Init Job runs after Vespa StatefulSet pod is ready — deploys the application
+# package (services.xml + hosts.xml + schemas) which registers the 5 document
+# types airweave indexes into (base_entity, file_entity, code_file_entity,
+# email_entity, web_entity).
+initJob:
+  image: alpine:3.19
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+
+# ConfigMap files for the Vespa application package.
+# Mounted at /app inside the init container. Schema files are loaded from the
+# airweave-fork repo's vespa/app/ folder via Helm `.Files.Glob`.
+applicationPackage:
+  configServerUrl: http://datasources-vespa:19071
+  # OpenAI text-embedding-3-small returns 1536-dim vectors — matches airweave's
+  # default. Bump to 3072 if switching to text-embedding-3-large.
+  embeddingDimensions: 1536
+  appVersion: "v0.9.73-gck.1"

@@ -1,0 +1,116 @@
+{{/*
+Init Job: after Vespa is healthy, lay out the application package files into
+the correct directory structure and call POST /application/v2/tenant/default/
+prepareandactivate on the config server to register the schema.
+
+Mirrors the docker-compose vespa-init container's behavior — but using a
+ConfigMap projection + a small shell script instead of a volume bind from
+the host filesystem.
+*/}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "datasources-vespa.name" . }}-deploy-appkg
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-vespa.labels" . | nindent 4 }}
+  annotations:
+    # Run this Job on EVERY Helm upgrade so schema changes are re-applied.
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.initJob.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.initJob.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "datasources-vespa.selectorLabels" . | nindent 8 }}
+        job: deploy-appkg
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: deploy
+          image: {{ .Values.initJob.image }}
+          env:
+            - name: VESPA_CONFIG_SERVER
+              value: {{ .Values.applicationPackage.configServerUrl | quote }}
+            # Schemas in the application package use the {{`{{EMBEDDING_DIM}}`}}
+            # template placeholder for the tensor field dimension — must be
+            # substituted before deploy or Vespa rejects with INVALID_APPLICATION_PACKAGE.
+            # 1536 matches OpenAI text-embedding-3-small (Airweave's default).
+            - name: EMBEDDING_DIMENSIONS
+              value: {{ .Values.applicationPackage.embeddingDimensions | default 1536 | quote }}
+            - name: APP_VERSION
+              value: {{ .Values.applicationPackage.appVersion | default "dev" | quote }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              apk add --no-cache curl >/dev/null 2>&1 || true
+
+              # Wait for Vespa config server.
+              echo "Waiting for Vespa config server at ${VESPA_CONFIG_SERVER}..."
+              i=0
+              while [ $i -lt 60 ]; do
+                if curl -sf "${VESPA_CONFIG_SERVER}/state/v1/health" >/dev/null 2>&1; then
+                  echo "  Config server up."
+                  break
+                fi
+                i=$((i + 1))
+                sleep 5
+              done
+              if [ $i -ge 60 ]; then
+                echo "ERROR: config server never became healthy"
+                exit 1
+              fi
+
+              # Lay out the application package from the flat ConfigMap keys.
+              mkdir -p /app/schemas /app/search/query-profiles
+              for f in /raw/root__*; do
+                cp "$f" "/app/$(basename "$f" | sed 's/^root__//')"
+              done
+              for f in /raw/schemas__*; do
+                cp "$f" "/app/schemas/$(basename "$f" | sed 's/^schemas__//')"
+              done
+              for f in /raw/qp__*; do
+                cp "$f" "/app/search/query-profiles/$(basename "$f" | sed 's/^qp__//')"
+              done
+
+              echo "Application package layout:"
+              find /app -type f
+
+              # Template the placeholders that airweave's schemas + services.xml
+              # carry: {{`{{EMBEDDING_DIM}}`}} → openai embedding dimension,
+              # {{`{{VERSION}}`}} → app version label.
+              echo "Templating placeholders (EMBEDDING_DIM=${EMBEDDING_DIMENSIONS}, VERSION=${APP_VERSION})..."
+              find /app -type f \( -name "*.sd" -o -name "*.xml" \) | while read f; do
+                sed -i "s/{{`{{EMBEDDING_DIM}}`}}/${EMBEDDING_DIMENSIONS}/g" "$f"
+                sed -i "s/{{`{{VERSION}}`}}/${APP_VERSION}/g" "$f"
+              done
+
+              # Deploy via REST API (no Vespa CLI needed in alpine image).
+              # Wrap /app in a zip first since the prepareandactivate endpoint
+              # expects an application/zip body.
+              apk add --no-cache zip >/dev/null 2>&1
+              cd /app && zip -rq /tmp/app.zip .
+              echo "Uploading $(stat -c %s /tmp/app.zip) bytes..."
+              RESPONSE=$(curl -sS -X POST \
+                -H "Content-Type: application/zip" \
+                --data-binary @/tmp/app.zip \
+                "${VESPA_CONFIG_SERVER}/application/v2/tenant/default/prepareandactivate")
+              echo "Vespa response: $RESPONSE"
+              # Naive success check — Vespa returns JSON with "session-id" on success.
+              echo "$RESPONSE" | grep -q '"session-id"' || {
+                echo "ERROR: deploy did not return session-id"
+                exit 1
+              }
+              echo "Application package deployed successfully."
+          volumeMounts:
+            - name: raw-appkg
+              mountPath: /raw
+      volumes:
+        - name: raw-appkg
+          configMap:
+            name: {{ include "datasources-vespa.name" . }}-appkg

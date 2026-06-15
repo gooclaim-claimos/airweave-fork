@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "datasources-backend.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-backend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  # RWO PVCs only attach to one pod at a time. The default RollingUpdate
+  # strategy creates the new pod before terminating the old one, so the
+  # new pod sits in ContainerCreating waiting for the volume detach. Force
+  # Recreate so the old pod is gone before the new pod is scheduled.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "datasources-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "datasources-backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        # Force pod restart on ConfigMap or Secret change so new env values
+        # are picked up without a manual rollout-restart.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "datasources-backend.serviceAccountName" . }}
+      {{- with .Values.deployment.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.deployment.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # Override the image's entrypoint to add `--root-path /api` so
+          # FastAPI tells the embedded Swagger UI to fetch openapi.json from
+          # /api/openapi.json (matching our ingress mount). Also drop --reload
+          # which is dev-only and adds spurious overhead in production pods.
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -e
+              sed 's|--port 8001 --reload|--port 8001 --root-path /api|' /app/entrypoint.sh > /tmp/entrypoint-patched.sh
+              chmod +x /tmp/entrypoint-patched.sh
+              exec /tmp/entrypoint-patched.sh
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "datasources-backend.name" . }}-config
+            - secretRef:
+                name: {{ include "datasources-backend.name" . }}
+          # Database URL assembled from injected POSTGRES_* env at startup
+          # via an exec wrapper. Airweave's Settings model reads DATABASE_URL
+          # directly, so we build it here from the parts ESO provides.
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?ssl=require"
+          {{- with .Values.deployment.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.deployment.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.deployment.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/datasources/storage
+      volumes:
+        # Filesystem storage backend — uploaded files, temp sync state.
+        # Backed by a PVC so uploads survive pod restarts + helm rollouts.
+        # The chart owns the PVC (see pvc.yaml) so it is kept in sync with
+        # this deployment's lifecycle.
+        - name: storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "datasources-backend.name" . }}-storage
+          {{- else }}
+          emptyDir:
+            sizeLimit: 5Gi
+          {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.deployment.terminationGracePeriodSeconds | default 30 }}

@@ -1,0 +1,190 @@
+# =============================================================================
+# datasources-backend (Airweave fork) — dev environment values
+# =============================================================================
+#
+# Service contract: FastAPI on port 8001, Swagger at /docs, /health endpoint.
+# Talks to: gc-dev Postgres (datasources DB) + Redis + Vespa (in-cluster) +
+# native OpenAI (sk-proj-…) for embeddings + Anthropic for fallback.
+#
+# Auth chain: Gooclaim Console mints a SSO bridge cookie via gooclaim-auth's
+# /v1/auth/sources-sso-mint endpoint (still pending — for now we expose with
+# AUTH_ENABLED=false in dev to unblock plumbing).
+# =============================================================================
+
+name: datasources-backend
+replicaCount: 1
+
+image:
+  repository: gcdevacrcin001.azurecr.io/datasources-backend
+  tag: v0.9.73-gck.8
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+
+service:
+  type: ClusterIP
+  port: 8001
+
+# PVC backing the filesystem storage backend. Disabling falls back to a
+# pod-local emptyDir (dev-only; uploads are lost on every pod restart).
+persistence:
+  enabled: true
+  storageClass: ""      # use the AKS default (managed-csi)
+  size: 20Gi
+
+# Temporal worker — sibling deployment that actually runs sync workflows.
+# Without the worker, sync jobs sit in Temporal as PENDING forever.
+worker:
+  enabled: true
+  replicaCount: 1
+  terminationGracePeriodSeconds: 60
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 3Gi
+
+deployment:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false   # uvicorn writes + temp uploads
+    capabilities:
+      drop: ["ALL"]
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 3Gi
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 6
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: http
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+  # Block external dial-out apart from explicit upstreams (Postgres, Redis,
+  # Vespa, OpenAI, Anthropic, Azure Blob, Svix). For dev we leave open;
+  # tighten in nprd/prod via networkpolicy.yaml when we add it.
+  terminationGracePeriodSeconds: 30
+
+# Non-secret config — goes into a ConfigMap and gets envFrom-mounted.
+# Secret values come from the ExternalSecret below.
+config:
+  # Project identity — flows into the FastAPI app title, openapi.json `info.title`,
+  # and the Swagger UI header. Overrides Airweave's default "Airweave".
+  PROJECT_NAME: Data Sources
+  # Embedder + tokenizer defaults
+  DENSE_EMBEDDER: openai_text_embedding_3_small
+  EMBEDDING_DIMENSIONS: "1536"
+  SPARSE_EMBEDDER: fastembed_bm25
+  # Postgres (host/user/db come from secret; DATABASE_URL assembled in deployment.yaml)
+  POSTGRES_PORT: "5432"
+  # Redis (host/port come from secret)
+  # Vespa — wired to our in-cluster StatefulSet from P2
+  VESPA_URL: "http://datasources-vespa.datasources.svc.cluster.local"
+  VESPA_PORT: "8081"
+  VESPA_CLUSTER: airweave
+  # Temporal — Marketriangle's cluster lives in temporal namespace.
+  # IMPORTANT: host ONLY — Airweave's client appends `:7233` itself, so
+  # passing `host:7233` here produces a bogus `host:7233:7233` target URL
+  # ("ValueError: invalid target URL: invalid port number" on first
+  # SourceConnection create that schedules a Temporal-backed sync).
+  TEMPORAL_HOST: "temporal-frontend.temporal.svc.cluster.local"
+  TEMPORAL_NAMESPACE: default
+  # Svix — placeholder so Airweave boots; webhooks UI is hidden in Gooclaim mode
+  SVIX_URL: "http://localhost:8071"
+  # Auth — disabled in dev so Console SSO bridge can be wired later
+  AUTH_ENABLED: "false"
+  # Gooclaim mode marker (FE uses this to render Sources UI)
+  ENVIRONMENT: dev
+  LOCAL_DEVELOPMENT: "false"
+  LOCAL_CURSOR_DEVELOPMENT: "false"
+  # v1.0: use local filesystem storage. Azure Blob storage wiring can land
+  # in v1.1 — needs a storage account spec + workload identity grant first.
+  SKIP_AZURE_STORAGE: "true"
+  STORAGE_BACKEND: filesystem
+  STORAGE_PATH: /var/lib/datasources/storage
+  # Poetry behavior overrides — the prod Dockerfile sets these via
+  # `poetry config` for the root user during build, but when the container
+  # runs as UID 1000 (per podSecurityContext) those configs aren't picked
+  # up and poetry tries to mkdir a new venv at /. Setting env vars guarantees
+  # the same behavior regardless of the runtime user.
+  POETRY_VIRTUALENVS_CREATE: "false"
+  POETRY_VIRTUALENVS_IN_PROJECT: "false"
+  POETRY_CACHE_DIR: "/tmp/poetry-cache"
+  # OCR provider — the Temporal worker hard-requires one configured before
+  # it will start. For v1.0 markdown / text-only demos we set a placeholder
+  # Mistral key just to satisfy the constructor; no real Mistral call is
+  # made until a sync ingests an OCR-required file (scanned PDF / image).
+  # Swap to a real key (or DOCLING_BASE_URL) when ingesting scanned docs.
+  MISTRAL_API_KEY: "placeholder-no-real-mistral-key-yet"
+  # SemanticChunker uses an embedder to find topic boundaries when chunking
+  # documents. Reuses our OpenAI key for that instead of a separate local
+  # model — avoids the `/.cache` writability problem the model2vec default
+  # hits when the pod runs as a non-root user, and consolidates on a single
+  # embedding provider for chunking + final search embeddings.
+  CHUNKER_EMBEDDER: openai
+  CHUNKER_OPENAI_MODEL: text-embedding-3-small
+
+# Secrets: pulled from gc-dev-kv-main-cin-001 via the platform-wide
+# ClusterSecretStore wired by ESO + Workload Identity.
+externalSecret:
+  enabled: true
+  clusterSecretStore: gooclaim-azurekv-dev
+  refreshInterval: 1h
+  # Key on the K8s side : key in AKV — order matches what Airweave reads at startup.
+  data:
+    FIRST_SUPERUSER: datasources-superuser-email
+    FIRST_SUPERUSER_PASSWORD: datasources-superuser-password
+    ENCRYPTION_KEY: datasources-encryption-key
+    STATE_SECRET: datasources-state-secret
+    SVIX_JWT_SECRET: datasources-svix-jwt-secret
+    OPENAI_API_KEY: datasources-openai-api-key
+    OPENAI_BASE_URL: datasources-openai-base-url
+    ANTHROPIC_API_KEY: datasources-anthropic-api-key
+    WEBHOOK_HMAC_SECRET: datasources-webhook-hmac-secret
+    POSTGRES_HOST: datasources-postgres-host
+    POSTGRES_USER: datasources-postgres-user
+    POSTGRES_DB: datasources-postgres-db
+    POSTGRES_PASSWORD: gc-dev-pg-admin-password    # reuse existing admin pwd (datasources DB user creation deferred)
+    REDIS_HOST: datasources-redis-host
+    REDIS_PORT: datasources-redis-port
+    REDIS_PASSWORD: datasources-redis-password
+
+ingress:
+  enabled: true
+  className: nginx
+  host: sources.dev.gooclaim.com
+  # Backend FastAPI exposes endpoints at root (`/health`, `/docs`, `/openapi.json`,
+  # `/source-connections`, etc.) — Airweave does NOT prefix with `/api`. We mount
+  # under `/api/*` externally and strip the prefix in nginx before forwarding.
+  # Path captures with `(.*)` so `$2` becomes the trailing portion that we forward.
+  path: /api(/|$)(.*)
+  pathType: ImplementationSpecific
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"     # file uploads
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"   # long sync streams
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  tls:
+    enabled: true
+    secretName: sources-dev-gooclaim-com-tls

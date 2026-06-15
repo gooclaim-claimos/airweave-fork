@@ -1,0 +1,81 @@
+# =============================================================================
+# datasources-frontend — dev environment values
+# =============================================================================
+#
+# Static React SPA built with Vite, served by `serve` (node) on port 3000.
+# Build-time bakes VITE_GOOCLAIM_MODE=true so the rebrand UI renders.
+# Runtime API URL injected via window.ENV (see public/env-config.js).
+# =============================================================================
+
+name: datasources-frontend
+replicaCount: 1
+
+image:
+  repository: gcdevacrcin001.azurecr.io/datasources-frontend
+  tag: v0.9.73-gck.2
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+
+service:
+  type: ClusterIP
+  port: 8080
+
+deployment:
+  # Frontend Dockerfile builds with root and the runtime entrypoint writes
+  # `/app/dist/config.js` from env vars. Running as a non-root user breaks
+  # that write — and since this container only serves static SPA assets
+  # there's negligible security upside to non-root. Leave the pod's default
+  # runtime user (which the image bakes as root) for now.
+  podSecurityContext: {}
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop: ["ALL"]
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 20
+    periodSeconds: 30
+    timeoutSeconds: 5
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+  terminationGracePeriodSeconds: 30
+
+# Runtime window.ENV injection — `serve` doesn't have a real template engine,
+# so we ship the env-config.js as a ConfigMap mounted into /app/dist/env-config.js.
+# index.html loads /env-config.js before bundle, populating window.ENV.
+runtimeEnv:
+  API_URL: "https://sources.dev.gooclaim.com/api"
+  ENABLE_AUTH: "false"
+  LOCAL_DEVELOPMENT: "false"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: sources.dev.gooclaim.com
+  # Frontend at root, backend (/api/*) handled by datasources-backend chart's
+  # ingress. Both ingresses share the same host + TLS secret cert-manager
+  # provisions on first request.
+  path: /
+  pathType: Prefix
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  tls:
+    enabled: true
+    secretName: sources-dev-gooclaim-com-tls

@@ -1,0 +1,87 @@
+{{/*
+Single-node Vespa StatefulSet — admin + container + content all on one pod.
+Persistent volume holds /opt/vespa/var (indexes, transaction logs, app state).
+StatefulSet (vs Deployment) so the PVC stays bound to this pod identity
+across restarts and the /opt/vespa/var hostname survives rescheduling.
+*/}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "datasources-vespa.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "datasources-vespa.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "datasources-vespa.name" . }}
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "datasources-vespa.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "datasources-vespa.selectorLabels" . | nindent 8 }}
+    spec:
+      hostname: vespa
+      # Vespa container runs as user vespa (uid/gid 1000). K8s mounts the PV
+      # owned by root by default, which makes `mkdir /opt/vespa/var/tmp`
+      # panic at startup. fsGroup tells the kubelet to chown the mount
+      # recursively to gid 1000 before the container starts.
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: vespa
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            # hosts.xml in the application package uses `<host name="localhost">`.
+            # In K8s the pod's real hostname is the long StatefulSet FQDN which
+            # makes Vespa panic at startup ("this host should not run a config
+            # server"). VESPA_HOSTNAME overrides the self-identification to
+            # match the alias in hosts.xml, and VESPA_CONFIGSERVERS points
+            # everything in the cluster to the same single node.
+            - name: VESPA_HOSTNAME
+              value: "localhost"
+            - name: VESPA_CONFIGSERVERS
+              value: "localhost"
+          ports:
+            - name: query
+              containerPort: 8081
+              protocol: TCP
+            - name: config
+              containerPort: 19071
+              protocol: TCP
+          volumeMounts:
+            - name: vespa-var
+              mountPath: /opt/vespa/var
+          livenessProbe:
+            httpGet:
+              path: /state/v1/health
+              port: config
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /state/v1/health
+              port: config
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: vespa-var
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with .Values.persistence.storageClass }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

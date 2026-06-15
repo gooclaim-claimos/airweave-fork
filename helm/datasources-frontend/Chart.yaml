@@ -1,0 +1,6 @@
+apiVersion: v2
+name: datasources-frontend
+description: Gooclaim Data Sources frontend — Vite-built React UI (Airweave fork) served by `serve` on port 3000.
+type: application
+version: 0.1.0
+appVersion: "v0.9.73-gck.1"
