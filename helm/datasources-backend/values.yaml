@@ -167,6 +167,11 @@ externalSecret:
     REDIS_HOST: datasources-redis-host
     REDIS_PORT: datasources-redis-port
     REDIS_PASSWORD: datasources-redis-password
+    # Azure Document Intelligence — primary OCR backend ahead of Mistral.
+    # When both are set the OCR fallback chain becomes:
+    #   azure-di -> mistral -> docling (if DOCLING_BASE_URL set).
+    AZURE_DI_ENDPOINT: datasources-azure-di-endpoint
+    AZURE_DI_KEY: datasources-azure-di-key
 
 ingress:
   enabled: true

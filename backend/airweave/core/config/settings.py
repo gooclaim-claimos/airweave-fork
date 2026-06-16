@@ -213,6 +213,11 @@ class Settings(BaseSettings):
     # Docling OCR fallback service (None = disabled)
     DOCLING_BASE_URL: Optional[str] = None
 
+    # Azure Document Intelligence OCR (None = disabled). When both endpoint
+    # and key are set, used as the PRIMARY OCR provider ahead of Mistral.
+    AZURE_DI_ENDPOINT: Optional[str] = None
+    AZURE_DI_KEY: Optional[str] = None
+
     # Temporal configuration
     TEMPORAL_HOST: str = "localhost"
     TEMPORAL_PORT: int = 7233

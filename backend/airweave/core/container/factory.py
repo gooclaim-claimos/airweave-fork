@@ -96,6 +96,7 @@ from airweave.domains.oauth.repository import (
     OAuthInitSessionRepository,
     OAuthRedirectSessionRepository,
 )
+from airweave.domains.ocr.azure_di import AzureDIOCR
 from airweave.domains.ocr.docling import DoclingOcrAdapter
 from airweave.domains.ocr.fallback import FallbackOcrProvider
 from airweave.domains.ocr.mistral.converter import MistralOCR
@@ -750,18 +751,31 @@ def _create_ocr_provider(
 ) -> Optional[OcrProvider]:
     """Create OCR provider with fallback chain.
 
-    Chain order: Mistral (cloud) -> Docling (local service, if configured).
-    Docling is only added when DOCLING_BASE_URL is set.
+    Chain order: Azure DI (cloud, if configured) -> Mistral (cloud) ->
+    Docling (local service, if configured). Azure DI is tried first when
+    both AZURE_DI_ENDPOINT and AZURE_DI_KEY are set; Docling is only added
+    when DOCLING_BASE_URL is set.
 
     Returns None with a warning when no providers are available.
     """
+    providers: list = []
+
+    if settings.AZURE_DI_ENDPOINT and settings.AZURE_DI_KEY:
+        try:
+            azure_di_ocr = AzureDIOCR(
+                endpoint=settings.AZURE_DI_ENDPOINT,
+                key=settings.AZURE_DI_KEY,
+            )
+            providers.append(("azure-di", azure_di_ocr))
+        except Exception as e:
+            logger.error(f"Error creating Azure DI OCR adapter: {e}")
+
     try:
         mistral_ocr = MistralOCR()
     except Exception as e:
         logger.error(f"Error creating Mistral OCR adapter: {e}")
         mistral_ocr = None
 
-    providers = []
     if mistral_ocr:
         providers.append(("mistral-ocr", mistral_ocr))
 
