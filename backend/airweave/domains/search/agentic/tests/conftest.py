@@ -38,7 +38,7 @@ def make_result(
             SearchBreadcrumb(entity_id="parent-1", name="Parent", entity_type="FolderEntity")
         ],
         textual_representation=content,
-        airweave_system_metadata=SearchSystemMetadata(
+        data_sources_system_metadata=SearchSystemMetadata(
             source_name=source_name,
             entity_type=entity_type,
             sync_id=str(uuid4()),

@@ -473,7 +473,7 @@ def _format_read_previous(results: list[SearchResult]) -> str:
     seen_originals: set[str] = set()
     unique: list[SearchResult] = []
     for r in results:
-        orig_id = r.airweave_system_metadata.original_entity_id
+        orig_id = r.data_sources_system_metadata.original_entity_id
         if orig_id not in seen_originals:
             seen_originals.add(orig_id)
             unique.append(r)
@@ -486,7 +486,7 @@ def _format_read_older(results: list[SearchResult]) -> str:
     """Older-tier read: one-line digest."""
     if not results:
         return "*[Read: no results]*"
-    unique = len({r.airweave_system_metadata.original_entity_id for r in results})
+    unique = len({r.data_sources_system_metadata.original_entity_id for r in results})
     return f"*[Read {unique} entities]*"
 
 

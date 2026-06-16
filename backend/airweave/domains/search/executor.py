@@ -395,8 +395,8 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
         """
         original_entity_id = str(entity.entity_id)
         entity_id = f"{original_entity_id}__chunk_0"
-        sys_meta = entity.airweave_system_metadata
-        assert sys_meta is not None, f"Entity {original_entity_id} missing airweave_system_metadata"
+        sys_meta = entity.data_sources_system_metadata
+        assert sys_meta is not None, f"Entity {original_entity_id} missing data_sources_system_metadata"
 
         # Build breadcrumbs from entity breadcrumbs
         assert entity.breadcrumbs is not None, f"Entity {original_entity_id} missing breadcrumbs"
@@ -437,7 +437,7 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
             created_at=entity.created_at,
             updated_at=entity.updated_at,
             textual_representation=entity.textual_representation,
-            airweave_system_metadata=SearchSystemMetadata(
+            data_sources_system_metadata=SearchSystemMetadata(
                 source_name=sys_meta.source_name or source_short_name,
                 entity_type=sys_meta.entity_type or entity.__class__.__name__,
                 sync_id=None,
@@ -515,7 +515,7 @@ def _get_field_value(result: SearchResult, field: FilterableField) -> Any:
     """Extract the value of a filterable field from a SearchResult.
 
     Resolves the dot-notation path from FilterableField.value (e.g.,
-    "airweave_system_metadata.source_name") by traversing the object tree.
+    "data_sources_system_metadata.source_name") by traversing the object tree.
     If a list is encountered mid-path (e.g., breadcrumbs), returns a list
     of values from each element (any-match semantics).
     """

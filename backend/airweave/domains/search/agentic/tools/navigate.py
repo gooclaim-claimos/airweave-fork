@@ -152,7 +152,7 @@ class GetChildrenTool(Tool):
 
         parent_entity = state.results.get(entity_id)
         parent_name = parent_entity.name if parent_entity else entity_id
-        parent_source = parent_entity.airweave_system_metadata.source_name if parent_entity else ""
+        parent_source = parent_entity.data_sources_system_metadata.source_name if parent_entity else ""
 
         summaries = [
             RenderedResult(entity_id=r.entity_id, text=r.to_snippet_summary_md()) for r in children
@@ -238,7 +238,7 @@ class GetSiblingsTool(Tool):
         ]
 
         parent_source = (
-            entity.airweave_system_metadata.source_name if entity.airweave_system_metadata else ""
+            entity.data_sources_system_metadata.source_name if entity.data_sources_system_metadata else ""
         )
         label = (
             f'siblings of "{parent.name}" ({parent_source})'
@@ -280,7 +280,7 @@ class GetParentTool(Tool):
         parent_bc = entity.breadcrumbs[-1]
 
         entity_source = (
-            entity.airweave_system_metadata.source_name if entity.airweave_system_metadata else ""
+            entity.data_sources_system_metadata.source_name if entity.data_sources_system_metadata else ""
         )
         context_label = (
             f'parent of "{entity.name}" ({entity_source})'
