@@ -41,9 +41,17 @@ export const CollectionFormView: React.FC<CollectionFormViewProps> = ({ humanRea
 
     setIsCreating(true);
     try {
+      // Pass the readable_id the modal has already generated so the
+      // collection that lands in the DB matches whatever the next step
+      // uses as its identifier (e.g. NativeUploadView's connection_id =
+      // humanReadableId). Without this, the backend picks its own random
+      // suffix and the Native Upload commit flow ends up creating a
+      // second collection with the frontend's id — leaving the original
+      // one stuck in "Needs Source" state.
       const response = await apiClient.post('/collections', {
         name: name.trim(),
         description: `Collection for ${name.trim()}`,
+        readable_id: humanReadableId || undefined,
       });
 
       if (!response.ok) {
