@@ -128,11 +128,11 @@ class ShopifySource(BaseSource):
 
     def _prepare_entity(self, entity: BaseEntity) -> BaseEntity:
         """Set original_entity_id for orphan cleanup."""
-        from airweave.platform.entities._base import AirweaveSystemMetadata  # noqa: PLC0415
+        from airweave.platform.entities._base import DataSourcesSystemMetadata  # noqa: PLC0415
 
-        if entity.airweave_system_metadata is None:
-            entity.airweave_system_metadata = AirweaveSystemMetadata()
-        entity.airweave_system_metadata.original_entity_id = entity.entity_id
+        if entity.data_sources_system_metadata is None:
+            entity.data_sources_system_metadata = DataSourcesSystemMetadata()
+        entity.data_sources_system_metadata.original_entity_id = entity.entity_id
         return entity
 
     async def _exchange_credentials(self) -> str:

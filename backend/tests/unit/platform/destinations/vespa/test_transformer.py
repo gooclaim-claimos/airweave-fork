@@ -47,17 +47,17 @@ def mock_entity():
     }
     
     # Mock system metadata
-    entity.airweave_system_metadata = MagicMock()
-    entity.airweave_system_metadata.entity_type = "document"
-    entity.airweave_system_metadata.source_name = "TestSource"
-    entity.airweave_system_metadata.sync_id = "sync-123"
-    entity.airweave_system_metadata.sync_job_id = None
-    entity.airweave_system_metadata.hash = "hash-123"
-    entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-    entity.airweave_system_metadata.chunk_index = None
-    entity.airweave_system_metadata.original_entity_id = "orig-123"
-    entity.airweave_system_metadata.dense_embedding = None
-    entity.airweave_system_metadata.sparse_embedding = None
+    entity.data_sources_system_metadata = MagicMock()
+    entity.data_sources_system_metadata.entity_type = "document"
+    entity.data_sources_system_metadata.source_name = "TestSource"
+    entity.data_sources_system_metadata.sync_id = "sync-123"
+    entity.data_sources_system_metadata.sync_job_id = None
+    entity.data_sources_system_metadata.hash = "hash-123"
+    entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+    entity.data_sources_system_metadata.chunk_index = None
+    entity.data_sources_system_metadata.original_entity_id = "orig-123"
+    entity.data_sources_system_metadata.dense_embedding = None
+    entity.data_sources_system_metadata.sparse_embedding = None
     
     # Mock breadcrumbs
     entity.breadcrumbs = []
@@ -75,7 +75,7 @@ def mock_entity():
 @pytest.fixture
 def mock_chunk_entity(mock_entity):
     """Create mock chunk entity."""
-    mock_entity.airweave_system_metadata.chunk_index = 5
+    mock_entity.data_sources_system_metadata.chunk_index = 5
     return mock_entity
 
 
@@ -112,25 +112,25 @@ class TestEntityTransformer:
         """Test transform flattens system metadata with prefix."""
         result = transformer.transform(mock_entity)
         
-        assert result.fields["airweave_system_metadata_entity_type"] == "document"
-        assert result.fields["airweave_system_metadata_source_name"] == "TestSource"
-        assert result.fields["airweave_system_metadata_sync_id"] == "sync-123"
+        assert result.fields["data_sources_system_metadata_entity_type"] == "document"
+        assert result.fields["data_sources_system_metadata_source_name"] == "TestSource"
+        assert result.fields["data_sources_system_metadata_sync_id"] == "sync-123"
 
     def test_transform_flattens_all_metadata_fields(self, transformer, mock_entity):
         """Test transform flattens various metadata fields."""
         result = transformer.transform(mock_entity)
         
         # Check that system metadata is flattened with prefix
-        assert "airweave_system_metadata_entity_type" in result.fields
-        assert "airweave_system_metadata_source_name" in result.fields
-        assert "airweave_system_metadata_sync_id" in result.fields
+        assert "data_sources_system_metadata_entity_type" in result.fields
+        assert "data_sources_system_metadata_source_name" in result.fields
+        assert "data_sources_system_metadata_sync_id" in result.fields
 
     def test_transform_chunk_entity_includes_chunk_index(self, transformer, mock_chunk_entity):
         """Test chunk entities include chunk_index."""
         result = transformer.transform(mock_chunk_entity)
         
         # Chunk entities should have chunk_index field
-        assert result.fields["airweave_system_metadata_chunk_index"] == 5
+        assert result.fields["data_sources_system_metadata_chunk_index"] == 5
 
     def test_transform_includes_required_base_fields(self, transformer, mock_entity):
         """Test transform includes required base fields."""
@@ -193,7 +193,7 @@ class TestEntityTransformer:
 
     def test_transform_generates_unique_ids_for_chunks(self, transformer, mock_chunk_entity):
         """Test chunk entities get unique IDs."""
-        mock_chunk_entity.airweave_system_metadata.chunk_index = 3
+        mock_chunk_entity.data_sources_system_metadata.chunk_index = 3
         
         result = transformer.transform(mock_chunk_entity)
         
@@ -206,16 +206,16 @@ class TestEntityTransformer:
         entity1 = MagicMock()
         entity1.id = "e1"
         entity1.entity_type = "document"
-        entity1.airweave_system_metadata = MagicMock()
-        entity1.airweave_system_metadata.chunk_index = None
-        entity1.airweave_system_metadata.entity_type = "document"
+        entity1.data_sources_system_metadata = MagicMock()
+        entity1.data_sources_system_metadata.chunk_index = None
+        entity1.data_sources_system_metadata.entity_type = "document"
         
         entity2 = MagicMock()
         entity2.id = "e2"
         entity2.entity_type = "folder"
-        entity2.airweave_system_metadata = MagicMock()
-        entity2.airweave_system_metadata.chunk_index = None
-        entity2.airweave_system_metadata.entity_type = "folder"
+        entity2.data_sources_system_metadata = MagicMock()
+        entity2.data_sources_system_metadata.chunk_index = None
+        entity2.data_sources_system_metadata.entity_type = "folder"
         
         # Mock transform to return simple VespaDocument
         def mock_transform(entity):
@@ -236,16 +236,16 @@ class TestEntityTransformer:
         """Test transform_batch groups documents by schema."""
         entity_regular = MagicMock()
         entity_regular.id = "regular"
-        entity_regular.airweave_system_metadata = MagicMock()
-        entity_regular.airweave_system_metadata.chunk_index = None
+        entity_regular.data_sources_system_metadata = MagicMock()
+        entity_regular.data_sources_system_metadata.chunk_index = None
         
         entity_chunk = MagicMock()
         entity_chunk.id = "chunk"
-        entity_chunk.airweave_system_metadata = MagicMock()
-        entity_chunk.airweave_system_metadata.chunk_index = 2
+        entity_chunk.data_sources_system_metadata = MagicMock()
+        entity_chunk.data_sources_system_metadata.chunk_index = 2
         
         def mock_transform(entity):
-            schema = "chunk_entity" if entity.airweave_system_metadata.chunk_index else "base_entity"
+            schema = "chunk_entity" if entity.data_sources_system_metadata.chunk_index else "base_entity"
             return VespaDocument(
                 schema=schema,
                 id=entity.id,
@@ -319,17 +319,17 @@ class TestEntityTransformer:
         entity.access.viewers = []
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "web_page"
-        entity.airweave_system_metadata.source_name = "Web"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "web_page"
+        entity.data_sources_system_metadata.source_name = "Web"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "web-123", "url": "https://example.com"}
         
         result = transformer.transform(entity)
@@ -355,17 +355,17 @@ class TestEntityTransformer:
         entity.access.viewers = []
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "file"
-        entity.airweave_system_metadata.source_name = "FileSystem"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "file"
+        entity.data_sources_system_metadata.source_name = "FileSystem"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "file-123", "file_path": "/path/to/document.pdf"}
         
         result = transformer.transform(entity)
@@ -392,17 +392,17 @@ class TestEntityTransformer:
         entity.access.viewers = []
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "code_file"
-        entity.airweave_system_metadata.source_name = "GitHub"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "code_file"
+        entity.data_sources_system_metadata.source_name = "GitHub"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "code-123", "language": "python"}
         
         result = transformer.transform(entity)
@@ -428,17 +428,17 @@ class TestEntityTransformer:
         entity.access.viewers = ["user@example.com"]
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "email"
-        entity.airweave_system_metadata.source_name = "Gmail"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "email"
+        entity.data_sources_system_metadata.source_name = "Gmail"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "email-123", "subject": "Important Email"}
         
         result = transformer.transform(entity)
@@ -611,17 +611,17 @@ class TestEntityTransformerWithValidation:
         entity.access.viewers = []
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "file"
-        entity.airweave_system_metadata.source_name = "GoogleDrive"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "file"
+        entity.data_sources_system_metadata.source_name = "GoogleDrive"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "corrupted-123"}
         
         with pytest.raises(ValueError) as exc_info:
@@ -646,17 +646,17 @@ class TestEntityTransformerWithValidation:
         entity.access.viewers = []
         entity.access.editors = []
         entity.access.owners = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "file"
-        entity.airweave_system_metadata.source_name = "GoogleDrive"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "file"
+        entity.data_sources_system_metadata.source_name = "GoogleDrive"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.collection_id = UUID("12345678-1234-1234-1234-123456789abc")
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.to_dict.return_value = {"entity_id": "clean-123"}
 
         result = transformer.transform(entity)
@@ -711,16 +711,16 @@ class TestTransformSanitizesNameField:
         entity.access = MagicMock()
         entity.access.is_public = True
         entity.access.viewers = []
-        entity.airweave_system_metadata = MagicMock()
-        entity.airweave_system_metadata.entity_type = "LinearIssueEntity"
-        entity.airweave_system_metadata.source_name = "Linear"
-        entity.airweave_system_metadata.sync_id = "sync-1"
-        entity.airweave_system_metadata.sync_job_id = None
-        entity.airweave_system_metadata.hash = "hash-1"
-        entity.airweave_system_metadata.chunk_index = None
-        entity.airweave_system_metadata.original_entity_id = "orig-1"
-        entity.airweave_system_metadata.dense_embedding = None
-        entity.airweave_system_metadata.sparse_embedding = None
+        entity.data_sources_system_metadata = MagicMock()
+        entity.data_sources_system_metadata.entity_type = "LinearIssueEntity"
+        entity.data_sources_system_metadata.source_name = "Linear"
+        entity.data_sources_system_metadata.sync_id = "sync-1"
+        entity.data_sources_system_metadata.sync_job_id = None
+        entity.data_sources_system_metadata.hash = "hash-1"
+        entity.data_sources_system_metadata.chunk_index = None
+        entity.data_sources_system_metadata.original_entity_id = "orig-1"
+        entity.data_sources_system_metadata.dense_embedding = None
+        entity.data_sources_system_metadata.sparse_embedding = None
         entity.model_dump.return_value = {"entity_id": "issue-456", "name": "Fix bug\x08 in login"}
 
         result = transformer.transform(entity)

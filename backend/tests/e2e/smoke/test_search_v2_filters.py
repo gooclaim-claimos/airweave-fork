@@ -102,7 +102,7 @@ def print_results_summary(results: dict, test_name: str, filter_list: list = Non
     entity_types = Counter()
 
     for r in result_list:
-        sys_meta = r.get("airweave_system_metadata", {})
+        sys_meta = r.get("data_sources_system_metadata", {})
         source_names[sys_meta.get("source_name", "UNKNOWN")] += 1
         entity_types[sys_meta.get("entity_type", "UNKNOWN")] += 1
 
@@ -116,7 +116,7 @@ def print_results_summary(results: dict, test_name: str, filter_list: list = Non
 
     print(f"\nFIRST 5 RESULTS:")
     for i, r in enumerate(result_list[:5]):
-        sys_meta = r.get("airweave_system_metadata", {})
+        sys_meta = r.get("data_sources_system_metadata", {})
         print(f"  {i+1}. {r.get('entity_id')}")
         print(f"      type: {sys_meta.get('entity_type')}")
         print(f"      source: {sys_meta.get('source_name')}")
@@ -478,7 +478,7 @@ async def test_invalid_operator_rejected_classic(
             {
                 "conditions": [
                     {
-                        "field": "airweave_system_metadata.source_name",
+                        "field": "data_sources_system_metadata.source_name",
                         "operator": "invalid_op",
                         "value": "test",
                     }
@@ -545,7 +545,7 @@ async def test_instant_filter_by_source_name(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.source_name",
+                    "field": "data_sources_system_metadata.source_name",
                     "operator": "equals",
                     "value": "stub",
                 }
@@ -568,7 +568,7 @@ async def test_instant_filter_by_source_name(
     assert len(results["results"]) > 0, "Expected results for stub source"
 
     for result in results["results"]:
-        source_name = result.get("airweave_system_metadata", {}).get("source_name")
+        source_name = result.get("data_sources_system_metadata", {}).get("source_name")
         assert source_name == "stub", f"Expected stub, got {source_name}"
 
 
@@ -582,7 +582,7 @@ async def test_classic_filter_by_source_name(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.source_name",
+                    "field": "data_sources_system_metadata.source_name",
                     "operator": "equals",
                     "value": "stub",
                 }
@@ -605,7 +605,7 @@ async def test_classic_filter_by_source_name(
     assert len(results["results"]) > 0, "Expected results for stub source"
 
     for result in results["results"]:
-        source_name = result.get("airweave_system_metadata", {}).get("source_name")
+        source_name = result.get("data_sources_system_metadata", {}).get("source_name")
         assert source_name == "stub", f"Expected stub, got {source_name}"
 
 
@@ -619,7 +619,7 @@ async def test_agentic_filter_by_source_name(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.source_name",
+                    "field": "data_sources_system_metadata.source_name",
                     "operator": "equals",
                     "value": "stub",
                 }
@@ -642,7 +642,7 @@ async def test_agentic_filter_by_source_name(
     assert len(results["results"]) > 0, "Expected results for stub source"
 
     for result in results["results"]:
-        source_name = result.get("airweave_system_metadata", {}).get("source_name")
+        source_name = result.get("data_sources_system_metadata", {}).get("source_name")
         assert source_name == "stub", f"Expected stub, got {source_name}"
 
 
@@ -656,7 +656,7 @@ async def test_filter_nonexistent_source_empty(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.source_name",
+                    "field": "data_sources_system_metadata.source_name",
                     "operator": "equals",
                     "value": "nonexistent_source_xyz",
                 }
@@ -696,7 +696,7 @@ async def test_filter_by_entity_type_equals(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "equals",
                     "value": "MediumStubEntity",
                 }
@@ -718,7 +718,7 @@ async def test_filter_by_entity_type_equals(
     assert "results" in results
 
     for result in results["results"]:
-        entity_type = result.get("airweave_system_metadata", {}).get("entity_type")
+        entity_type = result.get("data_sources_system_metadata", {}).get("entity_type")
         assert entity_type == "MediumStubEntity", (
             f"Expected MediumStubEntity, got {entity_type}"
         )
@@ -734,7 +734,7 @@ async def test_filter_with_in_operator(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "in",
                     "value": ["SmallStubEntity", "LargeStubEntity"],
                 }
@@ -757,7 +757,7 @@ async def test_filter_with_in_operator(
 
     valid_types = {"SmallStubEntity", "LargeStubEntity"}
     for result in results["results"]:
-        entity_type = result.get("airweave_system_metadata", {}).get("entity_type")
+        entity_type = result.get("data_sources_system_metadata", {}).get("entity_type")
         assert entity_type in valid_types, (
             f"Expected one of {valid_types}, got {entity_type}"
         )
@@ -773,7 +773,7 @@ async def test_filter_with_not_equals(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "not_equals",
                     "value": "StubContainerEntity",
                 }
@@ -795,7 +795,7 @@ async def test_filter_with_not_equals(
     assert "results" in results
 
     for result in results["results"]:
-        entity_type = result.get("airweave_system_metadata", {}).get("entity_type")
+        entity_type = result.get("data_sources_system_metadata", {}).get("entity_type")
         assert entity_type != "StubContainerEntity", (
             f"StubContainerEntity should be excluded, but found it"
         )
@@ -819,12 +819,12 @@ async def test_filter_multiple_conditions_and(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.source_name",
+                    "field": "data_sources_system_metadata.source_name",
                     "operator": "equals",
                     "value": "stub",
                 },
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "equals",
                     "value": "MediumStubEntity",
                 },
@@ -846,7 +846,7 @@ async def test_filter_multiple_conditions_and(
     assert "results" in results
 
     for result in results["results"]:
-        sys_meta = result.get("airweave_system_metadata", {})
+        sys_meta = result.get("data_sources_system_metadata", {})
         assert sys_meta.get("source_name") == "stub", (
             f"Expected source_name=stub, got {sys_meta.get('source_name')}"
         )
@@ -869,7 +869,7 @@ async def test_filter_multiple_groups_or(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "equals",
                     "value": "SmallStubEntity",
                 }
@@ -878,7 +878,7 @@ async def test_filter_multiple_groups_or(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "equals",
                     "value": "LargeStubEntity",
                 }
@@ -901,7 +901,7 @@ async def test_filter_multiple_groups_or(
 
     valid_types = {"SmallStubEntity", "LargeStubEntity"}
     for result in results["results"]:
-        entity_type = result.get("airweave_system_metadata", {}).get("entity_type")
+        entity_type = result.get("data_sources_system_metadata", {}).get("entity_type")
         assert entity_type in valid_types, (
             f"Expected one of {valid_types}, got {entity_type}"
         )
@@ -935,7 +935,7 @@ async def test_filter_reduces_result_count(
         {
             "conditions": [
                 {
-                    "field": "airweave_system_metadata.entity_type",
+                    "field": "data_sources_system_metadata.entity_type",
                     "operator": "equals",
                     "value": "StubContainerEntity",
                 }

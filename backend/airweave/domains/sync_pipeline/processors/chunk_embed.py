@@ -199,8 +199,8 @@ class ChunkEmbedProcessor:
                 chunk_entity = entity.model_copy(deep=True)
                 chunk_entity.textual_representation = chunk_text
                 chunk_entity.entity_id = f"{original_id}__chunk_{idx}"
-                chunk_entity.airweave_system_metadata.chunk_index = idx
-                chunk_entity.airweave_system_metadata.original_entity_id = original_id
+                chunk_entity.data_sources_system_metadata.chunk_index = idx
+                chunk_entity.data_sources_system_metadata.original_entity_id = original_id
 
                 chunk_entities.append(chunk_entity)
 
@@ -244,7 +244,7 @@ class ChunkEmbedProcessor:
         # Sparse embeddings (FastEmbed Qdrant/bm25 for keyword search scoring)
         sparse_texts = [
             json.dumps(
-                e.model_dump(mode="json", exclude={"airweave_system_metadata"}),
+                e.model_dump(mode="json", exclude={"data_sources_system_metadata"}),
                 sort_keys=True,
             )
             for e in chunk_entities
@@ -253,13 +253,13 @@ class ChunkEmbedProcessor:
 
         # Assign and validate embeddings
         for i, entity in enumerate(chunk_entities):
-            entity.airweave_system_metadata.dense_embedding = dense_results[i].vector
-            entity.airweave_system_metadata.sparse_embedding = sparse_embeddings[i]
+            entity.data_sources_system_metadata.dense_embedding = dense_results[i].vector
+            entity.data_sources_system_metadata.sparse_embedding = sparse_embeddings[i]
 
         for entity in chunk_entities:
-            if entity.airweave_system_metadata.dense_embedding is None:
+            if entity.data_sources_system_metadata.dense_embedding is None:
                 raise SyncFailureError(f"Entity {entity.entity_id} has no dense embedding")
-            if entity.airweave_system_metadata.sparse_embedding is None:
+            if entity.data_sources_system_metadata.sparse_embedding is None:
                 raise SyncFailureError(f"Entity {entity.entity_id} has no sparse embedding")
 
         return chunk_entities

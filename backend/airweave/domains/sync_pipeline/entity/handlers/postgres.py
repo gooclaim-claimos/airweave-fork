@@ -168,7 +168,7 @@ class EntityPostgresHandler(EntityActionHandler):
 
         create_objs = []
         for action in deduped:
-            if not action.entity.airweave_system_metadata.hash:
+            if not action.entity.data_sources_system_metadata.hash:
                 raise SyncFailureError(f"Entity {action.entity_id} missing hash")
             create_objs.append(
                 schemas.EntityCreate(
@@ -176,7 +176,7 @@ class EntityPostgresHandler(EntityActionHandler):
                     sync_id=sync_context.sync.id,
                     entity_id=action.entity_id,
                     entity_definition_short_name=action.entity_definition_short_name,
-                    hash=action.entity.airweave_system_metadata.hash,
+                    hash=action.entity.data_sources_system_metadata.hash,
                 )
             )
 
@@ -198,14 +198,14 @@ class EntityPostgresHandler(EntityActionHandler):
         """Execute UPDATE operations (hash updates)."""
         update_pairs = []
         for action in actions:
-            if not action.entity.airweave_system_metadata.hash:
+            if not action.entity.data_sources_system_metadata.hash:
                 raise SyncFailureError(f"Entity {action.entity_id} missing hash")
 
             key = (action.entity_id, action.entity_definition_short_name)
             if key not in existing_map:
                 raise SyncFailureError(f"UPDATE entity {action.entity_id} not in existing_map")
 
-            update_pairs.append((existing_map[key].id, action.entity.airweave_system_metadata.hash))
+            update_pairs.append((existing_map[key].id, action.entity.data_sources_system_metadata.hash))
 
         if not update_pairs:
             return

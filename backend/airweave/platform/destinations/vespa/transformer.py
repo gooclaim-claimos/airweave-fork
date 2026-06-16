@@ -15,7 +15,7 @@ from airweave.core.logging import ContextualLogger
 from airweave.core.logging import logger as default_logger
 from airweave.platform.destinations.vespa.types import VespaDocument
 from airweave.platform.entities._base import (
-    AirweaveSystemMetadata,
+    DataSourcesSystemMetadata,
     BaseEntity,
     CodeFileEntity,
     EmailEntity,
@@ -119,13 +119,13 @@ def _validate_text_quality(text: str, entity_id: str) -> Optional[str]:
 
 
 def _get_system_metadata_fields() -> set[str]:
-    """Get system metadata fields from AirweaveSystemMetadata class.
+    """Get system metadata fields from DataSourcesSystemMetadata class.
 
-    Derives the field set dynamically from AirweaveSystemMetadata.model_fields,
+    Derives the field set dynamically from DataSourcesSystemMetadata.model_fields,
     ensuring this stays in sync with the entity definitions (single source of truth).
     """
-    fields = set(AirweaveSystemMetadata.model_fields.keys())
-    fields.add("airweave_system_metadata")
+    fields = set(DataSourcesSystemMetadata.model_fields.keys())
+    fields.add("data_sources_system_metadata")
     fields.add("collection_id")
     return fields
 
@@ -156,7 +156,7 @@ class EntityTransformer:
     entity representation to Vespa's document format. It handles:
 
     - Base field extraction (entity_id, name, timestamps, etc.)
-    - System metadata flattening (airweave_system_metadata_* prefix)
+    - System metadata flattening (data_sources_system_metadata_* prefix)
     - Type-specific fields (WebEntity, FileEntity, CodeFileEntity)
     - Access control fields (is_public, viewers)
     - Embedding fields (dense_embedding tensor)
@@ -240,8 +240,8 @@ class EntityTransformer:
 
     def _get_entity_type(self, entity: BaseEntity) -> str:
         """Get entity type from metadata or class name."""
-        if entity.airweave_system_metadata and entity.airweave_system_metadata.entity_type:
-            return entity.airweave_system_metadata.entity_type
+        if entity.data_sources_system_metadata and entity.data_sources_system_metadata.entity_type:
+            return entity.data_sources_system_metadata.entity_type
         return entity.__class__.__name__
 
     def _get_vespa_schema(self, entity: BaseEntity) -> str:
@@ -287,7 +287,7 @@ class EntityTransformer:
     def _add_system_metadata_fields(
         self, fields: Dict[str, Any], entity: BaseEntity, entity_type: str
     ) -> None:
-        """Add flattened system metadata fields with airweave_system_metadata_ prefix."""
+        """Add flattened system metadata fields with data_sources_system_metadata_ prefix."""
         meta_fields = self._build_system_metadata(entity)
 
         if self.collection_id:
@@ -299,12 +299,12 @@ class EntityTransformer:
 
         for key, value in meta_fields.items():
             if value is not None:
-                fields[f"airweave_system_metadata_{key}"] = value
+                fields[f"data_sources_system_metadata_{key}"] = value
 
     def _build_system_metadata(self, entity: BaseEntity) -> Dict[str, Any]:
         """Extract system metadata from entity."""
         meta_fields: Dict[str, Any] = {}
-        meta = entity.airweave_system_metadata
+        meta = entity.data_sources_system_metadata
         if not meta:
             return meta_fields
 
@@ -364,15 +364,15 @@ class EntityTransformer:
             fields["access_viewers"] = []
 
     def _add_embedding_fields(self, fields: Dict[str, Any], entity: BaseEntity) -> None:
-        """Add pre-computed embeddings from airweave_system_metadata.
+        """Add pre-computed embeddings from data_sources_system_metadata.
 
         ChunkEmbedProcessor populates each chunk entity with:
-        - airweave_system_metadata.dense_embedding: 3072-dim float32 embedding
-        - airweave_system_metadata.sparse_embedding: FastEmbed BM25 sparse vector
+        - data_sources_system_metadata.dense_embedding: 3072-dim float32 embedding
+        - data_sources_system_metadata.sparse_embedding: FastEmbed BM25 sparse vector
 
         Vespa auto-converts float32 to bfloat16 for dense embedding storage.
         """
-        meta = entity.airweave_system_metadata
+        meta = entity.data_sources_system_metadata
         if meta is None:
             self._logger.warning(
                 f"[EntityTransformer] Entity {entity.entity_id} has NO system metadata!"
@@ -461,9 +461,9 @@ class EntityTransformer:
     def _add_payload_field(self, fields: Dict[str, Any], entity: BaseEntity) -> None:
         """Extract extra fields into payload JSON."""
         schema_fields = _get_schema_fields_for_entity(entity)
-        # Exclude airweave_system_metadata from dump to avoid serializing numpy arrays
+        # Exclude data_sources_system_metadata from dump to avoid serializing numpy arrays
         # (sparse_embedding contains FastEmbed SparseEmbedding with numpy arrays)
-        entity_dict = entity.model_dump(mode="json", exclude={"airweave_system_metadata"})
+        entity_dict = entity.model_dump(mode="json", exclude={"data_sources_system_metadata"})
         payload = {k: v for k, v in entity_dict.items() if k not in schema_fields}
         if payload:
             fields["payload"] = json.dumps(payload)

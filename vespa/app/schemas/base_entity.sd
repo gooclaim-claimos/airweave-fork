@@ -69,43 +69,43 @@ schema base_entity {
         # =============================================================================
         # System Metadata Fields (flattened)
         # =============================================================================
-        field airweave_system_metadata_collection_id type string {
+        field data_sources_system_metadata_collection_id type string {
             indexing: attribute | summary
             attribute: fast-search
         }
 
-        field airweave_system_metadata_entity_type type string {
+        field data_sources_system_metadata_entity_type type string {
             indexing: attribute | summary
             attribute: fast-search
         }
 
-        field airweave_system_metadata_sync_id type string {
+        field data_sources_system_metadata_sync_id type string {
             indexing: attribute | summary
             attribute: fast-search
         }
 
-        field airweave_system_metadata_sync_job_id type string {
+        field data_sources_system_metadata_sync_job_id type string {
             indexing: attribute | summary
         }
 
-        field airweave_system_metadata_hash type string {
+        field data_sources_system_metadata_hash type string {
             indexing: attribute | summary
         }
 
         # Original entity ID (before __chunk_{idx} suffix)
         # CRITICAL for entity-level deduplication in search results
-        field airweave_system_metadata_original_entity_id type string {
+        field data_sources_system_metadata_original_entity_id type string {
             indexing: attribute | summary
             attribute: fast-search
         }
 
-        field airweave_system_metadata_source_name type string {
+        field data_sources_system_metadata_source_name type string {
             indexing: attribute | summary
             attribute: fast-search
         }
 
         # Chunk index within the parent entity
-        field airweave_system_metadata_chunk_index type int {
+        field data_sources_system_metadata_chunk_index type int {
             indexing: attribute | summary
             attribute: fast-search
         }

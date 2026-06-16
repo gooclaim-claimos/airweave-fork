@@ -18,7 +18,7 @@ from airweave.domains.syncs.cursors.cursor import SyncCursor
 from airweave.platform.configs.auth import SlackAuthConfig
 from airweave.platform.configs.config import SlackConfig
 from airweave.platform.decorators import source
-from airweave.platform.entities._base import AirweaveSystemMetadata, BaseEntity, Breadcrumb
+from airweave.platform.entities._base import DataSourcesSystemMetadata, BaseEntity, Breadcrumb
 from airweave.platform.entities.slack import SlackMessageEntity
 from airweave.platform.http_client.airweave_client import AirweaveHttpClient
 from airweave.platform.sources._base import BaseSource
@@ -256,7 +256,7 @@ class SlackSource(BaseSource):
 
         entity = SlackMessageEntity.from_api(message, breadcrumbs=breadcrumbs)
 
-        entity.airweave_system_metadata = AirweaveSystemMetadata(
+        entity.data_sources_system_metadata = DataSourcesSystemMetadata(
             source_name="slack",
             entity_type="SlackMessageEntity",
             sync_id=None,

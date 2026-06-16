@@ -373,30 +373,30 @@ class EntityPipeline:
         sync_context: SyncContext,
     ) -> None:
         """Set early metadata fields from sync_context."""
-        from airweave.platform.entities._base import AirweaveSystemMetadata  # noqa: PLC0415
+        from airweave.platform.entities._base import DataSourcesSystemMetadata  # noqa: PLC0415
 
         for entity in entities:
-            if entity.airweave_system_metadata is None:
-                entity.airweave_system_metadata = AirweaveSystemMetadata()
+            if entity.data_sources_system_metadata is None:
+                entity.data_sources_system_metadata = DataSourcesSystemMetadata()
 
             is_snapshot = sync_context.source_short_name == "snapshot"
             if is_snapshot:
-                existing = entity.airweave_system_metadata.source_name
+                existing = entity.data_sources_system_metadata.source_name
                 if not existing or existing == "snapshot":
                     # Derive original source from entity module path, e.g.
                     # "airweave.platform.entities.herb_documents" → "herb_documents"
-                    entity.airweave_system_metadata.source_name = type(entity).__module__.rsplit(
+                    entity.data_sources_system_metadata.source_name = type(entity).__module__.rsplit(
                         ".", 1
                     )[-1]
             else:
-                entity.airweave_system_metadata.source_name = sync_context.source_short_name
-            entity.airweave_system_metadata.entity_type = entity.__class__.__name__
-            entity.airweave_system_metadata.sync_id = sync_context.sync.id
-            entity.airweave_system_metadata.sync_job_id = sync_context.sync_job.id
+                entity.data_sources_system_metadata.source_name = sync_context.source_short_name
+            entity.data_sources_system_metadata.entity_type = entity.__class__.__name__
+            entity.data_sources_system_metadata.sync_id = sync_context.sync.id
+            entity.data_sources_system_metadata.sync_job_id = sync_context.sync_job.id
 
         for entity in entities:
-            if entity.airweave_system_metadata is None:
+            if entity.data_sources_system_metadata is None:
                 raise SyncFailureError(
-                    f"PROGRAMMING ERROR: airweave_system_metadata not initialized "
+                    f"PROGRAMMING ERROR: data_sources_system_metadata not initialized "
                     f"for entity {entity.entity_id}"
                 )

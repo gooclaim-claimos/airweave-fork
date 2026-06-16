@@ -30,7 +30,7 @@ def _get_entity_schema_with_direct_fields_only(cls: Type) -> dict:
 
     always_include = {"breadcrumbs"}
     always_exclude = {
-        "airweave_system_metadata",
+        "data_sources_system_metadata",
         "textual_representation",
         "entity_id",
     }

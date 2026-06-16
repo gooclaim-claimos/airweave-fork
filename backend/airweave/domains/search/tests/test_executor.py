@@ -45,7 +45,7 @@ from airweave.domains.sources.fakes.lifecycle import FakeSourceLifecycleService
 from airweave.domains.sources.fakes.registry import FakeSourceRegistry
 from airweave.domains.sources.types import SourceRegistryEntry
 from airweave.platform.configs._base import Fields
-from airweave.platform.entities._base import AirweaveSystemMetadata, BaseEntity, Breadcrumb
+from airweave.platform.entities._base import DataSourcesSystemMetadata, BaseEntity, Breadcrumb
 from airweave.platform.entities.slack import SlackMessageEntity
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -226,7 +226,7 @@ def _make_slack_entity(
         ],
         created_at=datetime(2026, 3, 15, 10, 0, 0),
         textual_representation=f"Message in #{channel_name}: {text}",
-        data_sources_system_metadata=AirweaveSystemMetadata(
+        data_sources_system_metadata=DataSourcesSystemMetadata(
             source_name="slack",
             entity_type="SlackMessageEntity",
         ),

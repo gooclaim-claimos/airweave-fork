@@ -34,7 +34,7 @@ class HashComputer:
         sync_context: "SyncContext",
         runtime: "SyncRuntime",
     ) -> None:
-        """Compute hashes for entire batch and set on entity.airweave_system_metadata.hash.
+        """Compute hashes for entire batch and set on entity.data_sources_system_metadata.hash.
 
         Args:
             entities: List of entities to compute hashes for
@@ -42,7 +42,7 @@ class HashComputer:
             runtime: Sync runtime with live services
 
         Note:
-            Modifies entities in-place, setting airweave_system_metadata.hash.
+            Modifies entities in-place, setting data_sources_system_metadata.hash.
             Failed entities are removed from the list and counted as skipped.
 
         Raises:
@@ -157,7 +157,7 @@ class HashComputer:
 
         for entity, (_, hash_value) in zip(entities, results, strict=True):
             if hash_value is not None:
-                entity.airweave_system_metadata.hash = hash_value
+                entity.data_sources_system_metadata.hash = hash_value
 
                 if isinstance(entity, (FileEntity, CodeFileEntity)):
                     file_count += 1
@@ -193,7 +193,7 @@ class HashComputer:
             SyncFailureError: If any entity is missing a hash
         """
         for entity in entities:
-            if not entity.airweave_system_metadata.hash:
+            if not entity.data_sources_system_metadata.hash:
                 raise SyncFailureError(
                     f"PROGRAMMING ERROR: Hash not set for entity "
                     f"{entity.entity_id} after computation"
@@ -254,7 +254,7 @@ class HashComputer:
             Dict with volatile fields excluded
         """
         excluded_fields = {
-            "airweave_system_metadata",  # Not initialized yet
+            "data_sources_system_metadata",  # Not initialized yet
             "breadcrumbs",  # Parent relationships are volatile
             "local_path",  # Temp path changes per run
             "url",  # Contains access tokens

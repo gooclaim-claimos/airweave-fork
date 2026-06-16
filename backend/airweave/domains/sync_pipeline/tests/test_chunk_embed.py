@@ -58,11 +58,11 @@ def mock_entity():
     entity = MagicMock()
     entity.entity_id = "test-123"
     entity.textual_representation = "Test content"
-    entity.airweave_system_metadata = MagicMock()
-    entity.airweave_system_metadata.chunk_index = None
-    entity.airweave_system_metadata.original_entity_id = None
-    entity.airweave_system_metadata.dense_embedding = None
-    entity.airweave_system_metadata.sparse_embedding = None
+    entity.data_sources_system_metadata = MagicMock()
+    entity.data_sources_system_metadata.chunk_index = None
+    entity.data_sources_system_metadata.original_entity_id = None
+    entity.data_sources_system_metadata.dense_embedding = None
+    entity.data_sources_system_metadata.sparse_embedding = None
     entity.model_copy = MagicMock(return_value=entity)
     return entity
 
@@ -100,15 +100,15 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.entity_id = "parent-123"
         mock_entity.textual_representation = "Original text"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
 
         def create_chunk_entity(deep=False):
             chunk = MagicMock()
             chunk.entity_id = None
             chunk.textual_representation = None
-            chunk.airweave_system_metadata = MagicMock()
-            chunk.airweave_system_metadata.chunk_index = None
-            chunk.airweave_system_metadata.original_entity_id = None
+            chunk.data_sources_system_metadata = MagicMock()
+            chunk.data_sources_system_metadata.chunk_index = None
+            chunk.data_sources_system_metadata.original_entity_id = None
             return chunk
 
         mock_entity.model_copy = MagicMock(side_effect=create_chunk_entity)
@@ -129,9 +129,9 @@ class TestChunkEmbedProcessor:
             chunk = MagicMock()
             chunk.entity_id = None
             chunk.textual_representation = None
-            chunk.airweave_system_metadata = MagicMock()
-            chunk.airweave_system_metadata.chunk_index = None
-            chunk.airweave_system_metadata.original_entity_id = None
+            chunk.data_sources_system_metadata = MagicMock()
+            chunk.data_sources_system_metadata.chunk_index = None
+            chunk.data_sources_system_metadata.original_entity_id = None
             return chunk
 
         mock_entity.model_copy = MagicMock(side_effect=create_chunk_entity)
@@ -139,7 +139,7 @@ class TestChunkEmbedProcessor:
         chunks = [[{"text": "Chunk"}]]
         result = processor._multiply_entities([mock_entity], chunks, mock_sync_context)
 
-        assert result[0].airweave_system_metadata.chunk_index == 0
+        assert result[0].data_sources_system_metadata.chunk_index == 0
 
     @pytest.mark.asyncio
     async def test_multiply_entities_skips_empty_chunks(self, processor, mock_sync_context):
@@ -150,9 +150,9 @@ class TestChunkEmbedProcessor:
             chunk = MagicMock()
             chunk.entity_id = None
             chunk.textual_representation = None
-            chunk.airweave_system_metadata = MagicMock()
-            chunk.airweave_system_metadata.chunk_index = None
-            chunk.airweave_system_metadata.original_entity_id = None
+            chunk.data_sources_system_metadata = MagicMock()
+            chunk.data_sources_system_metadata.chunk_index = None
+            chunk.data_sources_system_metadata.original_entity_id = None
             return chunk
 
         mock_entity.model_copy = MagicMock(side_effect=create_chunk_entity)
@@ -168,7 +168,7 @@ class TestChunkEmbedProcessor:
     ):
         mock_entity = MagicMock()
         mock_entity.textual_representation = "Test content"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
         mock_entity.model_dump = MagicMock(return_value={"entity_id": "test"})
 
         dense_result = MagicMock()
@@ -187,9 +187,9 @@ class TestChunkEmbedProcessor:
     ):
         mock_entity = MagicMock()
         mock_entity.textual_representation = "Test"
-        mock_entity.airweave_system_metadata = MagicMock()
-        mock_entity.airweave_system_metadata.dense_embedding = None
-        mock_entity.airweave_system_metadata.sparse_embedding = None
+        mock_entity.data_sources_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata.dense_embedding = None
+        mock_entity.data_sources_system_metadata.sparse_embedding = None
         mock_entity.model_dump = MagicMock(return_value={"entity_id": "test"})
 
         dense_vector = [0.1] * 3072
@@ -202,8 +202,8 @@ class TestChunkEmbedProcessor:
 
         await processor._embed_entities([mock_entity], mock_sync_context)
 
-        assert mock_entity.airweave_system_metadata.dense_embedding == dense_vector
-        assert mock_entity.airweave_system_metadata.sparse_embedding == sparse_embedding
+        assert mock_entity.data_sources_system_metadata.dense_embedding == dense_vector
+        assert mock_entity.data_sources_system_metadata.sparse_embedding == sparse_embedding
 
     @pytest.mark.asyncio
     async def test_embed_entities_uses_full_json_for_sparse(
@@ -211,7 +211,7 @@ class TestChunkEmbedProcessor:
     ):
         mock_entity = MagicMock()
         mock_entity.textual_representation = "Test"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
         mock_entity.model_dump = MagicMock(
             return_value={"entity_id": "test-123", "name": "Test Entity"}
         )
@@ -239,7 +239,7 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.textual_representation = "Test"
         mock_entity.entity_id = "test-123"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
         mock_entity.model_dump = MagicMock(return_value={"entity_id": "test"})
 
         dense_result = MagicMock()
@@ -260,7 +260,7 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.textual_representation = "Test"
         mock_entity.entity_id = "test-123"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
 
         mock_dense_embedder.embed_many = AsyncMock(
             side_effect=RuntimeError("API error")
@@ -282,15 +282,15 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.entity_id = "test-123"
         mock_entity.textual_representation = "Original text"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
 
         def create_chunk(deep=False):
             chunk = MagicMock()
             chunk.entity_id = None
             chunk.textual_representation = None
-            chunk.airweave_system_metadata = MagicMock()
-            chunk.airweave_system_metadata.dense_embedding = None
-            chunk.airweave_system_metadata.sparse_embedding = None
+            chunk.data_sources_system_metadata = MagicMock()
+            chunk.data_sources_system_metadata.dense_embedding = None
+            chunk.data_sources_system_metadata.sparse_embedding = None
             chunk.model_dump = MagicMock(return_value={"entity_id": "chunk"})
             return chunk
 
@@ -337,7 +337,7 @@ class TestChunkEmbedProcessor:
         def create_chunk(deep=False):
             chunk = MagicMock()
             chunk.textual_representation = None
-            chunk.airweave_system_metadata = MagicMock()
+            chunk.data_sources_system_metadata = MagicMock()
             chunk.model_dump = MagicMock(return_value={})
             return chunk
 
@@ -368,7 +368,7 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.entity_id = "test-123"
         mock_entity.textual_representation = None
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
 
         with patch.object(
             processor._text_builder, "build_for_batch", new_callable=AsyncMock
@@ -400,7 +400,7 @@ class TestChunkEmbedProcessor:
         mock_entity = MagicMock()
         mock_entity.entity_id = "test-123"
         mock_entity.textual_representation = "Test"
-        mock_entity.airweave_system_metadata = MagicMock()
+        mock_entity.data_sources_system_metadata = MagicMock()
 
         with (
             patch.object(
@@ -428,9 +428,9 @@ def _make_entity(entity_id: str, text: str = "Test content") -> MagicMock:
     entity = MagicMock()
     entity.entity_id = entity_id
     entity.textual_representation = text
-    entity.airweave_system_metadata = MagicMock()
-    entity.airweave_system_metadata.dense_embedding = None
-    entity.airweave_system_metadata.sparse_embedding = None
+    entity.data_sources_system_metadata = MagicMock()
+    entity.data_sources_system_metadata.dense_embedding = None
+    entity.data_sources_system_metadata.sparse_embedding = None
     entity.model_dump = MagicMock(return_value={"entity_id": entity_id})
     return entity
 
