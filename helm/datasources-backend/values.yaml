@@ -16,7 +16,7 @@ replicaCount: 1
 
 image:
   repository: gcdevacrcin001.azurecr.io/datasources-backend
-  tag: 
+  tag: v0.9.73-gck.16
   pullPolicy: IfNotPresent
 
 serviceAccount:
