@@ -171,7 +171,7 @@ class VespaVectorDB:
         (whole-word) match, not a substring match.
         """
         where_parts = [
-            f"data_sources_system_metadata_collection_id contains '{collection_id}'",
+            f"airweave_system_metadata_collection_id contains '{collection_id}'",
         ]
 
         filter_yql = self._filter_translator.translate(filter_groups)
@@ -217,7 +217,7 @@ class VespaVectorDB:
         rationale (Vespa `contains` on an attribute is token-match, not substring).
         """
         where_parts = [
-            f"data_sources_system_metadata_collection_id contains '{collection_id}'",
+            f"airweave_system_metadata_collection_id contains '{collection_id}'",
         ]
 
         filter_yql = self._filter_translator.translate(filter_groups)
@@ -268,7 +268,7 @@ class VespaVectorDB:
         retrieval_clause = self._build_retrieval_clause(plan.retrieval_strategy, num_embeddings)
 
         where_parts = [
-            f"data_sources_system_metadata_collection_id contains '{collection_id}'",
+            f"airweave_system_metadata_collection_id contains '{collection_id}'",
             f"({retrieval_clause})",
         ]
 
@@ -476,8 +476,8 @@ class VespaVectorDB:
         self, fields: Dict[str, Any], entity_id: str
     ) -> SearchSystemMetadata:
         """Extract system metadata from flattened Vespa fields."""
-        source_name = fields.get("data_sources_system_metadata_source_name")
-        entity_type = fields.get("data_sources_system_metadata_entity_type")
+        source_name = fields.get("airweave_system_metadata_source_name")
+        entity_type = fields.get("airweave_system_metadata_entity_type")
 
         if not source_name:
             self._logger.warning(
@@ -491,10 +491,10 @@ class VespaVectorDB:
         return SearchSystemMetadata(
             source_name=source_name or "",
             entity_type=entity_type or "",
-            sync_id=fields.get("data_sources_system_metadata_sync_id") or "",
-            sync_job_id=fields.get("data_sources_system_metadata_sync_job_id") or "",
-            chunk_index=fields.get("data_sources_system_metadata_chunk_index") or 0,
-            original_entity_id=fields.get("data_sources_system_metadata_original_entity_id") or "",
+            sync_id=fields.get("airweave_system_metadata_sync_id") or "",
+            sync_job_id=fields.get("airweave_system_metadata_sync_job_id") or "",
+            chunk_index=fields.get("airweave_system_metadata_chunk_index") or 0,
+            original_entity_id=fields.get("airweave_system_metadata_original_entity_id") or "",
         )
 
     def _extract_access_control(self, fields: Dict[str, Any]) -> SearchAccessControl:
