@@ -7,7 +7,6 @@ from fastapi import Depends, HTTPException, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from airweave import crud
 from airweave.api import deps
 from airweave.api.context import ApiContext
 from airweave.api.inject import Inject
@@ -15,39 +14,6 @@ from airweave.api.router import TrailingSlashRouter
 from airweave.domains.storage.protocols import SyncFileManagerProtocol
 
 router = TrailingSlashRouter()
-
-
-async def verify_picnic_health_access(
-    ctx: ApiContext,
-    db: AsyncSession,
-) -> None:
-    """Verify that the request is from Picnic Health organization.
-
-    Raises:
-        HTTPException: If not from Picnic Health
-    """
-    # Picnic Health organization ID
-    PICNIC_HEALTH_ORG_ID = "9878d9b4-0fb9-4401-b2b3-15420da4eda3"
-
-    # Check if the request is from Picnic Health organization by ID
-    if str(ctx.organization.id) != PICNIC_HEALTH_ORG_ID:
-        # Get the organization details for logging
-        organization = await crud.organization.get(db=db, id=ctx.organization.id, ctx=ctx)
-
-        ctx.logger.warning(
-            f"File access denied for organization: "
-            f"{organization.name if organization else 'Unknown'} "
-            f"(ID: {ctx.organization.id})",
-            extra={
-                "organization_id": ctx.organization.id,
-                "organization_name": organization.name if organization else None,
-                "auth_method": ctx.auth_method,
-                "expected_org_id": PICNIC_HEALTH_ORG_ID,
-            },
-        )
-        raise HTTPException(
-            status_code=403, detail="Access restricted to Picnic Health organization members"
-        )
 
 
 @router.get("/{entity_id}", response_class=FileResponse)
@@ -72,9 +38,6 @@ async def download_file(
     Raises:
         HTTPException: If file not found or invalid entity ID
     """
-    # Verify Picnic Health access
-    await verify_picnic_health_access(ctx, db)
-
     try:
         # Download to temp file
         content, file_path = await sfm.download_ctti_file(
@@ -127,9 +90,6 @@ async def get_file_content(
     Raises:
         HTTPException: If file not found or invalid entity ID
     """
-    # Verify Picnic Health access
-    await verify_picnic_health_access(ctx, db)
-
     try:
         content = await sfm.get_ctti_file_content(ctx.logger, entity_id)
 
@@ -179,9 +139,6 @@ async def download_files_batch(
     Raises:
         HTTPException: If no valid files found
     """
-    # Verify Picnic Health access
-    await verify_picnic_health_access(ctx, db)
-
     if not entity_ids:
         raise HTTPException(status_code=400, detail="No entity IDs provided")
 
@@ -262,9 +219,6 @@ async def check_files_exist(
     Returns:
         dict: Dictionary with entity_ids as keys and existence status as values
     """
-    # Verify Picnic Health access
-    await verify_picnic_health_access(ctx, db)
-
     if not entity_ids:
         raise HTTPException(status_code=400, detail="No entity IDs provided")
 
