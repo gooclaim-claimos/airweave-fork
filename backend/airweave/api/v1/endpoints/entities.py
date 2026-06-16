@@ -57,17 +57,22 @@ async def get_entity_content_by_id(
     entity_id: str,
     ctx: ApiContext = Depends(deps.get_context),
 ) -> dict:
-    """Fetch the full content of a single Vespa document by entity_id.
+    """Fetch the full content of a single document by entity_id.
 
-    Direct Vespa Document API lookup — works for any entity_id format
-    (UUID-based ``gooclaim_upload``, ``ctti:study:NCT...``, etc.) because
-    Vespa's docid lookup is an O(1) bucket hash, not a BM25 search.
+    Uses Vespa's YQL search with an exact-match filter on the
+    ``entity_id`` field. Works for any entity_id format
+    (UUID-based ``gooclaim_upload`` chunks, ``ctti:study:NCT...``, etc.)
+    because the filter is a single equality predicate against an
+    indexed attribute — not a BM25 text search.
 
-    Probes ``file_entity``, ``email_entity``, ``code_file_entity``, and
-    ``web_entity`` schemas in that order and returns the first hit.
+    The Vespa Document API direct-docid lookup would be faster but
+    requires knowing the full doc-id which embeds the entity class
+    name (e.g. ``GooclaimUploadFileEntity_<uuid>__chunk_0``). Callers
+    typically only have the post-``::`` ``entity_id`` portion that
+    search results return.
 
     Args:
-        entity_id: The entity ID (Vespa doc ID after the ``::`` separator).
+        entity_id: The entity ID as returned by ``search_knowledge``.
         ctx: The API context — tenant + org scope.
 
     Returns:
@@ -78,43 +83,39 @@ async def get_entity_content_by_id(
         HTTPException: 404 if no schema returned a matching document.
     """
     base = f"{settings.VESPA_URL}:{settings.VESPA_PORT}"
-    encoded_id = quote(entity_id, safe="")
 
     async with httpx.AsyncClient(timeout=10.0) as client:
         for schema in _VESPA_SCHEMAS:
-            url = (
-                f"{base}/document/v1/{_VESPA_NAMESPACE}/{schema}/docid/{encoded_id}"
-            )
+            # Vespa YQL: exact attribute match on the entity_id field.
+            # Use parameter binding via the JSON query API to avoid YQL
+            # injection from user-supplied entity_ids.
+            body = {
+                "yql": f"select * from {schema} where entity_id contains @eid",
+                "eid": entity_id,
+                "hits": 1,
+            }
             try:
-                resp = await client.get(url)
+                resp = await client.post(f"{base}/search/", json=body)
             except httpx.HTTPError as exc:
                 ctx.logger.warning(
-                    f"[entities] Vespa GET {schema}/{entity_id} errored: {exc}"
+                    f"[entities] Vespa search {schema}/{entity_id} errored: {exc}"
                 )
-                continue
-            if resp.status_code == 404:
                 continue
             if resp.status_code >= 400:
                 ctx.logger.warning(
-                    f"[entities] Vespa GET {schema}/{entity_id} → "
+                    f"[entities] Vespa search {schema}/{entity_id} → "
                     f"HTTP {resp.status_code}: {resp.text[:200]}"
                 )
                 continue
-            payload = resp.json()
-            fields = payload.get("fields", {})
-            # Scope check: the document MUST belong to the calling org.
-            # The Vespa schema stores collection_id keyed by org via the
-            # `data_sources_system_metadata_collection_id` field, but a
-            # cheaper org-scope gate lives on the document directly
-            # through Vespa's existing query filter chain. For this
-            # direct-id lookup we re-check that the org owns the
-            # collection on the FastAPI side by comparing the document's
-            # collection_id against the caller's accessible collections.
-            # The current Phase 1 server has AUTH_ENABLED=false and a
-            # single org per deploy, so the upstream YQL filter is the
-            # canonical gate; a Phase 1.1 follow-up will tighten this
-            # path with an explicit org check once multi-tenant routing
-            # lands.
+            data = resp.json()
+            children = data.get("root", {}).get("children") or []
+            if not children:
+                continue
+            hit = children[0]
+            fields = hit.get("fields", {})
+            # Verify we matched the exact entity_id (not a substring).
+            if fields.get("entity_id") != entity_id:
+                continue
             return {
                 "entity_id": entity_id,
                 "schema": schema,
