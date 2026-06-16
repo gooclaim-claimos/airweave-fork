@@ -10,7 +10,7 @@ import asyncio
 import json
 from collections.abc import AsyncGenerator
 
-from fastapi import Depends, HTTPException, Path, Query
+from fastapi import Depends, Path, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import StreamingResponse
 
@@ -23,7 +23,6 @@ from airweave.api.v1.endpoints.admin import _require_admin
 from airweave.core.events.search import SearchStartedEvent, SearchTier
 from airweave.core.protocols import EventBus, PubSub
 from airweave.core.protocols.pubsub import PubSubSubscription
-from airweave.core.shared_models import FeatureFlag
 from airweave.domains.search.protocols import (
     AgenticSearchServiceProtocol,
     BrowseServiceProtocol,
@@ -100,8 +99,6 @@ async def browse_collection(
     service: BrowseServiceProtocol = Inject(BrowseServiceProtocol),
 ) -> BrowseResponse:
     """Browse a collection with offset/limit pagination."""
-    if not ctx.has_feature(FeatureFlag.COLLECTION_BROWSE):
-        raise HTTPException(status_code=404, detail="Not found")
     await usage_checker.is_allowed(db, ctx.organization.id, ActionType.QUERIES)
     return await service.browse(db, ctx, readable_id, request)
 
