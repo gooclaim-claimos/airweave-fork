@@ -96,13 +96,13 @@ class SyncFileManager(SyncFileManagerProtocol):
         Returns:
             Updated entity with storage information
         """
-        if not entity.airweave_system_metadata or not entity.airweave_system_metadata.sync_id:
+        if not entity.data_sources_system_metadata or not entity.data_sources_system_metadata.sync_id:
             logger.warning(
                 "Cannot store file without sync_id", extra={"entity_id": entity.entity_id}
             )
             return entity
 
-        sync_id = entity.airweave_system_metadata.sync_id
+        sync_id = entity.data_sources_system_metadata.sync_id
         # Use entity name for file extension
         filename = entity.name or ""
         file_path = self._get_file_path(sync_id, entity.entity_id, filename)
@@ -121,18 +121,18 @@ class SyncFileManager(SyncFileManagerProtocol):
         await self.backend.write_file(file_path, file_bytes)
 
         # Update entity metadata
-        entity.airweave_system_metadata.storage_blob_name = file_path
+        entity.data_sources_system_metadata.storage_blob_name = file_path
 
         # Store metadata
         metadata = {
             "entity_id": entity.entity_id,
             "sync_id": str(sync_id),
             "file_name": entity.name,
-            "size": entity.airweave_system_metadata.total_size
-            if entity.airweave_system_metadata
+            "size": entity.data_sources_system_metadata.total_size
+            if entity.data_sources_system_metadata
             else len(file_bytes),
-            "checksum": entity.airweave_system_metadata.checksum
-            if entity.airweave_system_metadata
+            "checksum": entity.data_sources_system_metadata.checksum
+            if entity.data_sources_system_metadata
             else None,
             "mime_type": getattr(entity, "mime_type", None),
             "stored_at": utc_now_naive().isoformat(),
@@ -302,8 +302,8 @@ class SyncFileManager(SyncFileManagerProtocol):
 
     def _is_ctti_entity(self, entity: Any) -> bool:
         """Check if an entity is from CTTI source."""
-        if hasattr(entity, "airweave_system_metadata") and entity.airweave_system_metadata:
-            if entity.airweave_system_metadata.source_name == "CTTI AACT":
+        if hasattr(entity, "data_sources_system_metadata") and entity.data_sources_system_metadata:
+            if entity.data_sources_system_metadata.source_name == "CTTI AACT":
                 return True
 
         entity_type = getattr(entity, "__class__", None)
@@ -348,7 +348,7 @@ class SyncFileManager(SyncFileManagerProtocol):
         await self.backend.write_file(path, file_bytes)
 
         # Update entity metadata
-        entity.airweave_system_metadata.storage_blob_name = path
+        entity.data_sources_system_metadata.storage_blob_name = path
 
         if not hasattr(entity, "metadata") or entity.metadata is None:
             entity.metadata = {}
@@ -360,8 +360,8 @@ class SyncFileManager(SyncFileManagerProtocol):
         metadata = {
             "entity_id": entity.entity_id,
             "size": len(file_bytes),
-            "checksum": entity.airweave_system_metadata.checksum
-            if entity.airweave_system_metadata
+            "checksum": entity.data_sources_system_metadata.checksum
+            if entity.data_sources_system_metadata
             else None,
             "stored_at": utc_now_naive().isoformat(),
             "source": "CTTI",

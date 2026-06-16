@@ -226,14 +226,14 @@ class EntityActionResolver:
         Raises:
             SyncFailureError: If entity has no hash or type not in entity registry
         """
-        if not entity.airweave_system_metadata or not entity.airweave_system_metadata.hash:
+        if not entity.data_sources_system_metadata or not entity.data_sources_system_metadata.hash:
             raise SyncFailureError(
                 f"PROGRAMMING ERROR: Entity {entity.__class__.__name__}"
                 f"[{entity.entity_id}] has no hash. "
                 f"Hash should have been set during hash computation."
             )
 
-        entity_hash = entity.airweave_system_metadata.hash
+        entity_hash = entity.data_sources_system_metadata.hash
 
         short_name = self.resolve_entity_definition_short_name(entity)
         if short_name is None:

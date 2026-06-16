@@ -36,7 +36,7 @@ class TestQueryBuilder:
         assert " OR " in yql
 
         # Should have collection filter
-        assert f"airweave_system_metadata_collection_id contains '{sample_collection_id}'" in yql
+        assert f"data_sources_system_metadata_collection_id contains '{sample_collection_id}'" in yql
 
     def test_build_yql_neural_strategy(self, query_builder, sample_collection_id):
         """Test YQL for neural search uses only nearestNeighbor."""
@@ -55,7 +55,7 @@ class TestQueryBuilder:
         assert "userInput" not in yql
 
         # Should have collection filter
-        assert f"airweave_system_metadata_collection_id contains '{sample_collection_id}'" in yql
+        assert f"data_sources_system_metadata_collection_id contains '{sample_collection_id}'" in yql
 
     def test_build_yql_keyword_strategy(self, query_builder, sample_collection_id):
         """Test YQL for keyword search uses only BM25."""
@@ -75,7 +75,7 @@ class TestQueryBuilder:
         assert "nearestNeighbor" not in yql
 
         # Should have collection filter
-        assert f"airweave_system_metadata_collection_id contains '{sample_collection_id}'" in yql
+        assert f"data_sources_system_metadata_collection_id contains '{sample_collection_id}'" in yql
 
     def test_build_yql_multiple_queries(self, query_builder, sample_collection_id):
         """Test YQL with query expansion creates multiple nearestNeighbor clauses."""
@@ -113,7 +113,7 @@ class TestQueryBuilder:
         )
 
         # Should contain filter clause
-        assert "airweave_system_metadata_source_name" in yql
+        assert "data_sources_system_metadata_source_name" in yql
         assert "GitHub" in yql
 
         # Should combine collection filter, retrieval clause, and user filter with AND

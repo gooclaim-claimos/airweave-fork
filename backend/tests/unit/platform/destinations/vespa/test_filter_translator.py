@@ -31,7 +31,7 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert 'airweave_system_metadata_source_name contains "GitHub"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitHub"' in result
 
     def test_match_with_special_characters(self, filter_translator):
         """Test match condition with special chars requiring escaping."""
@@ -94,8 +94,8 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert '!(airweave_system_metadata_source_name contains "Slack")' in result
-        assert '!(airweave_system_metadata_source_name contains "Teams")' in result
+        assert '!(data_sources_system_metadata_source_name contains "Slack")' in result
+        assert '!(data_sources_system_metadata_source_name contains "Teams")' in result
         assert " AND " in result
 
     def test_match_except_empty_array(self, filter_translator):
@@ -368,8 +368,8 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert 'airweave_system_metadata_source_name contains "GitHub"' in result
-        assert 'airweave_system_metadata_entity_type contains "issue"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitHub"' in result
+        assert 'data_sources_system_metadata_entity_type contains "issue"' in result
         assert " AND " in result
 
     def test_should_conditions(self, filter_translator):
@@ -381,8 +381,8 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert 'airweave_system_metadata_source_name contains "GitHub"' in result
-        assert 'airweave_system_metadata_source_name contains "GitLab"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitHub"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitLab"' in result
         assert " OR " in result
 
     def test_must_not_conditions(self, filter_translator):
@@ -394,8 +394,8 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert 'airweave_system_metadata_source_name contains "Slack"' in result
-        assert 'airweave_system_metadata_entity_type contains "draft"' in result
+        assert 'data_sources_system_metadata_source_name contains "Slack"' in result
+        assert 'data_sources_system_metadata_entity_type contains "draft"' in result
         assert "!(" in result
         assert " AND " in result
 
@@ -415,10 +415,10 @@ class TestFilterTranslator:
         }
         result = filter_translator.translate(filter_dict)
         # All three sections should be present and combined with AND
-        assert 'airweave_system_metadata_collection_id contains "col-123"' in result
-        assert 'airweave_system_metadata_source_name contains "GitHub"' in result
+        assert 'data_sources_system_metadata_collection_id contains "col-123"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitHub"' in result
         assert " OR " in result  # From should clause
-        assert 'airweave_system_metadata_entity_type contains "archived"' in result
+        assert 'data_sources_system_metadata_entity_type contains "archived"' in result
         assert "!(" in result  # From must_not
         # Top level should be AND of all three
         parts = result.split(" AND ")
@@ -462,17 +462,17 @@ class TestFilterTranslator:
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert "airweave_system_metadata_collection_id" in result
+        assert "data_sources_system_metadata_collection_id" in result
 
     def test_field_name_mapping_dotted_form(self, filter_translator):
         """Test field name mapping from dotted notation."""
         filter_dict = {
             "must": [
-                {"key": "airweave_system_metadata.sync_id", "match": {"value": "sync-123"}}
+                {"key": "data_sources_system_metadata.sync_id", "match": {"value": "sync-123"}}
             ]
         }
         result = filter_translator.translate(filter_dict)
-        assert "airweave_system_metadata_sync_id" in result
+        assert "data_sources_system_metadata_sync_id" in result
 
     def test_field_name_mapping_access_control(self, filter_translator):
         """Test access control field mapping."""
@@ -523,7 +523,7 @@ class TestFilterTranslator:
         
         mock_filter = MockFilter()
         result = filter_translator.translate(mock_filter)
-        assert 'airweave_system_metadata_source_name contains "GitHub"' in result
+        assert 'data_sources_system_metadata_source_name contains "GitHub"' in result
 
     def test_invalid_datetime_handled_gracefully(self, filter_translator):
         """Test that invalid datetime strings don't crash."""
@@ -561,7 +561,7 @@ class TestFieldNameMapping:
 
     def test_field_name_map_values_correct(self):
         """Verify field name mapping values."""
-        assert FIELD_NAME_MAP["collection_id"] == "airweave_system_metadata_collection_id"
-        assert FIELD_NAME_MAP["source_name"] == "airweave_system_metadata_source_name"
+        assert FIELD_NAME_MAP["collection_id"] == "data_sources_system_metadata_collection_id"
+        assert FIELD_NAME_MAP["source_name"] == "data_sources_system_metadata_source_name"
         assert FIELD_NAME_MAP["access.is_public"] == "access_is_public"
 

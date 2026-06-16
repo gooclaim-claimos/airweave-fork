@@ -467,8 +467,8 @@ class TestVespaClient:
                     "textual_representation": "Content",
                     "created_at": 1704067200000,
                     "updated_at": 1704067200000,
-                    "airweave_system_metadata_entity_type": "document",
-                    "airweave_system_metadata_source_name": "GitHub",
+                    "data_sources_system_metadata_entity_type": "document",
+                    "data_sources_system_metadata_source_name": "GitHub",
                 }
             }
         ]
@@ -555,10 +555,10 @@ class TestVespaClient:
     def test_extract_system_metadata(self, client):
         """Test extracting system metadata from fields."""
         fields = {
-            "airweave_system_metadata_entity_type": "document",
-            "airweave_system_metadata_source_name": "GitHub",
-            "airweave_system_metadata_sync_id": "sync-123",
-            "airweave_system_metadata_chunk_index": 5
+            "data_sources_system_metadata_entity_type": "document",
+            "data_sources_system_metadata_source_name": "GitHub",
+            "data_sources_system_metadata_sync_id": "sync-123",
+            "data_sources_system_metadata_chunk_index": 5
         }
 
         metadata = client._extract_system_metadata(fields)

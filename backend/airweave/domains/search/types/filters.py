@@ -31,7 +31,14 @@ class FilterableField(str, Enum):
     BREADCRUMBS_NAME = "breadcrumbs.name"
     BREADCRUMBS_ENTITY_TYPE = "breadcrumbs.entity_type"
 
-    # System metadata fields
+    # System metadata fields — string values MUST match the Vespa schema
+    # field names (data_sources_system_metadata_*) defined in the deployed .sd
+    # file. The Pydantic class field on SearchResult is named
+    # `data_sources_system_metadata` for the wire format, but the Vespa
+    # storage field names stay on the legacy `data_sources_system_metadata_*`
+    # naming until a schema migration + reindex (W1.10d). Renaming these
+    # enum strings breaks every YQL filter the browse + classic services
+    # generate.
     SYSTEM_METADATA_ENTITY_TYPE = "data_sources_system_metadata.entity_type"
     SYSTEM_METADATA_SOURCE_NAME = "data_sources_system_metadata.source_name"
     SYSTEM_METADATA_ORIGINAL_ENTITY_ID = "data_sources_system_metadata.original_entity_id"

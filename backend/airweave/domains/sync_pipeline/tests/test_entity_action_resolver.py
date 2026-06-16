@@ -14,7 +14,7 @@ from airweave.domains.sync_pipeline.entity.resolver import EntityActionResolver
 from airweave.domains.sync_pipeline.exceptions import SyncFailureError
 from airweave.platform.entities._airweave_field import AirweaveField
 from airweave.platform.entities._base import (
-    AirweaveSystemMetadata,
+    DataSourcesSystemMetadata,
     BaseEntity,
     DeletionEntity,
 )
@@ -43,7 +43,7 @@ def _entity(entity_id="e-1", hash_val="abc123"):
     """Create a _StubEntity with entity_id set (normally done by pipeline enrichment)."""
     e = _StubEntity(stub_id=entity_id, stub_name="test", breadcrumbs=[])
     e.entity_id = entity_id
-    e.airweave_system_metadata = AirweaveSystemMetadata(hash=hash_val)
+    e.data_sources_system_metadata = DataSourcesSystemMetadata(hash=hash_val)
     return e
 
 

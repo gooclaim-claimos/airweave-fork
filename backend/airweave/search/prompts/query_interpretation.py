@@ -5,14 +5,14 @@ filters from natural language queries.
 
 CRITICAL FIELD STRUCTURE INFORMATION:
 In the Qdrant database, fields are stored in a nested structure within the payload:
-- Fields marked with 'airweave_system_metadata.' prefix are nested under that object
+- Fields marked with 'data_sources_system_metadata.' prefix are nested under that object
 - Other fields are stored directly in the payload
 - The system will AUTOMATICALLY map the field names to their correct nested paths
 - You should use the field names AS SHOWN in the list below
-- DO NOT manually add 'airweave_system_metadata.' prefix - the system handles this
+- DO NOT manually add 'data_sources_system_metadata.' prefix - the system handles this
 
 For example:
-- If you see 'airweave_system_metadata.source_name' in the list, just use \
+- If you see 'data_sources_system_metadata.source_name' in the list, just use \
 'source_name' in your filter
 - If you see 'entity_id' in the list, use 'entity_id' as-is
 - The system knows which fields need the nested path and will apply it automatically
@@ -28,7 +28,7 @@ Generate Qdrant filter conditions in this format:
 
 Common patterns to look for:
 - Source/platform mentions: "in Asana", "from GitHub", "on Slack" → source_name field \
-(will be mapped to airweave_system_metadata.source_name)
+(will be mapped to data_sources_system_metadata.source_name)
 - Status indicators: "open", "closed", "pending", "completed" → status or state field
 - Time references: "last week", "yesterday", "past month" → choose a date/time field \
 that EXISTS for the relevant source (see lists above).

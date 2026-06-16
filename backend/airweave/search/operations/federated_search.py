@@ -492,7 +492,7 @@ class FederatedSearch(SearchOperation):
         breadcrumbs = payload.get("breadcrumbs", [])
 
         # Extract system metadata
-        sys_meta = payload.get("airweave_system_metadata", {})
+        sys_meta = payload.get("data_sources_system_metadata", {})
         system_metadata = {
             "entity_type": sys_meta.get("entity_type", ""),
             "source_name": sys_meta.get("source_name") or source_name,
@@ -520,7 +520,7 @@ class FederatedSearch(SearchOperation):
             "created_at",
             "updated_at",
             "breadcrumbs",
-            "airweave_system_metadata",
+            "data_sources_system_metadata",
             "access",
         }
         source_fields = {k: v for k, v in payload.items() if k not in known_fields}

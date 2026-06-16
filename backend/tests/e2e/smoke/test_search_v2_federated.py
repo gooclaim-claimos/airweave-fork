@@ -169,7 +169,7 @@ async def test_federated_result_structure(
         result = results["results"][0]
         assert "entity_id" in result, "Result missing entity_id"
         assert "name" in result, "Result missing name"
-        assert "airweave_system_metadata" in result, "Result missing airweave_system_metadata"
+        assert "data_sources_system_metadata" in result, "Result missing data_sources_system_metadata"
 
 
 # =============================================================================
@@ -273,7 +273,7 @@ async def test_mixed_filter_by_source_excludes_other(
             {
                 "conditions": [
                     {
-                        "field": "airweave_system_metadata.source_name",
+                        "field": "data_sources_system_metadata.source_name",
                         "operator": "equals",
                         "value": "stripe",
                     }
@@ -294,7 +294,7 @@ async def test_mixed_filter_by_source_excludes_other(
 
         # All returned results should be from stripe, not slack
         for result in results.get("results", []):
-            source_name = result.get("airweave_system_metadata", {}).get("source_name")
+            source_name = result.get("data_sources_system_metadata", {}).get("source_name")
             assert source_name == "stripe", (
                 f"Expected stripe results only, got source_name={source_name}"
             )

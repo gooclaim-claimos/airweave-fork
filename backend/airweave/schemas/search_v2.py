@@ -221,7 +221,7 @@ class SearchV2Response(BaseModel):
                                     "entity_type": "NotionDatabaseEntity",
                                 },
                             ],
-                            "airweave_system_metadata": {
+                            "data_sources_system_metadata": {
                                 "source_name": "notion",
                                 "entity_type": "NotionPageEntity",
                                 "original_entity_id": "page-abc123",
@@ -261,7 +261,7 @@ class SearchV2Response(BaseModel):
                                     "entity_type": "SlackChannelEntity",
                                 },
                             ],
-                            "airweave_system_metadata": {
+                            "data_sources_system_metadata": {
                                 "source_name": "slack",
                                 "entity_type": "SlackMessageEntity",
                                 "original_entity_id": "msg-def456",

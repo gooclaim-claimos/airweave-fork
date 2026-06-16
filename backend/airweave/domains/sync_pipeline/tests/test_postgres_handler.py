@@ -33,7 +33,7 @@ def _make_entity(entity_id: str, hash_val: str = "abc123", definition: str = "st
     meta = SimpleNamespace(hash=hash_val)
     return SimpleNamespace(
         entity_id=entity_id,
-        airweave_system_metadata=meta,
+        data_sources_system_metadata=meta,
     )
 
 
@@ -94,7 +94,7 @@ class TestDeduplicate:
         assert len(result) == 2
         ids = [a.entity_id for a in result]
         assert ids == ["e1", "e2"]
-        assert result[0].entity.airweave_system_metadata.hash == "new"
+        assert result[0].entity.data_sources_system_metadata.hash == "new"
 
     def test_no_duplicates_passthrough(self):
         handler, _ = _make_handler()

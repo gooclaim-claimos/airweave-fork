@@ -69,7 +69,7 @@ class QueryBuilder:
 
         # Base WHERE clause with collection filter and retrieval
         where_parts = [
-            f"airweave_system_metadata_collection_id contains '{collection_id}'",
+            f"data_sources_system_metadata_collection_id contains '{collection_id}'",
             f"({retrieval_clause})",
         ]
 

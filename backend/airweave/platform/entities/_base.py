@@ -43,7 +43,7 @@ class AccessControl(BaseModel):
     )
 
 
-class AirweaveSystemMetadata(BaseModel):
+class DataSourcesSystemMetadata(BaseModel):
     """System metadata for this entity.
 
     All fields are Optional to support progressive enrichment during pipeline stages.
@@ -108,7 +108,7 @@ class BaseEntity(BaseModel):
     textual_representation: Optional[str] = Field(
         None, description="Textual representation of the entity to be embedded."
     )
-    airweave_system_metadata: Optional[AirweaveSystemMetadata] = Field(
+    data_sources_system_metadata: Optional[DataSourcesSystemMetadata] = Field(
         None, description="System metadata for this entity."
     )
 

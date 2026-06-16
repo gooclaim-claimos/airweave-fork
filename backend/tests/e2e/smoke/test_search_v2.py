@@ -201,7 +201,7 @@ class TestInstantSearch:
 
         # All results should come from the stub source
         for r in results:
-            assert r["airweave_system_metadata"]["source_name"] == "stub"
+            assert r["data_sources_system_metadata"]["source_name"] == "stub"
 
     @pytest.mark.asyncio
     async def test_instant_retrieval_strategies(
@@ -274,8 +274,8 @@ class TestInstantSearch:
         assert "entity_id" in first
         assert "name" in first
         assert isinstance(first["relevance_score"], (int, float))
-        assert first["airweave_system_metadata"]["source_name"] == "stub"
-        assert "entity_type" in first["airweave_system_metadata"]
+        assert first["data_sources_system_metadata"]["source_name"] == "stub"
+        assert "entity_type" in first["data_sources_system_metadata"]
         assert isinstance(first["breadcrumbs"], list)
         assert "textual_representation" in first
 
@@ -291,7 +291,7 @@ class TestInstantSearch:
         )
         assert resp.status_code == 200
         entity_types = {
-            r["airweave_system_metadata"]["entity_type"] for r in resp.json()["results"]
+            r["data_sources_system_metadata"]["entity_type"] for r in resp.json()["results"]
         }
         # Stub source generates these entity types
         expected_types = {
@@ -326,7 +326,7 @@ class TestClassicSearch:
         assert len(results) > 0
 
         for r in results:
-            assert r["airweave_system_metadata"]["source_name"] == "stub"
+            assert r["data_sources_system_metadata"]["source_name"] == "stub"
 
     @pytest.mark.asyncio
     async def test_classic_returns_multiple_results(
@@ -380,7 +380,7 @@ class TestAgenticSearch:
         assert len(results) > 0, "Agent should find stub entities"
 
         for r in results:
-            assert r["airweave_system_metadata"]["source_name"] == "stub"
+            assert r["data_sources_system_metadata"]["source_name"] == "stub"
 
     @pytest.mark.asyncio
     @pytest.mark.slow

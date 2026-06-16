@@ -265,8 +265,8 @@ class VespaClient:
         results = []
         for schema in ALL_VESPA_SCHEMAS:
             selection = (
-                f"{schema}.airweave_system_metadata_sync_id=='{sync_id}' and "
-                f"{schema}.airweave_system_metadata_collection_id=='{collection_id}'"
+                f"{schema}.data_sources_system_metadata_sync_id=='{sync_id}' and "
+                f"{schema}.data_sources_system_metadata_collection_id=='{collection_id}'"
             )
             result = await self.delete_by_selection(schema, selection)
             results.append(result)
@@ -283,7 +283,7 @@ class VespaClient:
         """
         results = []
         for schema in ALL_VESPA_SCHEMAS:
-            selection = f"{schema}.airweave_system_metadata_collection_id=='{collection_id}'"
+            selection = f"{schema}.data_sources_system_metadata_collection_id=='{collection_id}'"
             result = await self.delete_by_selection(schema, selection)
             results.append(result)
         return results
@@ -356,8 +356,8 @@ class VespaClient:
         source_list = ", ".join(ALL_VESPA_SCHEMAS)
         yql = (
             f"select documentid, sddocname() from sources {source_list} where "
-            f"airweave_system_metadata_original_entity_id in ({escaped_ids}) and "
-            f"airweave_system_metadata_collection_id contains '{collection_id}'"
+            f"data_sources_system_metadata_original_entity_id in ({escaped_ids}) and "
+            f"data_sources_system_metadata_collection_id contains '{collection_id}'"
         )
         query_params = {
             "yql": yql,
@@ -482,13 +482,13 @@ class VespaClient:
         total = 0
         for schema in ALL_VESPA_SCHEMAS:
             id_conditions = " or ".join(
-                f"{schema}.airweave_system_metadata_original_entity_id=="
+                f"{schema}.data_sources_system_metadata_original_entity_id=="
                 f"'{eid.replace(chr(39), chr(92) + chr(39))}'"
                 for eid in original_entity_ids
             )
             selection = (
                 f"({id_conditions}) and "
-                f"{schema}.airweave_system_metadata_collection_id=='{collection_id}'"
+                f"{schema}.data_sources_system_metadata_collection_id=='{collection_id}'"
             )
             result = await self.delete_by_selection(schema, selection)
             total += result.deleted_count
@@ -618,7 +618,7 @@ class VespaClient:
         """Log debug info for first 5 hits."""
         if index < 5:
             entity_name = fields.get("name", "N/A")
-            entity_type = fields.get("airweave_system_metadata_entity_type", "N/A")
+            entity_type = fields.get("data_sources_system_metadata_entity_type", "N/A")
             self._logger.debug(
                 f"[VespaClient] Hit {index}: name='{entity_name[:40] if entity_name else 'N/A'}' "
                 f"type={entity_type} relevance={relevance:.4f}"
@@ -627,12 +627,12 @@ class VespaClient:
     def _extract_system_metadata(self, fields: Dict[str, Any]) -> SystemMetadataResult:
         """Extract system metadata from flattened Vespa fields."""
         return SystemMetadataResult(
-            entity_type=fields.get("airweave_system_metadata_entity_type", ""),
-            source_name=fields.get("airweave_system_metadata_source_name"),
-            sync_id=fields.get("airweave_system_metadata_sync_id"),
-            sync_job_id=fields.get("airweave_system_metadata_sync_job_id"),
-            original_entity_id=fields.get("airweave_system_metadata_original_entity_id"),
-            chunk_index=fields.get("airweave_system_metadata_chunk_index"),
+            entity_type=fields.get("data_sources_system_metadata_entity_type", ""),
+            source_name=fields.get("data_sources_system_metadata_source_name"),
+            sync_id=fields.get("data_sources_system_metadata_sync_id"),
+            sync_job_id=fields.get("data_sources_system_metadata_sync_job_id"),
+            original_entity_id=fields.get("data_sources_system_metadata_original_entity_id"),
+            chunk_index=fields.get("data_sources_system_metadata_chunk_index"),
         )
 
     def _extract_access_control(self, fields: Dict[str, Any]) -> Optional[AccessControlResult]:

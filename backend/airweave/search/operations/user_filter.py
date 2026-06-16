@@ -36,7 +36,7 @@ class UserFilter(SearchOperation):
     FIELD_CONDITION_RANGE = "range"
 
     # System metadata path prefix
-    SYSTEM_METADATA_PREFIX = "airweave_system_metadata."
+    SYSTEM_METADATA_PREFIX = "data_sources_system_metadata."
 
     # System metadata fields that need path mapping (same as QueryInterpretation)
     NESTED_SYSTEM_FIELDS = {
@@ -45,7 +45,7 @@ class UserFilter(SearchOperation):
         "sync_id",
     }
 
-    # Note: created_at, updated_at are entity-level fields (not nested in airweave_system_metadata)
+    # Note: created_at, updated_at are entity-level fields (not nested in data_sources_system_metadata)
     # They don't need path mapping - used directly in filters
 
     def __init__(self, filter: Optional[AirweaveFilter]) -> None:

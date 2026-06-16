@@ -80,7 +80,7 @@ class QueryInterpretation(SearchOperation):
 
     CONFIDENCE_THRESHOLD = 0.7
 
-    # System metadata fields that are stored in airweave_system_metadata nested object
+    # System metadata fields that are stored in data_sources_system_metadata nested object
     # These need to be mapped from simple names to nested paths for Qdrant
     NESTED_SYSTEM_FIELDS = {
         "source_name": "Source connector name (case-sensitive)",
@@ -288,7 +288,7 @@ class QueryInterpretation(SearchOperation):
             entity_class = entry.entity_class_ref
 
             for field_name, field_info in entity_class.model_fields.items():
-                if field_name.startswith("_") or field_name == "airweave_system_metadata":
+                if field_name.startswith("_") or field_name == "data_sources_system_metadata":
                     continue
 
                 description = getattr(field_info, "description", None)
@@ -492,12 +492,12 @@ class QueryInterpretation(SearchOperation):
     def _map_to_qdrant_path(self, key: str) -> str:
         """Map field names to Qdrant payload paths."""
         # Already has prefix
-        if key.startswith("airweave_system_metadata."):
+        if key.startswith("data_sources_system_metadata."):
             return key
 
         # Needs prefix (from class constant to avoid drift)
         if key in self.NESTED_SYSTEM_FIELDS:
-            return f"airweave_system_metadata.{key}"
+            return f"data_sources_system_metadata.{key}"
 
         # Regular field, no mapping needed
         return key
