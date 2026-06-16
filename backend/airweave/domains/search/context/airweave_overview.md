@@ -31,10 +31,10 @@ in a vector database.
 
 | Field | Description |
 |-------|-------------|
-| `airweave_system_metadata.source_name` | Source type (e.g., "notion", "slack") |
-| `airweave_system_metadata.entity_type` | Entity class (e.g., "NotionPageEntity") |
-| `airweave_system_metadata.original_entity_id` | ID before chunking (shared by all chunks from the same item) |
-| `airweave_system_metadata.chunk_index` | Position if content was split into chunks |
+| `data_sources_system_metadata.source_name` | Source type (e.g., "notion", "slack") |
+| `data_sources_system_metadata.entity_type` | Entity class (e.g., "NotionPageEntity") |
+| `data_sources_system_metadata.original_entity_id` | ID before chunking (shared by all chunks from the same item) |
+| `data_sources_system_metadata.chunk_index` | Position if content was split into chunks |
 
 **Source-Specific Fields:** Each source has unique entity types with different fields
 (e.g., `status`, `labels`, `assignee`). See the Collection Info section for available fields.

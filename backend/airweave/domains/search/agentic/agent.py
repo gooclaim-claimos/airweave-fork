@@ -411,8 +411,8 @@ class Agent:
                 EntitySummary(
                     entity_id=reranked_results[idx].entity_id,
                     name=reranked_results[idx].name or reranked_results[idx].entity_id,
-                    entity_type=reranked_results[idx].airweave_system_metadata.entity_type or "",
-                    source_name=reranked_results[idx].airweave_system_metadata.source_name or "",
+                    entity_type=reranked_results[idx].data_sources_system_metadata.entity_type or "",
+                    source_name=reranked_results[idx].data_sources_system_metadata.source_name or "",
                     relevance_score=reranked[idx].relevance_score,
                 )
                 for idx in range(min(5, len(reranked_results)))
@@ -441,7 +441,7 @@ class Agent:
         # Deduplicate entity IDs to original IDs
         all_read_ids = list(
             {
-                r.airweave_system_metadata.original_entity_id
+                r.data_sources_system_metadata.original_entity_id
                 for results in state.reads_by_tool_call_id.values()
                 for r in results
             }
@@ -699,8 +699,8 @@ def _entity_summary(entity_id: str, state: AgentState) -> EntitySummary:
         return EntitySummary(
             entity_id=entity_id,
             name=entity.name or entity_id,
-            entity_type=entity.airweave_system_metadata.entity_type or "",
-            source_name=entity.airweave_system_metadata.source_name or "",
+            entity_type=entity.data_sources_system_metadata.entity_type or "",
+            source_name=entity.data_sources_system_metadata.source_name or "",
             relevance_score=entity.relevance_score,
         )
     return EntitySummary(

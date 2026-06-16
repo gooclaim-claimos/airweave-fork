@@ -124,8 +124,8 @@ export const MOCK_EVENTS: SearchEvent[] = [
                 filter_groups: [
                     {
                         conditions: [
-                            { field: 'airweave_system_metadata.source_name', operator: 'equals', value: 'asana' },
-                            { field: 'airweave_system_metadata.entity_type', operator: 'equals', value: 'AsanaTaskEntity' },
+                            { field: 'data_sources_system_metadata.source_name', operator: 'equals', value: 'asana' },
+                            { field: 'data_sources_system_metadata.entity_type', operator: 'equals', value: 'AsanaTaskEntity' },
                         ],
                     },
                 ],
@@ -292,7 +292,7 @@ export const MOCK_EVENTS: SearchEvent[] = [
                 filter_groups: [
                     {
                         conditions: [
-                            { field: 'airweave_system_metadata.source_name', operator: 'equals', value: 'slack' },
+                            { field: 'data_sources_system_metadata.source_name', operator: 'equals', value: 'slack' },
                         ],
                     },
                 ],
@@ -316,13 +316,13 @@ export const MOCK_EVENTS: SearchEvent[] = [
                 filter_groups: [
                     {
                         conditions: [
-                            { field: 'airweave_system_metadata.source_name', operator: 'equals', value: 'slack' },
+                            { field: 'data_sources_system_metadata.source_name', operator: 'equals', value: 'slack' },
                             { field: 'created_at', operator: 'greater_than', value: '2026-03-01T00:00:00Z' },
                         ],
                     },
                     {
                         conditions: [
-                            { field: 'airweave_system_metadata.source_name', operator: 'equals', value: 'asana' },
+                            { field: 'data_sources_system_metadata.source_name', operator: 'equals', value: 'asana' },
                             { field: 'created_at', operator: 'greater_than', value: '2026-01-01T00:00:00Z' },
                         ],
                     },

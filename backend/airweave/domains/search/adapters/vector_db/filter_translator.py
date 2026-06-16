@@ -93,7 +93,7 @@ class FilterTranslator:
         """Convert field name to Vespa format.
 
         - Breadcrumb fields (breadcrumbs.x): keep as-is (Vespa struct-field syntax)
-        - System metadata fields (airweave_system_metadata.x): convert dot to underscore
+        - System metadata fields (data_sources_system_metadata.x): convert dot to underscore
         """
         if field.startswith("breadcrumbs."):
             return field

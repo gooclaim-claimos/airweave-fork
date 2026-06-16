@@ -275,7 +275,7 @@ SEARCH_RESPONSE_EXAMPLES = {
                     "entity_id": "1207573546742333__chunk_0",
                     "name": "Implement user authentication",
                     "breadcrumbs": [],
-                    "airweave_system_metadata": {
+                    "data_sources_system_metadata": {
                         "source_name": "asana",
                         "entity_type": "AsanaTaskEntity",
                         "chunk_index": 0,
@@ -293,7 +293,7 @@ SEARCH_RESPONSE_EXAMPLES = {
                     "entity_id": "1207921130902216__chunk_0",
                     "name": "Review and update API authentication documentation",
                     "breadcrumbs": [],
-                    "airweave_system_metadata": {
+                    "data_sources_system_metadata": {
                         "source_name": "asana",
                         "entity_type": "AsanaTaskEntity",
                         "chunk_index": 0,
@@ -316,7 +316,7 @@ SEARCH_RESPONSE_EXAMPLES = {
                 "payload": {
                     "entity_id": "cust_1234567890__chunk_0",
                     "name": "Customer Payment Record",
-                    "airweave_system_metadata": {
+                    "data_sources_system_metadata": {
                         "source_name": "stripe",
                         "entity_type": "StripePaymentEntity",
                         "chunk_index": 0,
@@ -333,7 +333,7 @@ SEARCH_RESPONSE_EXAMPLES = {
                 "payload": {
                     "entity_id": "ticket_789__chunk_0",
                     "name": "Billing Question - Subscription Upgrade",
-                    "airweave_system_metadata": {
+                    "data_sources_system_metadata": {
                         "source_name": "zendesk",
                         "entity_type": "ZendeskTicketEntity",
                         "chunk_index": 0,
@@ -362,7 +362,7 @@ SEARCH_RESPONSE_EXAMPLES = {
                         {"entity_id": "1204858079189506"},
                         {"entity_id": "1207324698039595"},
                     ],
-                    "airweave_system_metadata": {
+                    "data_sources_system_metadata": {
                         "source_name": "asana",
                         "entity_type": "AsanaTaskEntity",
                         "chunk_index": 0,

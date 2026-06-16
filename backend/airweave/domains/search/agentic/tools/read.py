@@ -80,7 +80,7 @@ class ReadTool(Tool):
             if not result:
                 not_found.append(eid)
                 continue
-            orig_id = result.airweave_system_metadata.original_entity_id
+            orig_id = result.data_sources_system_metadata.original_entity_id
             groups.setdefault(orig_id, []).append(result)
 
         for orig_id, group_results in groups.items():
@@ -112,10 +112,10 @@ class ReadTool(Tool):
         if len(chunks) == 1:
             return chunks[0].to_md()
 
-        matched_indices = {r.airweave_system_metadata.chunk_index for r in matched_results}
+        matched_indices = {r.data_sources_system_metadata.chunk_index for r in matched_results}
         parts = [f"### {name}\n"]
         for chunk in chunks:
-            idx = chunk.airweave_system_metadata.chunk_index
+            idx = chunk.data_sources_system_metadata.chunk_index
             marker = " <- search match" if idx in matched_indices else ""
             parts.append(f"**Chunk {idx}{marker}:**")
             parts.append("```")
@@ -130,7 +130,7 @@ class ReadTool(Tool):
         state: AgentState,
     ) -> list[SearchResult]:
         """Fetch surrounding chunks for a group of results sharing an original_entity_id."""
-        chunk_indices = [r.airweave_system_metadata.chunk_index for r in group_results]
+        chunk_indices = [r.data_sources_system_metadata.chunk_index for r in group_results]
         min_chunk = min(chunk_indices) - self._surrounding_chunks
         max_chunk = max(chunk_indices) + self._surrounding_chunks
 
@@ -165,5 +165,5 @@ class ReadTool(Tool):
         except Exception:
             results = list(group_results)
 
-        results.sort(key=lambda r: r.airweave_system_metadata.chunk_index)
+        results.sort(key=lambda r: r.data_sources_system_metadata.chunk_index)
         return results

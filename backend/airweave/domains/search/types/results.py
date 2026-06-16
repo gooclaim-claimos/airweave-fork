@@ -100,7 +100,7 @@ class SearchResult(BaseModel):
     )
 
     textual_representation: str = Field(..., description="Semantically searchable text content")
-    airweave_system_metadata: SearchSystemMetadata = Field(..., description="System metadata")
+    data_sources_system_metadata: SearchSystemMetadata = Field(..., description="System metadata")
 
     access: SearchAccessControl = Field(..., description="Access control")
 
@@ -124,7 +124,7 @@ class SearchResult(BaseModel):
         path = " > ".join(bc.to_md() for bc in self.breadcrumbs) if self.breadcrumbs else "(root)"
         created = self.created_at.isoformat() if self.created_at else "unknown"
         updated = self.updated_at.isoformat() if self.updated_at else "unknown"
-        meta = self.airweave_system_metadata
+        meta = self.data_sources_system_metadata
         return (
             f"- **{self.name}** (id: {self.entity_id}, score: {self.relevance_score:.4f})\n"
             f"  Breadcrumbs: {path}\n"
@@ -136,7 +136,7 @@ class SearchResult(BaseModel):
     def to_snippet_summary_md(self) -> str:
         """Compact summary with content snippet (~100 tokens) for search results."""
         path = " > ".join(bc.to_md() for bc in self.breadcrumbs) if self.breadcrumbs else "(root)"
-        meta = self.airweave_system_metadata
+        meta = self.data_sources_system_metadata
         created = self.created_at.isoformat() if self.created_at else "unknown"
         updated = self.updated_at.isoformat() if self.updated_at else "unknown"
 
@@ -194,7 +194,7 @@ class SearchResult(BaseModel):
 
         # System metadata
         lines.append("**System Metadata:**")
-        lines.append(self.airweave_system_metadata.to_md())
+        lines.append(self.data_sources_system_metadata.to_md())
 
         lines.append("")
 

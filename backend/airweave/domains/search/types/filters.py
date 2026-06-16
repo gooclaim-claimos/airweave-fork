@@ -17,7 +17,7 @@ class FilterableField(str, Enum):
     """Filterable fields in search.
 
     Uses dot notation for nested fields (e.g., breadcrumbs.name,
-    airweave_system_metadata.source_name).
+    data_sources_system_metadata.source_name).
     """
 
     # Base entity fields
@@ -32,12 +32,12 @@ class FilterableField(str, Enum):
     BREADCRUMBS_ENTITY_TYPE = "breadcrumbs.entity_type"
 
     # System metadata fields
-    SYSTEM_METADATA_ENTITY_TYPE = "airweave_system_metadata.entity_type"
-    SYSTEM_METADATA_SOURCE_NAME = "airweave_system_metadata.source_name"
-    SYSTEM_METADATA_ORIGINAL_ENTITY_ID = "airweave_system_metadata.original_entity_id"
-    SYSTEM_METADATA_CHUNK_INDEX = "airweave_system_metadata.chunk_index"
-    SYSTEM_METADATA_SYNC_ID = "airweave_system_metadata.sync_id"
-    SYSTEM_METADATA_SYNC_JOB_ID = "airweave_system_metadata.sync_job_id"
+    SYSTEM_METADATA_ENTITY_TYPE = "data_sources_system_metadata.entity_type"
+    SYSTEM_METADATA_SOURCE_NAME = "data_sources_system_metadata.source_name"
+    SYSTEM_METADATA_ORIGINAL_ENTITY_ID = "data_sources_system_metadata.original_entity_id"
+    SYSTEM_METADATA_CHUNK_INDEX = "data_sources_system_metadata.chunk_index"
+    SYSTEM_METADATA_SYNC_ID = "data_sources_system_metadata.sync_id"
+    SYSTEM_METADATA_SYNC_JOB_ID = "data_sources_system_metadata.sync_job_id"
 
 
 class FilterOperator(str, Enum):
@@ -157,7 +157,7 @@ class FilterCondition(BaseModel):
     Invalid filters raise ``pydantic.ValidationError`` automatically.
 
     Examples:
-        {"field": "airweave_system_metadata.source_name", "operator": "equals",
+        {"field": "data_sources_system_metadata.source_name", "operator": "equals",
          "value": "notion"}
         {"field": "created_at", "operator": "greater_than",
          "value": "2024-01-01T00:00:00Z"}
@@ -281,9 +281,9 @@ class FilterGroup(BaseModel):
     Examples:
         Single group (AND):
             {"conditions": [
-                {"field": "airweave_system_metadata.source_name",
+                {"field": "data_sources_system_metadata.source_name",
                  "operator": "equals", "value": "slack"},
-                {"field": "airweave_system_metadata.entity_type",
+                {"field": "data_sources_system_metadata.entity_type",
                  "operator": "equals", "value": "SlackMessageEntity"}
             ]}
 

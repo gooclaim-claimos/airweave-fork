@@ -73,7 +73,7 @@ def _make_search_result(
         breadcrumbs=breadcrumbs
         or [SearchBreadcrumb(entity_id="parent-1", name="Parent", entity_type="FolderEntity")],
         textual_representation=content,
-        airweave_system_metadata=SearchSystemMetadata(
+        data_sources_system_metadata=SearchSystemMetadata(
             source_name=source_name,
             entity_type=entity_type,
             sync_id=sync_id or str(uuid4()),
@@ -105,7 +105,7 @@ def _make_federated_result(
         breadcrumbs=breadcrumbs
         or [SearchBreadcrumb(entity_id="chan-1", name="#general", entity_type="SlackChannel")],
         textual_representation=content,
-        airweave_system_metadata=SearchSystemMetadata(
+        data_sources_system_metadata=SearchSystemMetadata(
             source_name=source_name,
             entity_type=entity_type,
             sync_id=None,
@@ -226,7 +226,7 @@ def _make_slack_entity(
         ],
         created_at=datetime(2026, 3, 15, 10, 0, 0),
         textual_representation=f"Message in #{channel_name}: {text}",
-        airweave_system_metadata=AirweaveSystemMetadata(
+        data_sources_system_metadata=AirweaveSystemMetadata(
             source_name="slack",
             entity_type="SlackMessageEntity",
         ),
@@ -395,12 +395,12 @@ class TestMatchesGroup:
         group = FilterGroup(
             conditions=[
                 FilterCondition(
-                    field="airweave_system_metadata.source_name",
+                    field="data_sources_system_metadata.source_name",
                     operator="equals",
                     value="slack",
                 ),
                 FilterCondition(
-                    field="airweave_system_metadata.entity_type",
+                    field="data_sources_system_metadata.entity_type",
                     operator="equals",
                     value="SlackMessageEntity",
                 ),
@@ -413,12 +413,12 @@ class TestMatchesGroup:
         group = FilterGroup(
             conditions=[
                 FilterCondition(
-                    field="airweave_system_metadata.source_name",
+                    field="data_sources_system_metadata.source_name",
                     operator="equals",
                     value="slack",
                 ),
                 FilterCondition(
-                    field="airweave_system_metadata.entity_type",
+                    field="data_sources_system_metadata.entity_type",
                     operator="equals",
                     value="SlackMessageEntity",
                 ),
@@ -433,24 +433,24 @@ class TestMatchesAnyGroup:
     def test_matches_first_group(self):
         r = _make_search_result(source_name="slack")
         groups = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "slack"),
-            _make_filter("airweave_system_metadata.source_name", "equals", "github"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "slack"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "github"),
         ]
         assert _matches_any_group(r, groups) is True
 
     def test_matches_second_group(self):
         r = _make_search_result(source_name="github")
         groups = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "slack"),
-            _make_filter("airweave_system_metadata.source_name", "equals", "github"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "slack"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "github"),
         ]
         assert _matches_any_group(r, groups) is True
 
     def test_matches_no_group(self):
         r = _make_search_result(source_name="notion")
         groups = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "slack"),
-            _make_filter("airweave_system_metadata.source_name", "equals", "github"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "slack"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "github"),
         ]
         assert _matches_any_group(r, groups) is False
 
@@ -468,7 +468,7 @@ class TestApplyFiltersInMemory:
             _make_federated_result(entity_id="f1", source_name="slack"),
             _make_federated_result(entity_id="f2", source_name="slack"),
         ]
-        filters = [_make_filter("airweave_system_metadata.source_name", "equals", "github")]
+        filters = [_make_filter("data_sources_system_metadata.source_name", "equals", "github")]
         filtered = SearchPlanExecutor._apply_filters_in_memory(results, filters)
         assert len(filtered) == 0
 
@@ -476,7 +476,7 @@ class TestApplyFiltersInMemory:
         results = [
             _make_federated_result(entity_id="f1", source_name="slack"),
         ]
-        filters = [_make_filter("airweave_system_metadata.source_name", "equals", "slack")]
+        filters = [_make_filter("data_sources_system_metadata.source_name", "equals", "slack")]
         filtered = SearchPlanExecutor._apply_filters_in_memory(results, filters)
         assert len(filtered) == 1
 
@@ -484,7 +484,7 @@ class TestApplyFiltersInMemory:
         slack = _make_federated_result(entity_id="f1", entity_type="SlackMessageEntity")
         github = _make_search_result(entity_id="g1", entity_type="GitHubPREntity")
         filters = [
-            _make_filter("airweave_system_metadata.entity_type", "equals", "GitHubPREntity")
+            _make_filter("data_sources_system_metadata.entity_type", "equals", "GitHubPREntity")
         ]
         filtered = SearchPlanExecutor._apply_filters_in_memory([slack, github], filters)
         assert len(filtered) == 1
@@ -495,7 +495,7 @@ class TestApplyFiltersInMemory:
         fed = _make_federated_result(entity_id="f1")
         synced = _make_search_result(entity_id="s1", sync_id="some-sync-id")
         filters = [
-            _make_filter("airweave_system_metadata.sync_id", "equals", "some-sync-id")
+            _make_filter("data_sources_system_metadata.sync_id", "equals", "some-sync-id")
         ]
         filtered = SearchPlanExecutor._apply_filters_in_memory([fed, synced], filters)
         assert len(filtered) == 1
@@ -530,8 +530,8 @@ class TestApplyFiltersInMemory:
         notion = _make_search_result(entity_id="n1", source_name="notion")
 
         filters = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "slack"),
-            _make_filter("airweave_system_metadata.source_name", "equals", "github"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "slack"),
+            _make_filter("data_sources_system_metadata.source_name", "equals", "github"),
         ]
         filtered = SearchPlanExecutor._apply_filters_in_memory(
             [slack, github, notion], filters
@@ -567,12 +567,12 @@ class TestEntityToSearchResult:
         assert result.entity_id == "msg-42__chunk_0"
         assert result.name == "deploy done"
         assert result.relevance_score == 0.0
-        assert result.airweave_system_metadata.source_name == "slack"
-        assert result.airweave_system_metadata.entity_type == "SlackMessageEntity"
-        assert result.airweave_system_metadata.sync_id is None
-        assert result.airweave_system_metadata.sync_job_id is None
-        assert result.airweave_system_metadata.chunk_index == 0
-        assert result.airweave_system_metadata.original_entity_id == "msg-42"
+        assert result.data_sources_system_metadata.source_name == "slack"
+        assert result.data_sources_system_metadata.entity_type == "SlackMessageEntity"
+        assert result.data_sources_system_metadata.sync_id is None
+        assert result.data_sources_system_metadata.sync_job_id is None
+        assert result.data_sources_system_metadata.chunk_index == 0
+        assert result.data_sources_system_metadata.original_entity_id == "msg-42"
 
     def test_breadcrumbs_converted(self):
         entity = _make_slack_entity()
@@ -761,7 +761,7 @@ class TestExecutorFederated:
         )
 
         user_filter = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "github")
+            _make_filter("data_sources_system_metadata.source_name", "equals", "github")
         ]
 
         results = await executor.execute(
@@ -775,7 +775,7 @@ class TestExecutorFederated:
 
         # Only GitHub results should remain — Slack filtered out in-memory
         assert all(
-            r.airweave_system_metadata.source_name == "github" for r in results.results
+            r.data_sources_system_metadata.source_name == "github" for r in results.results
         )
 
     @pytest.mark.asyncio
@@ -806,7 +806,7 @@ class TestExecutorFederated:
         )
 
         user_filter = [
-            _make_filter("airweave_system_metadata.source_name", "equals", "slack")
+            _make_filter("data_sources_system_metadata.source_name", "equals", "slack")
         ]
 
         results = await executor.execute(
@@ -819,7 +819,7 @@ class TestExecutorFederated:
         )
 
         assert len(results.results) == 1
-        assert results.results[0].airweave_system_metadata.source_name == "slack"
+        assert results.results[0].data_sources_system_metadata.source_name == "slack"
 
     @pytest.mark.asyncio
     async def test_federated_auth_failure_raises_error(self):
