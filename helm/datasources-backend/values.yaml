@@ -129,12 +129,14 @@ config:
   POETRY_VIRTUALENVS_CREATE: "false"
   POETRY_VIRTUALENVS_IN_PROJECT: "false"
   POETRY_CACHE_DIR: "/tmp/poetry-cache"
-  # OCR provider — the Temporal worker hard-requires one configured before
-  # it will start. For v1.0 markdown / text-only demos we set a placeholder
-  # Mistral key just to satisfy the constructor; no real Mistral call is
-  # made until a sync ingests an OCR-required file (scanned PDF / image).
-  # Swap to a real key (or DOCLING_BASE_URL) when ingesting scanned docs.
-  MISTRAL_API_KEY: "placeholder-no-real-mistral-key-yet"
+  # OCR provider — Azure Document Intelligence is the primary OCR backend
+  # (see externalSecret.data below for AZURE_DI_*). MISTRAL_API_KEY is now
+  # UNSET on purpose: a truthy placeholder was causing the search providers
+  # factory to wire MistralProvider for query_expansion + reranking +
+  # generate_answer, where every call returned 401 and triggered retry
+  # tax (~38s per agentic search). The Temporal worker requires
+  # container.ocr_provider to be non-None which Azure DI satisfies, and
+  # MistralOCR safely falls out of the OCR chain when the key is missing.
   # SemanticChunker uses an embedder to find topic boundaries when chunking
   # documents. Reuses our OpenAI key for that instead of a separate local
   # model — avoids the `/.cache` writability problem the model2vec default
