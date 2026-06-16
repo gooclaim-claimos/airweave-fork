@@ -261,6 +261,12 @@ class CollectionMetadataBuilder:
             "An internal test data source that generates deterministic synthetic entities "
             "for testing and development purposes."
         ),
+        # Gooclaim-fork sources
+        "gooclaim_upload": (
+            "Files uploaded directly via Gooclaim's Native Upload — PDFs, "
+            "Office docs, plain text, and HTML stored in a per-collection "
+            "directory and indexed on each sync."
+        ),
     }
 
     def __init__(
