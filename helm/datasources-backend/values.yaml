@@ -198,6 +198,14 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"     # file uploads
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"   # long sync streams
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # Per-tenant isolation: nginx auth-request validates the gooclaim SSO
+    # bridge cookie against gooclaim-auth and copies the resulting
+    # X-Organization-Id (= tenant_id UUID) onto the upstream request, so the
+    # Airweave backend scopes every call to the logged-in tenant's org.
+    # No auth-signin here — API calls return 401 (not a browser redirect)
+    # when the cookie is missing/expired; the frontend ingress handles login.
+    nginx.ingress.kubernetes.io/auth-url: "http://gooclaim-auth.gooclaim.svc.cluster.local/v1/auth/airweave-verify"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Organization-Id"
   tls:
     enabled: true
     secretName: sources-dev-gooclaim-com-tls
