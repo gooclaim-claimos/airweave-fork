@@ -112,6 +112,12 @@ config:
   SVIX_URL: "http://localhost:8071"
   # Auth — disabled in dev so Console SSO bridge can be wired later
   AUTH_ENABLED: "false"
+  # Auto-create an Airweave org 1:1 from the X-Organization-ID header
+  # (= gooclaim tenant_id UUID) injected by the nginx auth-request sidecar.
+  # Without this a valid-but-new tenant UUID 404s ("Organization not found")
+  # and the Sources UI breaks. Safe: only affects the not-found path; the
+  # nginx auth boundary ensures only verified tenant UUIDs ever reach here.
+  EXTERNAL_ORG_ID_PROVISIONING: "true"
   # Gooclaim mode marker (FE uses this to render Sources UI)
   ENVIRONMENT: dev
   LOCAL_DEVELOPMENT: "false"
