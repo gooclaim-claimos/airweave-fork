@@ -91,6 +91,7 @@ async def get_context(
     db: AsyncSession = Depends(get_db),
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     x_organization_id: Optional[str] = Header(None, alias="X-Organization-ID"),
+    x_gck_platform_admin: Optional[str] = Header(None, alias="X-Gck-Platform-Admin"),
     auth0_user: Optional[Auth0User] = Depends(auth0.get_user),
     cache: ContextCache = Inject(ContextCache),
     rate_limiter: RateLimiter = Inject(RateLimiter),
@@ -103,7 +104,17 @@ async def get_context(
         api_key_repo=_api_key_repo,
         org_repo=_org_repo,
     )
-    return await resolver.resolve(request, db, auth0_user, x_api_key, x_organization_id)
+    ctx = await resolver.resolve(request, db, auth0_user, x_api_key, x_organization_id)
+    # Gooclaim: the nginx auth-request sidecar sets X-Gck-Platform-Admin=true
+    # (from gooclaim-auth /airweave-verify) ONLY for a verified Gooclaim
+    # SUPER_ADMIN, and overwrites any client-supplied value — so it can't be
+    # spoofed. Stash it so _require_admin can let platform admins through the
+    # cross-org admin endpoints in trusted-header mode while tenants stay denied.
+    ctx.auth_metadata = {
+        **(ctx.auth_metadata or {}),
+        "platform_admin": (x_gck_platform_admin or "").lower() == "true",
+    }
+    return ctx
 
 
 async def get_logger(

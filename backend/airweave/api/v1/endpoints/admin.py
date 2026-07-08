@@ -94,11 +94,14 @@ def _require_admin(ctx: ApiContext) -> None:
         HTTPException: If user is not an admin or superuser
     """
     # Gooclaim: in trusted-header mode (EXTERNAL_ORG_ID_PROVISIONING) every SSO'd
-    # tenant request resolves ctx.user to the shared system superuser, so the
+    # request resolves ctx.user to the shared system superuser, so the
     # is_superuser check below would pass for EVERY tenant — exposing all orgs
-    # in the Admin Dashboard. Platform administration lives in the Gooclaim
-    # Console, not the Sources UI, so deny these cross-org admin endpoints.
+    # in the Admin Dashboard. Allow ONLY a verified Gooclaim platform admin
+    # (SUPER_ADMIN — signalled by the trusted nginx sidecar via
+    # X-Gck-Platform-Admin); deny regular tenants.
     if settings.EXTERNAL_ORG_ID_PROVISIONING:
+        if (ctx.auth_metadata or {}).get("platform_admin"):
+            return
         raise HTTPException(status_code=403, detail="Admin endpoints are disabled")
     # Allow both explicit admins AND superusers (for system operations and tests)
     if not ctx.has_user_context or not (ctx.user.is_admin or ctx.user.is_superuser):
@@ -126,6 +129,12 @@ def _require_admin_permission(ctx: ApiContext, permission: FeatureFlagEnum) -> N
         # Require API_KEY_ADMIN_SYNC for resync operations
         _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
     """
+    # Gooclaim: a verified platform admin (SUPER_ADMIN, signalled by the trusted
+    # nginx sidecar) is granted in trusted-header mode.
+    if settings.EXTERNAL_ORG_ID_PROVISIONING and (ctx.auth_metadata or {}).get("platform_admin"):
+        ctx.logger.debug("Admin access granted via Gooclaim platform admin")
+        return
+
     # Check 1: User-based admin (traditional path)
     # Gooclaim: skip the user path in trusted-header mode — ctx.user is always
     # the shared system superuser, so it would grant every tenant. Only the
