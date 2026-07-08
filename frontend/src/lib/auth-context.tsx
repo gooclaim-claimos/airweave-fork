@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Default to Auth0 values, but override if auth is disabled
   const isAuthenticated = authConfig.authEnabled ? auth0IsAuthenticated : true;
   const isLoading = authConfig.authEnabled ? (auth0IsLoading || !tokenInitialized || userProfileLoading) : false;
-  const user = authConfig.authEnabled ? (enrichedUser || auth0User) : (enrichedUser || { name: 'Developer', email: 'dev@example.com', is_admin: DEV_IS_ADMIN });
+  const user = authConfig.authEnabled ? (enrichedUser || auth0User) : (enrichedUser || { name: 'Developer', email: 'dev@example.com', is_admin: DEV_IS_ADMIN, is_platform_admin: false });
 
   // Debug logging
   console.log('[Auth] authEnabled:', authConfig.authEnabled, 'enrichedUser:', enrichedUser, 'user.is_admin:', user?.is_admin);
@@ -108,10 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setEnrichedUser({
               ...auth0User,
               is_admin: backendUser.is_admin || false,
+              is_platform_admin: backendUser.is_platform_admin || false,
               id: backendUser.id,
               // Add any other backend fields you want to include
             });
-            console.log('User profile enriched with backend data', { is_admin: backendUser.is_admin });
+            console.log('User profile enriched with backend data', { is_admin: backendUser.is_admin, is_platform_admin: backendUser.is_platform_admin });
           } else {
             console.error('Failed to fetch user profile from backend:', response.status);
             // Fallback to Auth0 user without backend data
@@ -131,8 +132,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserProfileLoading(false);
         }
       } else if (!authConfig.authEnabled) {
-        // For dev mode, set a mock user with admin rights (controlled by VITE_DEV_IS_ADMIN)
-        setEnrichedUser({ name: 'Developer', email: 'dev@example.com', is_admin: DEV_IS_ADMIN });
+        // Gooclaim: even without Auth0, fetch /users/ so we pick up the REAL
+        // per-session platform-admin flag (from the trusted X-Gck-Platform-Admin
+        // header set by the SSO bridge) instead of a hardcoded dev flag. This is
+        // what gates the Admin Dashboard to Gooclaim SUPER_ADMINs only.
+        try {
+          const response = await apiClient.get('/users/');
+          if (response.ok) {
+            const backendUser = await response.json();
+            setEnrichedUser({
+              name: 'Developer',
+              email: 'dev@example.com',
+              is_admin: backendUser.is_admin ?? false,
+              is_platform_admin: backendUser.is_platform_admin ?? false,
+              id: backendUser.id,
+            });
+          } else {
+            setEnrichedUser({ name: 'Developer', email: 'dev@example.com', is_admin: false, is_platform_admin: false });
+          }
+        } catch (error) {
+          setEnrichedUser({ name: 'Developer', email: 'dev@example.com', is_admin: false, is_platform_admin: false });
+        }
       }
     };
 

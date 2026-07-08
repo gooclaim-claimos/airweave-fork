@@ -379,8 +379,8 @@ export function UserProfileDropdown() {
 
           <MenuSeparator />
 
-          {/* Admin Section */}
-          {user?.is_admin && (
+          {/* Admin Section — Gooclaim: only a verified platform admin (SUPER_ADMIN) */}
+          {user?.is_platform_admin && (
             <>
               <InternalMenuLink
                 to="/admin"

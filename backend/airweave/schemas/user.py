@@ -64,6 +64,11 @@ class UserInDBBase(UserBase):
     user_organizations: list[UserOrganization] = Field(default_factory=list)
     is_admin: bool = False
     is_superuser: bool = False
+    # Gooclaim: set per-request from the trusted X-Gck-Platform-Admin header
+    # (true only for a verified Gooclaim SUPER_ADMIN). Not persisted — the DB
+    # user is always the shared system superuser in trusted-header mode, so the
+    # frontend gates the Admin Dashboard on THIS flag, not is_admin/is_superuser.
+    is_platform_admin: bool = False
     last_active_at: Optional[datetime] = None
 
     @field_validator("user_organizations", mode="before")

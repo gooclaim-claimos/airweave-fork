@@ -306,21 +306,6 @@ export function OrganizationsTab() {
 
   return (
     <>
-      <div className="flex items-center justify-end mb-6">
-        <Button
-          onClick={() => {
-            setActionType('create');
-            setNewOrgName('');
-            setNewOrgDescription('');
-            setOwnerEmail('');
-          }}
-          className="gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create Enterprise Org
-        </Button>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
         <Card className="border-l-4 border-l-brand-lime/50">
@@ -333,7 +318,7 @@ export function OrganizationsTab() {
           <CardContent className="pb-3">
             <div className="text-2xl font-bold">{formatNumber(stats.totalOrgs)}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {stats.enterpriseCount} enterprise • {stats.trialCount} trial
+              tenant organizations
             </p>
           </CardContent>
         </Card>
@@ -469,12 +454,6 @@ export function OrganizationsTab() {
                         <ArrowUpDown className="h-3 w-3" />
                       </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => handleSort('billing_plan')}>
-                      <div className="flex items-center gap-1">
-                        Plan
-                        <ArrowUpDown className="h-3 w-3" />
-                      </div>
-                    </TableHead>
                     <TableHead className="text-right cursor-pointer" onClick={() => handleSort('user_count')}>
                       <div className="flex items-center gap-1 justify-end">
                         Users
@@ -515,7 +494,6 @@ export function OrganizationsTab() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{getBillingPlanBadge(org.billing_plan)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{formatNumber(org.user_count)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{formatNumber(org.source_connection_count)}</TableCell>
                       <TableCell className="text-right font-mono text-sm">{formatNumber(org.entity_count)}</TableCell>
@@ -536,20 +514,6 @@ export function OrganizationsTab() {
                             >
                               <UserPlus className="h-3.5 w-3.5 mr-1" />
                               Join
-                            </Button>
-                          )}
-                          {org.billing_plan !== 'enterprise' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedOrg(org);
-                                setActionType('upgrade');
-                              }}
-                              className="h-7 px-2"
-                            >
-                              <ArrowUpCircle className="h-3.5 w-3.5 mr-1" />
-                              Upgrade
                             </Button>
                           )}
                           <Button
@@ -608,83 +572,6 @@ export function OrganizationsTab() {
             </Button>
             <Button onClick={handleJoinOrganization} disabled={isSubmitting}>
               {isSubmitting ? 'Joining...' : 'Join Organization'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={actionType === 'upgrade'} onOpenChange={(open) => !open && setActionType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upgrade to Enterprise</DialogTitle>
-            <DialogDescription>
-              Upgrade {selectedOrg?.name} to the enterprise plan
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              This will create a $0 enterprise subscription for this organization.
-            </p>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionType(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpgradeToEnterprise} disabled={isSubmitting}>
-              {isSubmitting ? 'Upgrading...' : 'Upgrade to Enterprise'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={actionType === 'create'} onOpenChange={(open) => !open && setActionType(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create Enterprise Organization</DialogTitle>
-            <DialogDescription>
-              Create a new organization on the enterprise plan
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="org-name">Organization Name *</Label>
-              <Input
-                id="org-name"
-                value={newOrgName}
-                onChange={(e) => setNewOrgName(e.target.value)}
-                placeholder="Acme Corp"
-              />
-            </div>
-            <div>
-              <Label htmlFor="org-description">Description</Label>
-              <Input
-                id="org-description"
-                value={newOrgDescription}
-                onChange={(e) => setNewOrgDescription(e.target.value)}
-                placeholder="Optional description"
-              />
-            </div>
-            <div>
-              <Label htmlFor="owner-email">Owner Email *</Label>
-              <Input
-                id="owner-email"
-                type="email"
-                value={ownerEmail}
-                onChange={(e) => setOwnerEmail(e.target.value)}
-                placeholder="owner@example.com"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionType(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateEnterprise} disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create Organization'}
             </Button>
           </DialogFooter>
         </DialogContent>

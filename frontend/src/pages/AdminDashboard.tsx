@@ -12,15 +12,15 @@ export function AdminDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if not admin
-    if (user && !user.is_admin) {
+    // Redirect if not a Gooclaim platform admin (SUPER_ADMIN)
+    if (user && !user.is_platform_admin) {
       toast.error('Admin access required');
       navigate('/');
       return;
     }
   }, [user, navigate]);
 
-  if (!user?.is_admin) {
+  if (!user?.is_platform_admin) {
     return null;
   }
 

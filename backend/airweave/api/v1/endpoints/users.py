@@ -28,8 +28,15 @@ router = TrailingSlashRouter()
 async def read_user(
     *,
     current_user: schemas.User = Depends(deps.get_user),
+    ctx: ApiContext = Depends(deps.get_context),
 ) -> schemas.User:
-    """Get current user with all organization relationships."""
+    """Get current user with all organization relationships.
+
+    Gooclaim: surface the per-request platform-admin flag (from the trusted
+    X-Gck-Platform-Admin header, set only for a verified SUPER_ADMIN) so the
+    Sources UI can gate the Admin Dashboard on it.
+    """
+    current_user.is_platform_admin = bool((ctx.auth_metadata or {}).get("platform_admin"))
     return current_user
 
 
