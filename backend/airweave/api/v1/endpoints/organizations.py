@@ -11,6 +11,7 @@ from airweave.api import deps
 from airweave.api.context import ApiContext
 from airweave.api.deps import Inject
 from airweave.api.router import TrailingSlashRouter
+from airweave.core.config import settings
 from airweave.core.datetime_utils import utc_now_naive
 from airweave.core.logging import logger
 from airweave.core.protocols.identity import (
@@ -78,12 +79,24 @@ async def create_organization(
 @router.get("/", response_model=List[schemas.OrganizationWithRole])
 async def list_user_organizations(
     db: AsyncSession = Depends(deps.get_db),
-    user: User = Depends(deps.get_user),
+    ctx: ApiContext = Depends(deps.get_context),
 ) -> List[schemas.OrganizationWithRole]:
-    """Get all organizations the current user belongs to."""
+    """Get all organizations the current user belongs to.
+
+    Gooclaim: in trusted-header mode (EXTERNAL_ORG_ID_PROVISIONING) every
+    request is scoped to a single tenant org via the X-Organization-Id header,
+    and the system superuser owns every auto-provisioned org. Returning all of
+    the superuser's memberships would leak other tenants' org names in the UI
+    switcher, so restrict the list to the current context org — each tenant
+    only ever sees its own.
+    """
     organizations = await crud.organization.get_user_organizations_with_roles(
-        db=db, user_id=user.id
+        db=db, user_id=ctx.user.id
     )
+    if settings.EXTERNAL_ORG_ID_PROVISIONING:
+        organizations = [
+            org for org in organizations if str(org.id) == str(ctx.organization.id)
+        ]
     return [
         schemas.OrganizationWithRole(
             id=org.id,
