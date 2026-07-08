@@ -12,8 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from airweave import schemas
 from airweave.api import deps
 from airweave.api.auth import auth0
+from airweave.api.context import ApiContext
 from airweave.api.deps import Inject
 from airweave.api.router import TrailingSlashRouter
+from airweave.core.config import settings
 from airweave.core.logging import logger
 from airweave.domains.users.protocols import UserServiceProtocol
 from airweave.domains.users.types import is_email_authorized
@@ -36,10 +38,23 @@ async def read_user_organizations(
     *,
     db: AsyncSession = Depends(deps.get_db),
     current_user: schemas.User = Depends(deps.get_user),
+    ctx: ApiContext = Depends(deps.get_context),
     user_service: UserServiceProtocol = Inject(UserServiceProtocol),
 ) -> List[OrganizationWithRole]:
-    """Get all organizations that the current user is a member of."""
-    return await user_service.get_user_organizations(db, user_id=current_user.id)
+    """Get all organizations that the current user is a member of.
+
+    Gooclaim: in trusted-header mode (EXTERNAL_ORG_ID_PROVISIONING) each request
+    is scoped to a single tenant org via X-Organization-Id, and the system
+    superuser owns every auto-provisioned org. Returning all its memberships
+    would leak other tenants' org names in the UI switcher, so restrict the
+    list to the current context org — each tenant only sees its own.
+    """
+    organizations = await user_service.get_user_organizations(db, user_id=current_user.id)
+    if settings.EXTERNAL_ORG_ID_PROVISIONING:
+        organizations = [
+            org for org in organizations if str(org.id) == str(ctx.organization.id)
+        ]
+    return organizations
 
 
 @router.post("/create_or_update", response_model=User)
