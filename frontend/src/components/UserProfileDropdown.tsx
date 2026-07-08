@@ -170,6 +170,15 @@ export function UserProfileDropdown() {
     logout();
   };
 
+  // Gooclaim: Sources is opened from the portal in a new tab, so instead of a
+  // sign-out we offer "Back to portal" — close this tab if it was script-opened
+  // (window.open), otherwise navigate back to the portal.
+  const handleBackToPortal = () => {
+    setDropdownOpen(false);
+    window.close();
+    window.location.href = 'https://portal.dev.gooclaim.com/';
+  };
+
   const handleSwitchOrganization = (orgId: string) => {
     // If clicking on the already selected organization, just close the dropdown
     if (orgId === currentOrganization?.id) {
@@ -412,13 +421,13 @@ export function UserProfileDropdown() {
 
           <MenuSeparator />
 
-          {/* Logout */}
+          {/* Back to portal — Sources opens from the Gooclaim portal in a new tab */}
           <MenuItemWithIcon
             icon={<LogOut className="h-4 w-4" />}
-            onClick={handleLogout}
+            onClick={handleBackToPortal}
             className="text-muted-foreground/80"
           >
-            Sign out
+            Back to portal
           </MenuItemWithIcon>
         </DropdownMenuContent>
       </DropdownMenu>
