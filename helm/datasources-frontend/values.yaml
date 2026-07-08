@@ -12,7 +12,7 @@ replicaCount: 1
 
 image:
   repository: gcdevacrcin001.azurecr.io/datasources-frontend
-  tag: v0.9.73-gck.6
+  tag: v0.9.73-gck.7
   pullPolicy: IfNotPresent
 
 serviceAccount:
