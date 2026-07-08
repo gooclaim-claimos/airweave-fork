@@ -29,6 +29,7 @@ from airweave.api.router import TrailingSlashRouter
 
 # [code blue] todo: inject context_cache via Inject() instead of container access
 from airweave.core import container as container_mod
+from airweave.core.config import settings
 from airweave.core.context import SystemContext
 from airweave.core.exceptions import InvalidStateError, NotFoundException
 from airweave.core.protocols import PubSub
@@ -92,6 +93,13 @@ def _require_admin(ctx: ApiContext) -> None:
     Raises:
         HTTPException: If user is not an admin or superuser
     """
+    # Gooclaim: in trusted-header mode (EXTERNAL_ORG_ID_PROVISIONING) every SSO'd
+    # tenant request resolves ctx.user to the shared system superuser, so the
+    # is_superuser check below would pass for EVERY tenant — exposing all orgs
+    # in the Admin Dashboard. Platform administration lives in the Gooclaim
+    # Console, not the Sources UI, so deny these cross-org admin endpoints.
+    if settings.EXTERNAL_ORG_ID_PROVISIONING:
+        raise HTTPException(status_code=403, detail="Admin endpoints are disabled")
     # Allow both explicit admins AND superusers (for system operations and tests)
     if not ctx.has_user_context or not (ctx.user.is_admin or ctx.user.is_superuser):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -119,7 +127,14 @@ def _require_admin_permission(ctx: ApiContext, permission: FeatureFlagEnum) -> N
         _require_admin_permission(ctx, FeatureFlagEnum.API_KEY_ADMIN_SYNC)
     """
     # Check 1: User-based admin (traditional path)
-    if ctx.has_user_context and (ctx.user.is_admin or ctx.user.is_superuser):
+    # Gooclaim: skip the user path in trusted-header mode — ctx.user is always
+    # the shared system superuser, so it would grant every tenant. Only the
+    # scoped API-key path below (feature-flag gated) may grant admin access.
+    if (
+        not settings.EXTERNAL_ORG_ID_PROVISIONING
+        and ctx.has_user_context
+        and (ctx.user.is_admin or ctx.user.is_superuser)
+    ):
         ctx.logger.debug(f"Admin access granted via user: {ctx.user.email}")
         return
 
