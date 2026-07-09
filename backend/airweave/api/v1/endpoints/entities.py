@@ -1,7 +1,5 @@
 """API endpoints for entity definitions, relations, and direct doc lookup."""
 
-from urllib.parse import quote
-
 import httpx
 from fastapi import Depends, HTTPException
 
@@ -23,11 +21,15 @@ _VESPA_NAMESPACE = "airweave"
 
 # Schemas to probe in order when an entity_id's source schema is unknown.
 # Matches the .sd files under vespa/app/schemas/. The first hit wins.
+# ``base_entity`` is probed LAST as the catch-all: generic sources that
+# don't map to a specialised schema (e.g. ``gooclaim_upload`` native
+# uploads) index there, so omitting it 404'd every native-upload lookup.
 _VESPA_SCHEMAS = (
     "file_entity",
     "email_entity",
     "code_file_entity",
     "web_entity",
+    "base_entity",
 )
 
 
