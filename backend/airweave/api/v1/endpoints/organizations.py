@@ -1,9 +1,9 @@
 """API endpoints for organizations."""
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
-from fastapi import Body, Depends, HTTPException
+from fastapi import Body, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from airweave import crud, schemas
@@ -40,12 +40,25 @@ async def create_organization(
     db: AsyncSession = Depends(deps.get_db),
     user: User = Depends(deps.get_user),
     org_service: OrganizationServiceProtocol = Inject(OrganizationServiceProtocol),
+    x_gck_platform_admin: Optional[str] = Header(None, alias="X-Gck-Platform-Admin"),
 ) -> schemas.Organization:
     """Create a new organization with current user as owner.
 
     This endpoint uses get_user instead of get_context because users creating their
     first organization don't have an organization context yet.
+
+    Gooclaim: in trusted-header mode every tenant's org is auto-provisioned
+    1:1 from its real tenant_id via the SSO bridge (see
+    context_resolver.py::_auto_provision_organization). This endpoint must
+    stay blocked for regular tenants — an org created here has no
+    gooclaim_tenant_id mapping, so it is unreachable from Portal and
+    unprotected by the nginx auth-request boundary. Same gate as
+    admin.py's _require_admin and delete_organization below.
     """
+    if settings.EXTERNAL_ORG_ID_PROVISIONING and (x_gck_platform_admin or "").lower() != "true":
+        raise HTTPException(
+            status_code=403, detail="You don't have permission to create an organization"
+        )
     try:
         return await org_service.create_organization(
             db=db, org_data=organization_data, owner_user=user
@@ -215,6 +228,18 @@ async def delete_organization(
 
     user_role = user_org.role
     user_is_primary = user_org.is_primary
+
+    # Gooclaim: in trusted-header mode every SSO'd request resolves to the
+    # shared system superuser, so user_role == "owner" for EVERY tenant —
+    # the role check below would let any tenant permanently delete their own
+    # org. Require a verified platform admin (Console) too, same gate as
+    # admin.py's _require_admin.
+    if settings.EXTERNAL_ORG_ID_PROVISIONING and not (ctx.auth_metadata or {}).get(
+        "platform_admin"
+    ):
+        raise HTTPException(
+            status_code=403, detail="You don't have permission to delete this organization"
+        )
 
     user_orgs = await crud.organization.get_user_organizations_with_roles(
         db=db, user_id=ctx.user.id

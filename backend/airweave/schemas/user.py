@@ -69,6 +69,12 @@ class UserInDBBase(UserBase):
     # user is always the shared system superuser in trusted-header mode, so the
     # frontend gates the Admin Dashboard on THIS flag, not is_admin/is_superuser.
     is_platform_admin: bool = False
+    # Gooclaim: set per-request from the trusted X-Gck-Return-Url header —
+    # where the bridge UI's own "Back" button should send the browser
+    # (Console for a platform admin, Portal for a tenant). None outside the
+    # Gooclaim bridge (e.g. local dev with AUTH_ENABLED=false); the frontend
+    # falls back to its own default in that case.
+    return_url: Optional[str] = None
     last_active_at: Optional[datetime] = None
 
     @field_validator("user_organizations", mode="before")

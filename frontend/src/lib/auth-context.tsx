@@ -109,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ...auth0User,
               is_admin: backendUser.is_admin || false,
               is_platform_admin: backendUser.is_platform_admin || false,
+              return_url: backendUser.return_url || null,
               id: backendUser.id,
               // Add any other backend fields you want to include
             });
@@ -145,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: 'dev@example.com',
               is_admin: backendUser.is_admin ?? false,
               is_platform_admin: backendUser.is_platform_admin ?? false,
+              return_url: backendUser.return_url ?? null,
               id: backendUser.id,
             });
           } else {

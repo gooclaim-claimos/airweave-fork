@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FeatureFlags } from '@/lib/constants/feature-flags';
 import { IS_GOOCLAIM_TENANT } from '@/config/env';
+import { useAuth } from '@/lib/auth-context';
 
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 
@@ -24,6 +25,12 @@ type TabType = 'settings' | 'api-keys' | 'members' | 'billing' | 'usage' | 'rate
 export const OrganizationSettingsUnified = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  // Gooclaim: Members/Usage/Delete are tenant-billing/roster surfaces that
+  // don't apply to the trusted-header bridge (no real per-user identity,
+  // no Gooclaim billing plans here) — keep them for a verified platform
+  // admin (Console), hide for a regular tenant session (Portal).
+  const showTenantHiddenTabs = !IS_GOOCLAIM_TENANT || user?.is_platform_admin;
 
   const {
     currentOrganization,
@@ -49,8 +56,12 @@ export const OrganizationSettingsUnified = () => {
       navigate('/organization/settings?tab=settings', { replace: true });
       return;
     }
+    if (!showTenantHiddenTabs && (tabFromUrl === 'members' || tabFromUrl === 'usage')) {
+      navigate('/organization/settings?tab=settings', { replace: true });
+      return;
+    }
     setActiveTab(tabFromUrl);
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, showTenantHiddenTabs]);
 
   // Check for billing success parameter
   useEffect(() => {
@@ -169,13 +180,20 @@ export const OrganizationSettingsUnified = () => {
   );
 
   // In Gooclaim mode, API Keys + Billing tabs are managed in Portal — hide them here.
+  // Members/Usage also hide for a tenant session — no real per-user identity
+  // in the trusted-header bridge and no per-service billing plans — but stay
+  // visible for a verified platform admin (Console).
   const tabs = [
     { id: 'settings' as TabType, label: 'Settings', icon: <SettingsIcon className="h-3.5 w-3.5" /> },
     ...(IS_GOOCLAIM_TENANT
       ? []
       : [{ id: 'api-keys' as TabType, label: 'API Keys', icon: <Key className="h-3.5 w-3.5" /> }]),
-    { id: 'members' as TabType, label: 'Members', icon: <Users className="h-3.5 w-3.5" /> },
-    { id: 'usage' as TabType, label: 'Usage', icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    ...(showTenantHiddenTabs
+      ? [{ id: 'members' as TabType, label: 'Members', icon: <Users className="h-3.5 w-3.5" /> }]
+      : []),
+    ...(showTenantHiddenTabs
+      ? [{ id: 'usage' as TabType, label: 'Usage', icon: <TrendingUp className="h-3.5 w-3.5" /> }]
+      : []),
     ...(IS_GOOCLAIM_TENANT
       ? []
       : [{ id: 'billing' as TabType, label: 'Billing', icon: <CreditCard className="h-3.5 w-3.5" /> }]),

@@ -92,6 +92,8 @@ async def get_context(
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
     x_organization_id: Optional[str] = Header(None, alias="X-Organization-ID"),
     x_gck_platform_admin: Optional[str] = Header(None, alias="X-Gck-Platform-Admin"),
+    x_gck_return_url: Optional[str] = Header(None, alias="X-Gck-Return-Url"),
+    x_gck_tenant_name: Optional[str] = Header(None, alias="X-Gck-Tenant-Name"),
     auth0_user: Optional[Auth0User] = Depends(auth0.get_user),
     cache: ContextCache = Inject(ContextCache),
     rate_limiter: RateLimiter = Inject(RateLimiter),
@@ -104,15 +106,21 @@ async def get_context(
         api_key_repo=_api_key_repo,
         org_repo=_org_repo,
     )
-    ctx = await resolver.resolve(request, db, auth0_user, x_api_key, x_organization_id)
+    ctx = await resolver.resolve(
+        request, db, auth0_user, x_api_key, x_organization_id, x_gck_tenant_name
+    )
     # Gooclaim: the nginx auth-request sidecar sets X-Gck-Platform-Admin=true
     # (from gooclaim-auth /airweave-verify) ONLY for a verified Gooclaim
     # SUPER_ADMIN, and overwrites any client-supplied value — so it can't be
     # spoofed. Stash it so _require_admin can let platform admins through the
     # cross-org admin endpoints in trusted-header mode while tenants stay denied.
+    # X-Gck-Return-Url is where the bridge UI's "Back" button should send the
+    # browser (Console for a platform admin, Portal for a tenant) — set by
+    # gooclaim-auth so this service never hardcodes either URL.
     ctx.auth_metadata = {
         **(ctx.auth_metadata or {}),
         "platform_admin": (x_gck_platform_admin or "").lower() == "true",
+        "return_url": x_gck_return_url or None,
     }
     return ctx
 

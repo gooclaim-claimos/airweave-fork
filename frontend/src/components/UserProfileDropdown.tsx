@@ -170,13 +170,18 @@ export function UserProfileDropdown() {
     logout();
   };
 
-  // Gooclaim: Sources is opened from the portal in a new tab, so instead of a
-  // sign-out we offer "Back to portal" — close this tab if it was script-opened
-  // (window.open), otherwise navigate back to the portal.
+  // Gooclaim: Sources is opened from Portal OR Console in a new tab, so
+  // instead of a sign-out we offer "Back" — close this tab if it was
+  // script-opened (window.open), otherwise navigate back to wherever we
+  // came from. return_url comes from gooclaim-auth (X-Gck-Return-Url, set
+  // by /v1/auth/airweave-verify) so this component never hardcodes either
+  // Portal's or Console's URL. Falls back to Portal for local dev
+  // (AUTH_ENABLED=false, no bridge) where the header never arrives.
+  const backDestinationIsConsole = Boolean(user?.is_platform_admin);
   const handleBackToPortal = () => {
     setDropdownOpen(false);
     window.close();
-    window.location.href = 'https://portal.dev.gooclaim.com/';
+    window.location.href = user?.return_url || 'https://portal.dev.gooclaim.com/';
   };
 
   const handleSwitchOrganization = (orgId: string) => {
@@ -325,15 +330,25 @@ export function UserProfileDropdown() {
                     );
                   })}
 
-                  <MenuSeparator />
+                  {/* Create Organization — hidden in Gooclaim mode. A tenant's
+                      org is auto-provisioned 1:1 from its real Gooclaim
+                      tenant_id via the SSO bridge; letting a tenant create an
+                      extra one here would create an org with no
+                      gooclaim_tenant_id mapping — unreachable from Portal and
+                      unprotected by the nginx auth-request boundary. */}
+                  {!IS_GOOCLAIM_TENANT && (
+                    <>
+                      <MenuSeparator />
 
-                  <MenuItemWithIcon
-                    icon={<Plus className="h-4 w-4" />}
-                    onClick={handleCreateOrganization}
-                    className="text-primary data-[highlighted]:bg-transparent"
-                  >
-                    Create Organization
-                  </MenuItemWithIcon>
+                      <MenuItemWithIcon
+                        icon={<Plus className="h-4 w-4" />}
+                        onClick={handleCreateOrganization}
+                        className="text-primary data-[highlighted]:bg-transparent"
+                      >
+                        Create Organization
+                      </MenuItemWithIcon>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -341,15 +356,19 @@ export function UserProfileDropdown() {
                     No organizations found
                   </DropdownMenuItem>
 
-                  <MenuSeparator />
+                  {!IS_GOOCLAIM_TENANT && (
+                    <>
+                      <MenuSeparator />
 
-                  <MenuItemWithIcon
-                    icon={<Plus className="h-4 w-4" />}
-                    onClick={handleCreateOrganization}
-                    className="text-primary data-[highlighted]:bg-transparent"
-                  >
-                    Create Organization
-                  </MenuItemWithIcon>
+                      <MenuItemWithIcon
+                        icon={<Plus className="h-4 w-4" />}
+                        onClick={handleCreateOrganization}
+                        className="text-primary data-[highlighted]:bg-transparent"
+                      >
+                        Create Organization
+                      </MenuItemWithIcon>
+                    </>
+                  )}
                 </>
               )}
             </DropdownMenuSubContent>
@@ -360,12 +379,17 @@ export function UserProfileDropdown() {
             <>
               <MenuSeparator />
 
-              <InternalMenuLink
-                to="/organization/settings?tab=members"
-                icon={<UserPlus className="h-4 w-4" />}
-              >
-                Invite Members
-              </InternalMenuLink>
+              {/* Invite Members — hidden for a Gooclaim tenant session (Portal
+                  manages real membership; see OrganizationSettingsUnified's
+                  Members tab, same gate). */}
+              {(!IS_GOOCLAIM_TENANT || user?.is_platform_admin) && (
+                <InternalMenuLink
+                  to="/organization/settings?tab=members"
+                  icon={<UserPlus className="h-4 w-4" />}
+                >
+                  Invite Members
+                </InternalMenuLink>
+              )}
 
               <InternalMenuLink
                 to="/organization/settings"
@@ -421,13 +445,14 @@ export function UserProfileDropdown() {
 
           <MenuSeparator />
 
-          {/* Back to portal — Sources opens from the Gooclaim portal in a new tab */}
+          {/* Back — Sources opens from Portal or Console in a new tab; label +
+              destination follow return_url (see handleBackToPortal above). */}
           <MenuItemWithIcon
             icon={<LogOut className="h-4 w-4" />}
             onClick={handleBackToPortal}
             className="text-muted-foreground/80"
           >
-            Back to portal
+            {backDestinationIsConsole ? 'Back to Console' : 'Back to Portal'}
           </MenuItemWithIcon>
         </DropdownMenuContent>
       </DropdownMenu>

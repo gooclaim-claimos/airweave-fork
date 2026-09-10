@@ -84,6 +84,7 @@ class ContextResolver:
         auth0_user: Optional[Auth0User],
         x_api_key: Optional[str],
         x_organization_id: Optional[str],
+        x_gck_tenant_name: Optional[str] = None,
     ) -> ApiContext:
         """Build a fully populated ApiContext for this request."""
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
@@ -91,7 +92,9 @@ class ContextResolver:
         auth = await self._authenticate(db, auth0_user, x_api_key, request)
 
         organization_id = self._resolve_organization_id(x_organization_id, auth)
-        organization = await self._get_or_fetch_organization(db, organization_id)
+        organization = await self._get_or_fetch_organization(
+            db, organization_id, tenant_name=x_gck_tenant_name
+        )
 
         await self._validate_organization_access(db, organization_id, auth, x_api_key)
 
@@ -253,7 +256,7 @@ class ContextResolver:
         )
 
     async def _get_or_fetch_organization(
-        self, db: AsyncSession, organization_id: str
+        self, db: AsyncSession, organization_id: str, tenant_name: Optional[str] = None
     ) -> schemas.Organization:
         org = await self._cache.get_organization(uuid.UUID(organization_id))
         if not org:
@@ -278,7 +281,9 @@ class ContextResolver:
                 # already verified the gooclaim JWT before forwarding the
                 # X-Organization-ID header (= gooclaim tenant_id).
                 if not settings.AUTH_ENABLED and settings.EXTERNAL_ORG_ID_PROVISIONING:
-                    org = await self._auto_provision_organization(db, organization_id)
+                    org = await self._auto_provision_organization(
+                        db, organization_id, tenant_name=tenant_name
+                    )
                 else:
                     raise HTTPException(
                         status_code=404,
@@ -288,7 +293,7 @@ class ContextResolver:
         return org
 
     async def _auto_provision_organization(
-        self, db: AsyncSession, organization_id: str
+        self, db: AsyncSession, organization_id: str, tenant_name: Optional[str] = None
     ) -> schemas.Organization:
         """Auto-create an organization with a caller-supplied UUID.
 
@@ -297,6 +302,11 @@ class ContextResolver:
         eliminating the need for a separate mapping table. The nginx
         sidecar already verified the upstream JWT, so the header is trusted.
         The system superuser is added as the owner of the new org.
+
+        tenant_name comes from gooclaim-auth (X-Gck-Tenant-Name, looked up
+        once at bridge-mint time from its own organizations table) — the
+        tenant's real display name. Falls back to a truncated UUID only if
+        that lookup ever comes back empty (shouldn't happen in practice).
         """
         system_user_model = await self._users.get_by_email(db, email=settings.FIRST_SUPERUSER)
         if not system_user_model:
@@ -308,7 +318,7 @@ class ContextResolver:
         org_uuid = uuid.UUID(organization_id)
         organization = OrganizationModel(
             id=org_uuid,
-            name=f"tenant-{organization_id[:8]}",
+            name=tenant_name or f"tenant-{organization_id[:8]}",
             description="Auto-provisioned via gooclaim bridge",
             org_metadata={"gooclaim_tenant_id": organization_id},
         )

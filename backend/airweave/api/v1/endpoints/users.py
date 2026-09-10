@@ -34,9 +34,12 @@ async def read_user(
 
     Gooclaim: surface the per-request platform-admin flag (from the trusted
     X-Gck-Platform-Admin header, set only for a verified SUPER_ADMIN) so the
-    Sources UI can gate the Admin Dashboard on it.
+    Sources UI can gate the Admin Dashboard on it. Also surface return_url
+    (from X-Gck-Return-Url) so the UI's "Back" control knows where to send
+    the browser without hardcoding Portal/Console URLs itself.
     """
     current_user.is_platform_admin = bool((ctx.auth_metadata or {}).get("platform_admin"))
+    current_user.return_url = (ctx.auth_metadata or {}).get("return_url")
     return current_user
 
 

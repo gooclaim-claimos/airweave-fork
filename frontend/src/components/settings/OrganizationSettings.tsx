@@ -18,6 +18,8 @@ import { apiClient } from "@/lib/api";
 import { toast } from 'sonner';
 import { useOrganizationStore } from '@/lib/stores/organizations';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
+import { IS_GOOCLAIM_TENANT } from '@/config/env';
 
 interface Organization {
   id: string;
@@ -142,8 +144,15 @@ export const OrganizationSettings = ({
     }
   };
 
+  const { user } = useAuth();
+
   const canEdit = ['owner', 'admin'].includes(currentOrganization.role);
-  const canDelete = currentOrganization.role === 'owner';
+  // Gooclaim: every trusted-header session resolves to role="owner" (there is
+  // no real per-user identity, see UserProfileDropdown's Members note) — so
+  // this must ALSO require a verified platform admin (Console) in Gooclaim
+  // mode, or any tenant session could permanently delete their own org.
+  const canDelete =
+    currentOrganization.role === 'owner' && (!IS_GOOCLAIM_TENANT || user?.is_platform_admin);
 
   return (
     <div className="space-y-8">
