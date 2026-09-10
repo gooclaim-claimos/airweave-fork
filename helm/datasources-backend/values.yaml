@@ -205,7 +205,7 @@ ingress:
     # No auth-signin here — API calls return 401 (not a browser redirect)
     # when the cookie is missing/expired; the frontend ingress handles login.
     nginx.ingress.kubernetes.io/auth-url: "http://gooclaim-auth.gooclaim.svc.cluster.local/v1/auth/airweave-verify"
-    nginx.ingress.kubernetes.io/auth-response-headers: "X-Organization-Id,X-Gck-Platform-Admin,X-Gck-Return-Url,X-Gck-Tenant-Name"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Organization-Id,X-Gck-Platform-Admin,X-Gck-Return-Url,X-Gck-Tenant-Name,X-Gck-User-Email"
   tls:
     enabled: true
     secretName: sources-dev-gooclaim-com-tls

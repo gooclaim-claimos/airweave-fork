@@ -94,6 +94,7 @@ async def get_context(
     x_gck_platform_admin: Optional[str] = Header(None, alias="X-Gck-Platform-Admin"),
     x_gck_return_url: Optional[str] = Header(None, alias="X-Gck-Return-Url"),
     x_gck_tenant_name: Optional[str] = Header(None, alias="X-Gck-Tenant-Name"),
+    x_gck_user_email: Optional[str] = Header(None, alias="X-Gck-User-Email"),
     auth0_user: Optional[Auth0User] = Depends(auth0.get_user),
     cache: ContextCache = Inject(ContextCache),
     rate_limiter: RateLimiter = Inject(RateLimiter),
@@ -117,10 +118,16 @@ async def get_context(
     # X-Gck-Return-Url is where the bridge UI's "Back" button should send the
     # browser (Console for a platform admin, Portal for a tenant) — set by
     # gooclaim-auth so this service never hardcodes either URL.
+    # X-Gck-User-Email is the REAL caller, looked up once by gooclaim-auth at
+    # bridge-mint time — used by ApiContext.tracking_email so created_by/
+    # modified_by audit fields show the actual person instead of the shared
+    # system superuser every trusted-header request otherwise resolves to.
+    # Display/audit only — no Airweave User row exists for this email.
     ctx.auth_metadata = {
         **(ctx.auth_metadata or {}),
         "platform_admin": (x_gck_platform_admin or "").lower() == "true",
         "return_url": x_gck_return_url or None,
+        "user_email": x_gck_user_email or None,
     }
     return ctx
 

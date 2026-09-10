@@ -83,7 +83,18 @@ class ApiContext(BaseContext):
 
     @property
     def tracking_email(self) -> Optional[str]:
-        """Email for created_by/modified_by audit fields."""
+        """Email for created_by/modified_by audit fields.
+
+        Gooclaim: in trusted-header mode every request resolves self.user to
+        the same shared system superuser (see context_resolver.py), so
+        self.user.email alone would attribute every action in the audit
+        trail to that one account regardless of who really did it. When
+        gooclaim-auth resolved a real caller email (X-Gck-User-Email, set
+        once at bridge-mint time), prefer it here.
+        """
+        bridge_email = (self.auth_metadata or {}).get("user_email")
+        if bridge_email:
+            return bridge_email
         return self.user.email if self.user else None
 
     @property
