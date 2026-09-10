@@ -109,7 +109,14 @@ services:
     ports:
       - "${FRONTEND_LOCAL_DEVELOPMENT_PORT:-8080}:8080"
     environment:
-      - API_URL=http://localhost:8001
+      # NOT localhost — this is baked into the browser's runtime config.js,
+      # so "localhost:8001" would mean the VIEWER's machine, not the host
+      # serving the page. Override via .env with an ABSOLUTE URL (e.g.
+      # https://your-domain/api) for any real deployment: a bare relative
+      # path throws "Invalid URL" in frontend/src/lib/api.ts's
+      # `new URL(`${baseURL}${endpoint}`)`. Default here is only safe for
+      # same-machine `localhost:8080` docker-compose usage.
+      - API_URL=${API_URL:-/api}
       - ENABLE_AUTH=false
     depends_on:
       backend:
@@ -132,7 +139,8 @@ services:
     ports:
       - "${CONNECT_LOCAL_DEVELOPMENT_PORT:-8082}:8082"
     environment:
-      - API_URL=http://localhost:8001
+      # See frontend service above — must be an absolute URL, not localhost.
+      - API_URL=${API_URL:-/api}
       - PORT=8082
     depends_on:
       backend:
