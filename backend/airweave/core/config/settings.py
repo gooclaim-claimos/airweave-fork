@@ -275,7 +275,11 @@ class Settings(BaseSettings):
     # SSRF protection
     SSRF_ALLOW_PRIVATE_NETWORKS: bool = False
 
-    API_REQUEST_BODY_SIZE_LIMIT: int = 10 * 1024 * 1024  # 10MB default
+    # Must be >= the frontend's own per-file cap (NativeUploadView.tsx
+    # MAX_BYTES = 50MB) — the old 10MB default silently 413'd any native
+    # upload the frontend itself claimed to support, confirmed live
+    # 2026-09-10 (T194).
+    API_REQUEST_BODY_SIZE_LIMIT: int = 50 * 1024 * 1024  # 50MB default
     API_REQUEST_TIMEOUT_SECONDS: int = 60
 
     # Custom deployment URLs - these are used to override the default URLs to allow
