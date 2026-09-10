@@ -109,7 +109,16 @@ services:
     ports:
       - "${FRONTEND_LOCAL_DEVELOPMENT_PORT:-8080}:8080"
     environment:
-      - API_URL=http://localhost:8001
+      # NOT localhost — this is baked into the browser's runtime config.js,
+      # so "localhost:8001" would mean the VIEWER's machine, not the host.
+      # Must be an ABSOLUTE URL (e.g. https://your-domain/api), not a bare
+      # path: frontend/src/lib/api.ts builds every request with
+      # `new URL(`${baseURL}${endpoint}`)`, which throws "Invalid URL" on a
+      # relative base like "/api" (confirmed 2026-09-10, T194 live test) —
+      # despite docker-entrypoint.sh offering "/api" as its own default.
+      # Whatever fronts this (nginx, etc.) must proxy <that-domain>/api/* to
+      # the backend.
+      - API_URL=/api
       - ENABLE_AUTH=false
     depends_on:
       backend:
@@ -132,7 +141,8 @@ services:
     ports:
       - "${CONNECT_LOCAL_DEVELOPMENT_PORT:-8082}:8082"
     environment:
-      - API_URL=http://localhost:8001
+      # See frontend service above — must be an absolute URL, not localhost.
+      - API_URL=/api
       - PORT=8082
     depends_on:
       backend:
