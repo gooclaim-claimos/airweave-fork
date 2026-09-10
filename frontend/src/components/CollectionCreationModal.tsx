@@ -27,6 +27,7 @@ export const CollectionCreationModal: React.FC = () => {
     currentStep,
     flowType,
     collectionName,
+    collectionId,
     existingCollectionName,
     selectedSource,
     sourceName,
@@ -90,7 +91,14 @@ export const CollectionCreationModal: React.FC = () => {
           isAddingToExisting={isAddingToExistingCollection()}
         />;
       case 'native-upload':
-        return <NativeUploadView humanReadableId={humanReadableId} />;
+        // Adding to an EXISTING collection never populates the local
+        // humanReadableId state (only generated for brand-new collections,
+        // see the effect above) — fall back to the store's collectionId,
+        // which openForAddToCollection sets to the real collection's
+        // readable_id. Without this every such upload landed in a shared
+        // 'untitled' bucket (NativeUploadView's own fallback), mixing
+        // files from unrelated collections together.
+        return <NativeUploadView humanReadableId={humanReadableId || collectionId || ''} />;
       case 'oauth-redirect':
         return <OAuthRedirectView />;
       case 'success':
