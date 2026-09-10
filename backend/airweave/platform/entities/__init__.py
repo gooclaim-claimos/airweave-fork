@@ -234,6 +234,7 @@ from .pipedrive import (
     PipedriveProductEntity,
 )
 from .powerpoint import PowerPointPresentationEntity
+from .s3 import S3BucketEntity, S3FileEntity
 from .salesforce import (
     SalesforceAccountEntity,
     SalesforceContactEntity,
@@ -604,6 +605,10 @@ ENTITIES_BY_SOURCE: dict[str, list[type]] = {
         PipedriveOrganizationEntity,
         PipedrivePersonEntity,
         PipedriveProductEntity,
+    ],
+    "s3": [
+        S3BucketEntity,
+        S3FileEntity,
     ],
     "salesforce": [
         SalesforceAccountEntity,

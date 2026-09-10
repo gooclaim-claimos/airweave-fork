@@ -3,7 +3,8 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
+from typing_extensions import Self
 
 from airweave.platform.configs._base import BaseConfig, RequiredTemplateConfig
 from airweave.platform.utils.ssrf import validate_host, validate_url
@@ -1284,3 +1285,93 @@ class EnronConfig(SourceConfig):
         ),
         min_length=1,
     )
+
+
+class S3SourceConfig(SourceConfig):
+    """Configuration for the AWS S3 source connector.
+
+    Point at a bucket either via ``s3_uri`` (e.g. ``s3://my-bucket/my-prefix/``)
+    or via ``bucket_name`` + ``prefix`` separately — provide one or the other.
+    """
+
+    s3_uri: str = Field(
+        default="",
+        title="S3 URI",
+        description=(
+            "Bucket + prefix as a single URI, e.g. 's3://my-bucket/my-prefix/'. "
+            "Leave empty and use Bucket Name / Prefix instead."
+        ),
+    )
+    bucket_name: str = Field(
+        default="",
+        title="Bucket Name",
+        description="S3 bucket name. Ignored if S3 URI is set.",
+    )
+    prefix: str = Field(
+        default="",
+        title="Prefix",
+        description="Only sync objects under this key prefix. Ignored if S3 URI is set.",
+    )
+    include_patterns: list[str] = Field(
+        default=[],
+        title="Include Patterns",
+        description=(
+            "Glob patterns matched against each object's key relative to the prefix "
+            "(e.g. '*.pdf', 'reports/*'). Separate multiple patterns with commas. "
+            "If empty, all files are included."
+        ),
+    )
+    s3_download_concurrency: int = Field(
+        default=30,
+        title="Download Concurrency",
+        description="Max number of files downloaded from S3 concurrently.",
+        ge=1,
+        le=100,
+    )
+    s3_max_pool_connections: int = Field(
+        default=50,
+        title="Max Pool Connections",
+        description="Max size of the underlying S3 client's HTTP connection pool.",
+        ge=1,
+    )
+    s3_connect_timeout: float = Field(
+        default=10.0,
+        title="Connect Timeout (seconds)",
+        description="Timeout for establishing a connection to S3.",
+        gt=0,
+    )
+    s3_read_timeout: float = Field(
+        default=60.0,
+        title="Read Timeout (seconds)",
+        description="Timeout for reading a response from S3.",
+        gt=0,
+    )
+    s3_max_retries: int = Field(
+        default=5,
+        title="Max Retries",
+        description="Max number of retries for throttled/transient S3 API errors.",
+        ge=0,
+    )
+    s3_metadata_preload_max_files: int = Field(
+        default=5000,
+        title="Metadata Preload Cap",
+        description=(
+            "Skip preloading companion .metadata.json sidecars when a bucket/prefix has "
+            "more objects than this (sidecars are still read lazily per-file)."
+        ),
+        ge=0,
+    )
+
+    @field_validator("include_patterns", mode="before")
+    @classmethod
+    def _parse_include_patterns(cls, value):
+        if isinstance(value, str):
+            return [p.strip() for p in value.split(",") if p.strip()]
+        return value
+
+    @model_validator(mode="after")
+    def validate_bucket_target(self) -> Self:
+        """Require either s3_uri or bucket_name."""
+        if not self.s3_uri.strip() and not self.bucket_name.strip():
+            raise ValueError("Provide either 's3_uri' or 'bucket_name'.")
+        return self

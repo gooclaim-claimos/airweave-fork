@@ -1192,3 +1192,68 @@ class EnronAuthConfig(BaseConfig):
         title="Placeholder",
         description="Internal placeholder (ignored)",
     )
+
+
+class S3SourceAuthConfig(AuthConfig):
+    """AWS S3 source authentication credentials schema.
+
+    Provide ``aws_access_key_id`` + ``aws_secret_access_key`` together for
+    explicit credentials, or leave both empty to use boto3's default
+    credential chain (environment variables, ``~/.aws/credentials``, IAM
+    role, SSO, okta-awscli). Providing only one of the pair is rejected.
+    """
+
+    aws_access_key_id: Optional[str] = Field(
+        default=None,
+        title="AWS Access Key ID",
+        description=(
+            "Leave empty to use the default AWS credential chain "
+            "(environment, ~/.aws/credentials, IAM role, SSO)."
+        ),
+    )
+    aws_secret_access_key: Optional[str] = Field(
+        default=None,
+        title="AWS Secret Access Key",
+        description="Required together with AWS Access Key ID, or leave both empty.",
+    )
+    aws_session_token: Optional[str] = Field(
+        default=None,
+        title="AWS Session Token",
+        description="Optional — only needed for temporary credentials (e.g. assumed roles).",
+    )
+    region_name: Optional[str] = Field(
+        default=None,
+        title="Region",
+        description=(
+            "AWS region the bucket lives in, e.g. 'us-east-1'. If omitted or wrong, the "
+            "connector auto-discovers the real region from the bucket on first connect."
+        ),
+    )
+    endpoint_url: Optional[str] = Field(
+        default=None,
+        title="Endpoint URL",
+        description=(
+            "Custom S3-compatible endpoint (MinIO, LocalStack, Cloudflare R2, etc.). "
+            "Leave empty for real AWS S3."
+        ),
+    )
+
+    @field_validator("endpoint_url")
+    @classmethod
+    def validate_endpoint_url_ssrf(cls, v: Optional[str]) -> Optional[str]:
+        """Validate a custom endpoint isn't targeting internal resources."""
+        if v is None or not v.strip():
+            return v
+        return validate_url(v)
+
+    @model_validator(mode="after")
+    def validate_credential_pair(self) -> Self:
+        """Access key and secret must be given together, or neither."""
+        has_key = bool(self.aws_access_key_id)
+        has_secret = bool(self.aws_secret_access_key)
+        if has_key != has_secret:
+            raise ValueError(
+                "Provide both aws_access_key_id and aws_secret_access_key together, "
+                "or leave both empty to use the default AWS credential chain."
+            )
+        return self
