@@ -881,28 +881,30 @@ const Collections = () => {
                                             <StatusBadge status={collection.status} showTooltip={true} tooltipContext="collection" />
                                         )}
                                         {canToggleVisibility ? (
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="flex items-center gap-1.5 pl-1">
-                                                        <Switch
-                                                            checked={!!collection?.is_public}
-                                                            onCheckedChange={handleToggleVisibility}
-                                                            disabled={isTogglingVisibility}
-                                                            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
-                                                        />
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {collection?.is_public ? "Public" : "Private"}
-                                                        </span>
-                                                    </div>
-                                                </TooltipTrigger>
-                                                <TooltipContent side="bottom" className="max-w-xs">
-                                                    <p className="text-xs">
-                                                        {collection?.is_public
-                                                            ? "Every organization can search this collection."
-                                                            : "Only this organization can search this collection."}
-                                                    </p>
-                                                </TooltipContent>
-                                            </Tooltip>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className="flex items-center gap-1.5 pl-1">
+                                                            <Switch
+                                                                checked={!!collection?.is_public}
+                                                                onCheckedChange={handleToggleVisibility}
+                                                                disabled={isTogglingVisibility}
+                                                                className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                                                            />
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {collection?.is_public ? "Public" : "Private"}
+                                                            </span>
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="bottom" className="max-w-xs">
+                                                        <p className="text-xs">
+                                                            {collection?.is_public
+                                                                ? "Every organization can search this collection."
+                                                                : "Only this organization can search this collection."}
+                                                        </p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
                                         ) : (
                                             collection?.is_public && (
                                                 <Badge variant="outline" className="text-xs font-normal">
