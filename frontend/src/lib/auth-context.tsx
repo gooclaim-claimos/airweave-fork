@@ -141,9 +141,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const response = await apiClient.get('/users/');
           if (response.ok) {
             const backendUser = await response.json();
+            // Gooclaim: backendUser.email is the real caller's email when the
+            // trusted-header bridge resolved one (X-Gck-User-Email) — falls
+            // back to the generic dev placeholder only if the backend truly
+            // has nothing (e.g. local OSS dev with no bridge at all).
             setEnrichedUser({
-              name: 'Developer',
-              email: 'dev@example.com',
+              name: backendUser.full_name || 'Developer',
+              email: backendUser.email || 'dev@example.com',
               is_admin: backendUser.is_admin ?? false,
               is_platform_admin: backendUser.is_platform_admin ?? false,
               return_url: backendUser.return_url ?? null,

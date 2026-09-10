@@ -37,9 +37,19 @@ async def read_user(
     Sources UI can gate the Admin Dashboard on it. Also surface return_url
     (from X-Gck-Return-Url) so the UI's "Back" control knows where to send
     the browser without hardcoding Portal/Console URLs itself.
+
+    ``current_user`` here is always the shared system superuser in trusted-
+    header mode (no real per-tenant User row exists) — its email would
+    otherwise show as a generic placeholder in the UI regardless of who is
+    really logged in. Override it with the real caller's email (X-Gck-User-
+    Email, resolved once by gooclaim-auth at bridge-mint time) when present,
+    same source ApiContext.tracking_email already uses for audit fields.
     """
     current_user.is_platform_admin = bool((ctx.auth_metadata or {}).get("platform_admin"))
     current_user.return_url = (ctx.auth_metadata or {}).get("return_url")
+    bridge_email = (ctx.auth_metadata or {}).get("user_email")
+    if bridge_email:
+        current_user.email = bridge_email
     return current_user
 
 

@@ -89,7 +89,11 @@ export function OrganizationsTab() {
   const [selectedRole, setSelectedRole] = useState<'owner' | 'admin' | 'member'>('owner');
 
   useEffect(() => {
-    if (user?.is_admin) {
+    // Gooclaim: this page is already gated on is_platform_admin one level up
+    // (AdminDashboard.tsx) — is_admin is an unrelated per-org role flag that
+    // the trusted-header shared superuser never has set, so checking it here
+    // silently skipped the fetch and the page always showed "0 organizations".
+    if (user?.is_platform_admin) {
       loadOrganizations();
       loadAvailableFeatureFlags();
     }

@@ -274,7 +274,9 @@ export function UserProfileDropdown() {
               <p className="text-sm text-muted-foreground font-medium truncate">
                 {user?.email}
               </p>
-              {getPlanBadge()}
+              {/* Gooclaim tenants don't use Airweave's own billing plans —
+                  hides the same "Pro"/"Team" badge as the Billing tab. */}
+              {!IS_GOOCLAIM_TENANT && getPlanBadge()}
             </div>
           </div>
 
@@ -379,10 +381,10 @@ export function UserProfileDropdown() {
             <>
               <MenuSeparator />
 
-              {/* Invite Members — hidden for a Gooclaim tenant session (Portal
-                  manages real membership; see OrganizationSettingsUnified's
-                  Members tab, same gate). */}
-              {(!IS_GOOCLAIM_TENANT || user?.is_platform_admin) && (
+              {/* Invite Members — hidden in Gooclaim mode entirely, including
+                  for a platform admin (Portal manages real membership; see
+                  OrganizationSettingsUnified's Members tab, same gate). */}
+              {!IS_GOOCLAIM_TENANT && (
                 <InternalMenuLink
                   to="/organization/settings?tab=members"
                   icon={<UserPlus className="h-4 w-4" />}
