@@ -38,7 +38,12 @@ class OpenAIProvider(BaseProvider):
 
         try:
             # Gooclaim patch: honor OPENAI_BASE_URL for Azure OpenAI routing.
-            base_url = os.getenv("OPENAI_BASE_URL") or None
+            # Must resolve to a real URL, never None — see the matching
+            # comment in embedders/dense/openai.py for why (the OpenAI SDK
+            # re-reads OPENAI_BASE_URL from the raw environment when we pass
+            # None, undoing this `or` for an env var that is present-but-
+            # empty rather than truly unset).
+            base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
             self.client = AsyncOpenAI(
                 api_key=api_key,
                 base_url=base_url,

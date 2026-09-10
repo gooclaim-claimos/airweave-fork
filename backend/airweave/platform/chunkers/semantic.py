@@ -126,14 +126,19 @@ class SemanticChunker(BaseChunker):
             # the pod runs as a non-root user and `/.cache` is read-only).
             embedder_choice = os.getenv("CHUNKER_EMBEDDER", "model2vec").lower()
             openai_key = os.getenv("OPENAI_API_KEY")
-            # Empty string (unset-but-present env var, e.g. OPENAI_BASE_URL=
-            # in a .env file) must become None, not "" — OpenAIEmbeddings
-            # passes it straight through as httpx's base_url, and an empty
-            # string produces `httpcore.UnsupportedProtocol: Request URL is
-            # missing an 'http://' or 'https://' protocol` on every call.
-            # Matches the same `or None` guard already used for this env var
-            # in embedders/dense/openai.py and search/providers/openai.py.
-            openai_base = os.getenv("OPENAI_BASE_URL") or None
+            # Empty string (present-but-empty env var, e.g. OPENAI_BASE_URL=
+            # in a .env file) must resolve to a real URL, never None or "" —
+            # OpenAIEmbeddings passes it straight through as httpx's
+            # base_url. `or None` alone is NOT enough: the underlying OpenAI
+            # SDK re-reads OPENAI_BASE_URL from the raw environment whenever
+            # it receives None (openai/_client.py), which finds the same
+            # empty string again and produces
+            # `httpcore.UnsupportedProtocol: Request URL is missing an
+            # 'http://' or 'https://' protocol` on every call. Confirmed
+            # live end-to-end on the EC2 sandbox, 2026-09-10 (T194). Same
+            # fix applied in embedders/dense/openai.py and
+            # search/providers/openai.py.
+            openai_base = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
 
             if embedder_choice == "openai" and openai_key:
                 openai_model = os.getenv("CHUNKER_OPENAI_MODEL", "text-embedding-3-small")

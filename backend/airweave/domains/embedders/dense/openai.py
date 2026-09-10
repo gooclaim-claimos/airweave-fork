@@ -64,7 +64,16 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
         self._model = model
         self._dimensions = dimensions
         # Gooclaim patch: honor OPENAI_BASE_URL for Azure OpenAI routing.
-        base_url = os.getenv("OPENAI_BASE_URL") or None
+        # Must resolve to a real URL, never None: passing base_url=None makes
+        # the OpenAI SDK re-read OPENAI_BASE_URL from the raw environment
+        # itself (openai/_client.py: `if base_url is None: base_url =
+        # os.environ.get("OPENAI_BASE_URL")`) — that check doesn't treat ""
+        # as unset the way our `or` does, so an env file that declares
+        # OPENAI_BASE_URL= with no value (present but empty) silently wins
+        # over this line and every request fails with
+        # `httpcore.UnsupportedProtocol: ... missing a protocol`. Confirmed
+        # live on the EC2 sandbox, 2026-09-10 (T194).
+        base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
         self._client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
