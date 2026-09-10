@@ -202,6 +202,12 @@ class Agent:
                 detail=f"Collection '{readable_id}' not found",
             )
         collection_id = str(collection.id)
+        # Gooclaim: the SEARCH tool ranks this collection PLUS every Public
+        # collection (e.g. Console-curated regulations) together — READ/COUNT
+        # stay scoped to this collection alone, matching their existing
+        # single-collection contract. See CollectionServiceProtocol.set_visibility.
+        public_ids = await self._collection_repo.get_public_collection_ids(db)
+        collection_ids = list({collection_id, *(str(pid) for pid in public_ids)})
 
         metadata = await self._metadata_builder.build(db, ctx, readable_id)
         system_prompt = build_system_prompt(metadata, config.MAX_ITERATIONS)
@@ -212,6 +218,7 @@ class Agent:
         # Construct per-request tools
         dispatcher = self._build_dispatcher(
             collection_id,
+            collection_ids,
             user_filter,
             db,
             ctx,
@@ -592,19 +599,25 @@ class Agent:
     def _build_dispatcher(
         self,
         collection_id: str,
+        collection_ids: list[str],
         user_filter: list,
         db: AsyncSession,
         ctx: ApiContext,
         collection_readable_id: str,
         user_principal: str | None = None,
     ) -> ToolDispatcher:
-        """Construct tools and dispatcher for this request."""
+        """Construct tools and dispatcher for this request.
+
+        collection_id (singular) stays the READ/COUNT tools' scope — their
+        contract is unchanged. collection_ids (this collection + every
+        Public one) is only for the SEARCH tool, which ranks them together.
+        """
         return ToolDispatcher(
             {
                 ToolName.SEARCH: SearchTool(
                     executor=self._executor,
                     user_filter=user_filter,
-                    collection_id=collection_id,
+                    collection_ids=collection_ids,
                     db=db,
                     ctx=ctx,
                     collection_readable_id=collection_readable_id,

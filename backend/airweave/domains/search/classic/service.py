@@ -117,6 +117,12 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
         if not collection:
             raise HTTPException(status_code=404, detail=f"Collection '{readable_id}' not found")
 
+        # Gooclaim: search this collection PLUS every Public collection (e.g.
+        # Console-curated regulations) in one ranked call, not merged from
+        # separate searches. See CollectionServiceProtocol.set_visibility.
+        public_ids = await self._collection_repo.get_public_collection_ids(db)
+        collection_ids = list({str(collection.id), *(str(pid) for pid in public_ids)})
+
         # 2. Build system prompt
         metadata = await self._metadata_builder.build(db, ctx, readable_id)
         system_prompt = build_system_prompt(
@@ -157,7 +163,7 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
         results = await self._executor.execute(
             plan=plan,
             user_filter=request.filter or [],
-            collection_id=str(collection.id),
+            collection_ids=collection_ids,
             db=db,
             ctx=ctx,
             collection_readable_id=readable_id,

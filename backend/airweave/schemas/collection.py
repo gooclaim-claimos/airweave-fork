@@ -113,6 +113,25 @@ class CollectionCreate(CollectionBase):
     }
 
 
+class CollectionVisibilityUpdate(BaseModel):
+    """Gooclaim: dedicated schema for the Public/Private toggle.
+
+    Deliberately separate from ``CollectionUpdate`` — visibility is gated to
+    platform admins only (see ``PATCH /collections/{readable_id}/visibility``)
+    while name/sync_config updates are ordinary owner operations. Keeping
+    them on different endpoints/schemas means a regular update can never
+    accidentally flip this.
+    """
+
+    is_public: bool = Field(
+        ...,
+        description=(
+            "When true, every organization can read this collection, not just the "
+            "owning organization."
+        ),
+    )
+
+
 class CollectionUpdate(BaseModel):
     """Schema for updating an existing collection.
 
@@ -195,6 +214,15 @@ class CollectionInDBBase(CollectionBase):
             "isolated per organization."
         ),
     )
+    is_public: bool = Field(
+        False,
+        description=(
+            "Gooclaim: when true, every organization can read this collection (used for "
+            "shared/regulatory knowledge curated via Console), not just the owning "
+            "organization. Only a platform admin can change this — see "
+            "PATCH /collections/{readable_id}/visibility."
+        ),
+    )
     created_by_email: Optional[EmailStr] = Field(
         None,
         description="Email address of the user who created this collection.",
@@ -203,6 +231,19 @@ class CollectionInDBBase(CollectionBase):
         None,
         description="Email address of the user who last modified this collection.",
     )
+
+    @field_validator("is_public", mode="before")
+    @classmethod
+    def _default_is_public_when_none(cls, v: Optional[bool]) -> bool:
+        """Treat missing/None as False.
+
+        The ORM column has default=False + server_default, but a Collection
+        built in-memory and never flushed/refreshed against a real DB (as
+        several existing tests and some construction paths do) leaves the
+        Python attribute at None until then — this field is bool, not
+        Optional[bool], so validation would otherwise reject that None.
+        """
+        return v if v is not None else False
 
     model_config = ConfigDict(from_attributes=True)
 

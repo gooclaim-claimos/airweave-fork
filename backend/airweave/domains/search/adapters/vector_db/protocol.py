@@ -22,7 +22,7 @@ class VectorDBProtocol(Protocol):
         self,
         plan: SearchPlan,
         embeddings: QueryEmbeddings,
-        collection_id: str,
+        collection_ids: list[str],
         acl_principals: Optional[list[str]] = None,
     ) -> CompiledQuery:
         """Compile plan and embeddings into a DB-specific query.
@@ -30,7 +30,11 @@ class VectorDBProtocol(Protocol):
         Args:
             plan: Search plan with queries, filters, strategy, pagination.
             embeddings: Dense and sparse embeddings for the queries.
-            collection_id: Collection readable ID for tenant filtering.
+            collection_ids: Collection UUIDs to search — the caller's own
+                collection plus every Gooclaim Public collection (see
+                CollectionServiceProtocol.set_visibility), OR-ed together so
+                one call ranks everything together instead of merging
+                separately-scored result sets.
             acl_principals: Resolved user principals for access control filtering.
                 None = no AC sources in collection (skip filtering).
                 [] = user has no principals (only public entities visible).

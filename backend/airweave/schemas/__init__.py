@@ -23,6 +23,7 @@ from .collection import (
     CollectionCreate,
     CollectionRecord,
     CollectionUpdate,
+    CollectionVisibilityUpdate,
 )
 from .connect_session import (
     ConnectSessionContext,

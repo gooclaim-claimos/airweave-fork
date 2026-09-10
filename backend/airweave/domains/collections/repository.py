@@ -198,3 +198,15 @@ class CollectionRepository(CollectionRepositoryProtocol):
     async def remove(self, db: AsyncSession, *, id: UUID, ctx: ApiContext) -> Optional[Collection]:
         """Delete a collection by ID."""
         return await crud.collection.remove(db, id=id, ctx=ctx)
+
+    async def set_visibility(
+        self, db: AsyncSession, *, db_obj: Collection, is_public: bool, ctx: ApiContext
+    ) -> Collection:
+        """Set a collection's is_public flag. Caller must have already checked permission."""
+        return await crud.collection.update(
+            db, db_obj=db_obj, obj_in={"is_public": is_public}, ctx=ctx
+        )
+
+    async def get_public_collection_ids(self, db: AsyncSession) -> List[UUID]:
+        """IDs of every Public collection, across all organizations."""
+        return await crud.collection.get_public_ids(db)

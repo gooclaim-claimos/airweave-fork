@@ -613,7 +613,7 @@ class TestExecutorVectorOnly:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=[],
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=ctx,
             collection_readable_id="my-collection",
@@ -631,7 +631,7 @@ class TestExecutorVectorOnly:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=[],
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=_make_ctx(),
             collection_readable_id="my-collection",
@@ -677,7 +677,7 @@ class TestExecutorFederated:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=[],
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=_make_ctx(),
             collection_readable_id="my-collection",
@@ -718,7 +718,7 @@ class TestExecutorFederated:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=[],
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=_make_ctx(),
             collection_readable_id="my-collection",
@@ -767,7 +767,7 @@ class TestExecutorFederated:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=user_filter,
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=_make_ctx(),
             collection_readable_id="my-collection",
@@ -812,7 +812,7 @@ class TestExecutorFederated:
         results = await executor.execute(
             plan=_make_plan(),
             user_filter=user_filter,
-            collection_id="col-1",
+            collection_ids=["col-1"],
             db=AsyncMock(),
             ctx=_make_ctx(),
             collection_readable_id="my-collection",
@@ -850,7 +850,7 @@ class TestExecutorFederated:
             await executor.execute(
                 plan=_make_plan(),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -922,7 +922,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(strategy="semantic"),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -948,7 +948,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(strategy="keyword"),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -966,7 +966,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -984,7 +984,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -1019,7 +1019,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",
@@ -1063,7 +1063,7 @@ class TestExecutorErrorPaths:
             await executor.execute(
                 plan=_make_plan(),
                 user_filter=[],
-                collection_id="col-1",
+                collection_ids=["col-1"],
                 db=AsyncMock(),
                 ctx=_make_ctx(),
                 collection_readable_id="my-collection",

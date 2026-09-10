@@ -83,13 +83,21 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
         self,
         plan: SearchPlan,
         user_filter: list[FilterGroup],
-        collection_id: str,
+        collection_ids: list[str],
         db: AsyncSession,
         ctx: ApiContext,
         collection_readable_id: str,
         user_principal: Optional[str] = None,
     ) -> SearchResults:
-        """Execute the full search pipeline including federated sources."""
+        """Execute the full search pipeline including federated sources.
+
+        collection_ids is the caller's own collection plus every Gooclaim
+        Public collection (see CollectionServiceProtocol.set_visibility) —
+        the vector DB ranks all of them together in one call.
+        collection_readable_id stays singular: federated source discovery
+        and ACL resolution are about THIS collection's own source
+        connections, not the merged Public set.
+        """
         # 0. Resolve access control principals
         acl_principals = await self._resolve_acl_principals(
             db, ctx, user_principal, collection_readable_id
@@ -116,7 +124,7 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
         fetch_limit = original_offset + original_limit
 
         vector_task = asyncio.create_task(
-            self._execute_vector_search(complete_plan, collection_id, acl_principals)
+            self._execute_vector_search(complete_plan, collection_ids, acl_principals)
         )
 
         fed_task = None
@@ -157,7 +165,7 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
     async def _execute_vector_search(
         self,
         plan: SearchPlan,
-        collection_id: str,
+        collection_ids: list[str],
         acl_principals: Optional[list[str]] = None,
     ) -> list[SearchResult]:
         """Embed, compile, and execute vector DB search.
@@ -189,7 +197,7 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
         compiled_query = await self._vector_db.compile_query(
             plan=plan,
             embeddings=embeddings,
-            collection_id=collection_id,
+            collection_ids=collection_ids,
             acl_principals=acl_principals,
         )
         return (await self._vector_db.execute_query(compiled_query)).results

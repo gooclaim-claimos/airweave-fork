@@ -171,6 +171,25 @@ class CollectionService(CollectionServiceProtocol):
 
         return result
 
+    async def set_visibility(
+        self, db: AsyncSession, *, readable_id: str, is_public: bool, ctx: ApiContext
+    ) -> schemas.Collection:
+        """Set a collection's Public/Private flag.
+
+        Caller (the API endpoint) must already have verified the caller is a
+        platform admin — this method does not re-check that, matching the
+        rest of this service's separation between authorization (endpoint)
+        and domain logic (here).
+        """
+        db_obj = await self._collection_repo.get_by_readable_id(db, readable_id, ctx)
+        if db_obj is None:
+            raise CollectionNotFoundError(readable_id)
+
+        updated = await self._collection_repo.set_visibility(
+            db, db_obj=db_obj, is_public=is_public, ctx=ctx
+        )
+        return self._to_response(updated)
+
     async def delete(
         self, db: AsyncSession, *, readable_id: str, ctx: ApiContext
     ) -> schemas.Collection:

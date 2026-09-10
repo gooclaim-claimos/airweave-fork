@@ -7,6 +7,9 @@ import { useUsageStore } from "@/lib/stores/usage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/lib/auth-context";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 import { toast } from "@/hooks/use-toast";
 import { getAppIconUrl } from "@/lib/utils/icons";
 import { useTheme } from "@/lib/theme-provider";
@@ -190,6 +193,9 @@ interface Collection {
     created_by_email: string;
     modified_by_email: string;
     status?: string;
+    // Gooclaim: readable by every organization when true — see
+    // PATCH /collections/{readable_id}/visibility (platform admin only).
+    is_public?: boolean;
 }
 
 interface SourceConnection {
@@ -248,6 +254,12 @@ const Collections = () => {
     const [collection, setCollection] = useState<Collection | null>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const nameInputRef = useRef<HTMLDivElement>(null);
+    const [isTogglingVisibility, setIsTogglingVisibility] = useState(false);
+    const { user } = useAuth();
+    // Gooclaim: only a verified platform admin (Console) may change this —
+    // same gate the backend enforces (PATCH .../visibility, 403 otherwise).
+    // A regular tenant session (Portal) never sees the control at all.
+    const canToggleVisibility = IS_GOOCLAIM_TENANT && user?.is_platform_admin;
 
     // Source connection state
     const [sourceConnections, setSourceConnections] = useState<SourceConnection[]>([]);
@@ -539,6 +551,39 @@ const Collections = () => {
                 variant: "destructive"
             });
             setIsEditingName(false);
+        }
+    };
+
+    // Gooclaim: toggle a collection between Public (every org can read it —
+    // used for Console-curated shared/regulatory knowledge) and Private
+    // (only this org). Backend re-checks platform-admin on every call —
+    // this UI control is convenience, not the actual authorization boundary.
+    const handleToggleVisibility = async (nextIsPublic: boolean) => {
+        if (!collection) return;
+        setIsTogglingVisibility(true);
+        try {
+            const response = await apiClient.patch(
+                `/collections/${readable_id}/visibility`,
+                { is_public: nextIsPublic }
+            );
+            if (!response.ok) throw new Error("Failed to update collection visibility");
+
+            setCollection(prev => prev ? { ...prev, is_public: nextIsPublic } : null);
+            toast({
+                title: "Success",
+                description: nextIsPublic
+                    ? "Collection is now Public — every organization can search it"
+                    : "Collection is now Private — only this organization can search it",
+            });
+        } catch (error) {
+            console.error("Error updating collection visibility:", error);
+            toast({
+                title: "Error",
+                description: "Failed to update collection visibility",
+                variant: "destructive",
+            });
+        } finally {
+            setIsTogglingVisibility(false);
         }
     };
 
@@ -834,6 +879,36 @@ const Collections = () => {
                                         </Button>
                                         {collection?.status && (
                                             <StatusBadge status={collection.status} showTooltip={true} tooltipContext="collection" />
+                                        )}
+                                        {canToggleVisibility ? (
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="flex items-center gap-1.5 pl-1">
+                                                        <Switch
+                                                            checked={!!collection?.is_public}
+                                                            onCheckedChange={handleToggleVisibility}
+                                                            disabled={isTogglingVisibility}
+                                                            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                                                        />
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {collection?.is_public ? "Public" : "Private"}
+                                                        </span>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom" className="max-w-xs">
+                                                    <p className="text-xs">
+                                                        {collection?.is_public
+                                                            ? "Every organization can search this collection."
+                                                            : "Only this organization can search this collection."}
+                                                    </p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        ) : (
+                                            collection?.is_public && (
+                                                <Badge variant="outline" className="text-xs font-normal">
+                                                    Public
+                                                </Badge>
+                                            )
                                         )}
                                     </div>
                                 )}

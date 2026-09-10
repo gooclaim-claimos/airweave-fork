@@ -36,14 +36,14 @@ class FakeSearchPlanExecutor(SearchPlanExecutorProtocol):
         self,
         plan: SearchPlan,
         user_filter: list[FilterGroup],
-        collection_id: str,
+        collection_ids: list[str],
         db: Any = None,
         ctx: Any = None,
         collection_readable_id: str = "",
         user_principal: str | None = None,
     ) -> SearchResults:
         """Record the call and return seeded result, or raise seeded error."""
-        self._calls.append(("execute", plan, user_filter, collection_id))
+        self._calls.append(("execute", plan, user_filter, collection_ids))
         if self._error:
             err = self._error
             self._error = None

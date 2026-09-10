@@ -97,6 +97,12 @@ class InstantSearchService(InstantSearchServiceProtocol):
         if not collection:
             raise HTTPException(status_code=404, detail=f"Collection '{readable_id}' not found")
 
+        # Gooclaim: search this collection PLUS every Public collection (e.g.
+        # Console-curated regulations) in one ranked call. See
+        # CollectionServiceProtocol.set_visibility.
+        public_ids = await self._collection_repo.get_public_collection_ids(db)
+        collection_ids = list({str(collection.id), *(str(pid) for pid in public_ids)})
+
         plan = SearchPlan(
             query=SearchQuery(primary=request.query),
             limit=request.limit,
@@ -107,7 +113,7 @@ class InstantSearchService(InstantSearchServiceProtocol):
         results = await self._executor.execute(
             plan=plan,
             user_filter=request.filter or [],
-            collection_id=str(collection.id),
+            collection_ids=collection_ids,
             db=db,
             ctx=ctx,
             collection_readable_id=readable_id,

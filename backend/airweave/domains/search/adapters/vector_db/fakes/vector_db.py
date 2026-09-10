@@ -60,11 +60,11 @@ class FakeVectorDB:
         self,
         plan: SearchPlan,
         embeddings: QueryEmbeddings,
-        collection_id: str,
+        collection_ids: list[str],
         acl_principals: list[str] | None = None,
     ) -> CompiledQuery:
         """Return a fake compiled query, or raise seeded error."""
-        self._calls.append(("compile_query", plan, embeddings, collection_id))
+        self._calls.append(("compile_query", plan, embeddings, collection_ids))
         if self._compile_error:
             err = self._compile_error
             self._compile_error = None
@@ -72,7 +72,7 @@ class FakeVectorDB:
         return CompiledQuery(
             vector_db="fake",
             display="fake query",
-            raw={"plan": plan.model_dump(), "collection_id": collection_id},
+            raw={"plan": plan.model_dump(), "collection_ids": collection_ids},
         )
 
     async def execute_query(

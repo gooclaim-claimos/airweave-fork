@@ -57,6 +57,7 @@ def _collection(
     id: UUID = COLLECTION_ID,
     name: str = "Test Collection",
     readable_id: str = "test-collection",
+    is_public: bool = False,
 ) -> MagicMock:
     col = MagicMock(spec=Collection)
     col.id = id
@@ -75,6 +76,7 @@ def _collection(
     col.created_by_email = None
     col.modified_by_email = None
     col.status = "NEEDS SOURCE"
+    col.is_public = is_public
     return col
 
 
@@ -375,6 +377,59 @@ async def test_update_not_found():
     with pytest.raises(CollectionNotFoundError):
         await svc.update(
             MagicMock(), readable_id="nonexistent", collection_in=update_in, ctx=_ctx()
+        )
+
+
+# ---------------------------------------------------------------------------
+# set_visibility() tests
+# ---------------------------------------------------------------------------
+#
+# Gooclaim: the service itself does NOT re-check platform-admin — that's the
+# API endpoint's job (see endpoints/collections.py::set_visibility). These
+# tests only cover the domain logic: does it flip the flag and return the
+# updated collection.
+
+
+@pytest.mark.asyncio
+async def test_set_visibility_to_public():
+    """set_visibility(True) flips a Private collection to Public."""
+    repo = FakeCollectionRepository()
+    col = _collection(is_public=False)
+    repo.seed_readable("test-collection", col)
+
+    svc = _build_service(collection_repo=repo)
+
+    result = await svc.set_visibility(
+        MagicMock(), readable_id="test-collection", is_public=True, ctx=_ctx()
+    )
+
+    assert result.is_public is True
+
+
+@pytest.mark.asyncio
+async def test_set_visibility_to_private():
+    """set_visibility(False) flips a Public collection back to Private."""
+    repo = FakeCollectionRepository()
+    col = _collection(is_public=True)
+    repo.seed_readable("test-collection", col)
+
+    svc = _build_service(collection_repo=repo)
+
+    result = await svc.set_visibility(
+        MagicMock(), readable_id="test-collection", is_public=False, ctx=_ctx()
+    )
+
+    assert result.is_public is False
+
+
+@pytest.mark.asyncio
+async def test_set_visibility_not_found():
+    """set_visibility() raises CollectionNotFoundError when not found."""
+    svc = _build_service()
+
+    with pytest.raises(CollectionNotFoundError):
+        await svc.set_visibility(
+            MagicMock(), readable_id="nonexistent", is_public=True, ctx=_ctx()
         )
 
 

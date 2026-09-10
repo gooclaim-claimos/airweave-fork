@@ -39,16 +39,21 @@ class SearchTool(Tool):
         self,
         executor: SearchPlanExecutorProtocol,
         user_filter: list[FilterGroup],
-        collection_id: str,
+        collection_ids: list[str],
         db: AsyncSession,
         ctx: ApiContext,
         collection_readable_id: str,
         user_principal: str | None = None,
     ) -> None:
-        """Initialize with executor, user filter, collection ID, and request context."""
+        """Initialize with executor, user filter, collection IDs, and request context.
+
+        collection_ids: this collection plus every Gooclaim Public collection
+        (see CollectionServiceProtocol.set_visibility) — ranked together in
+        one vector DB call.
+        """
         self._executor = executor
         self._user_filter = user_filter
-        self._collection_id = collection_id
+        self._collection_ids = collection_ids
         self._db = db
         self._ctx = ctx
         self._collection_readable_id = collection_readable_id
@@ -65,7 +70,7 @@ class SearchTool(Tool):
         results = await self._executor.execute(
             plan=plan,
             user_filter=self._user_filter,
-            collection_id=self._collection_id,
+            collection_ids=self._collection_ids,
             db=self._db,
             ctx=self._ctx,
             collection_readable_id=self._collection_readable_id,

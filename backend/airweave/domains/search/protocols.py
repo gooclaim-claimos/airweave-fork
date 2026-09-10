@@ -37,13 +37,17 @@ class SearchPlanExecutorProtocol(Protocol):
         self,
         plan: SearchPlan,
         user_filter: list[FilterGroup],
-        collection_id: str,
+        collection_ids: list[str],
         db: AsyncSession,
         ctx: ApiContext,
         collection_readable_id: str,
         user_principal: Optional[str] = None,
     ) -> SearchResults:
-        """Execute a search plan and return results."""
+        """Execute a search plan and return results.
+
+        collection_ids: the caller's own collection plus every Gooclaim
+        Public collection, ranked together in one vector DB call.
+        """
         ...
 
 

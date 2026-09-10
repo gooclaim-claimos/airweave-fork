@@ -136,6 +136,23 @@ class FakeCollectionRepository:
             setattr(db_obj, k, v)
         return db_obj
 
+    async def set_visibility(
+        self, db: AsyncSession, *, db_obj: Collection, is_public: bool, ctx: ApiContext
+    ) -> Collection:
+        """Set is_public on the fake collection."""
+        self._calls.append(("set_visibility", db, db_obj, is_public, ctx))
+        db_obj.is_public = is_public
+        return db_obj
+
+    async def get_public_collection_ids(self, db: AsyncSession) -> list[UUID]:
+        """IDs of every seeded collection with is_public=True."""
+        self._calls.append(("get_public_collection_ids", db))
+        ids: list[UUID] = []
+        for c in [*self._store.values(), *self._readable_store.values()]:
+            if getattr(c, "is_public", False) and c.id not in ids:
+                ids.append(c.id)
+        return ids
+
     async def remove(self, db: AsyncSession, *, id: UUID, ctx: ApiContext) -> Optional[Collection]:
         """Remove a collection from the fake store."""
         self._calls.append(("remove", db, id, ctx))

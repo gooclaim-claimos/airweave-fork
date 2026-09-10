@@ -87,11 +87,11 @@ class VespaVectorDB:
         self,
         plan: SearchPlan,
         embeddings: QueryEmbeddings,
-        collection_id: str,
+        collection_ids: list[str],
         acl_principals: Optional[list[str]] = None,
     ) -> CompiledQuery:
         """Compile plan and embeddings into Vespa query."""
-        yql = self._build_yql(plan, collection_id, acl_principals=acl_principals)
+        yql = self._build_yql(plan, collection_ids, acl_principals=acl_principals)
         params = self._build_params(plan, embeddings)
 
         raw_query = {"yql": yql, "params": params}
@@ -257,18 +257,40 @@ class VespaVectorDB:
     # YQL Building
     # =========================================================================
 
+    @staticmethod
+    def _build_collection_clause(collection_ids: list[str]) -> str:
+        """Build the collection-membership YQL clause for one or more collections.
+
+        Gooclaim: a search normally targets exactly one collection, but a
+        caller may pass its own collection plus every Public collection
+        (see CollectionServiceProtocol.set_visibility) so they're ranked
+        together in one Vespa call, rather than merging separately-scored
+        result sets from multiple calls.
+        """
+        if not collection_ids:
+            # Should never happen — callers always pass at least the
+            # caller's own collection — but fail closed (match nothing)
+            # rather than silently building an unfiltered, cross-tenant query.
+            return "false"
+        clauses = [
+            f"data_sources_system_metadata_collection_id contains '{cid}'" for cid in collection_ids
+        ]
+        return " OR ".join(clauses)
+
     def _build_yql(
         self,
         plan: SearchPlan,
-        collection_id: str,
+        collection_ids: list[str],
         acl_principals: Optional[list[str]] = None,
     ) -> str:
         """Build the complete YQL query string."""
         num_embeddings = self._count_dense_embeddings(plan)
         retrieval_clause = self._build_retrieval_clause(plan.retrieval_strategy, num_embeddings)
 
+        collection_clause = self._build_collection_clause(collection_ids)
+
         where_parts = [
-            f"data_sources_system_metadata_collection_id contains '{collection_id}'",
+            f"({collection_clause})",
             f"({retrieval_clause})",
         ]
 

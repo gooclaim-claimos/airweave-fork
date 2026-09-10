@@ -80,6 +80,16 @@ class CollectionRepositoryProtocol(Protocol):
         """Delete a collection by ID."""
         ...
 
+    async def set_visibility(
+        self, db: AsyncSession, *, db_obj: Collection, is_public: bool, ctx: ApiContext
+    ) -> Collection:
+        """Set a collection's is_public flag. Caller must have already checked permission."""
+        ...
+
+    async def get_public_collection_ids(self, db: AsyncSession) -> List[UUID]:
+        """IDs of every Public collection, across all organizations."""
+        ...
+
 
 class VectorDbDeploymentMetadataRepositoryProtocol(Protocol):
     """Data access for the singleton VectorDbDeploymentMetadata row."""
@@ -135,6 +145,12 @@ class CollectionServiceProtocol(Protocol):
         ctx: ApiContext,
     ) -> schemas.Collection:
         """Update a collection."""
+        ...
+
+    async def set_visibility(
+        self, db: AsyncSession, *, readable_id: str, is_public: bool, ctx: ApiContext
+    ) -> schemas.Collection:
+        """Set a collection's Public/Private flag. Caller must already be authorized."""
         ...
 
     async def delete(

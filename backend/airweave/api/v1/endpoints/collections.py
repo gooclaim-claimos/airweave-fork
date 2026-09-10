@@ -18,6 +18,7 @@ from airweave.api.examples import (
     create_collection_list_response,
 )
 from airweave.api.router import TrailingSlashRouter
+from airweave.core.config import settings
 from airweave.domains.collections.exceptions import (
     CollectionAlreadyExistsError,
     CollectionNotFoundError,
@@ -185,6 +186,51 @@ async def update(
     """Update a collection's properties."""
     try:
         return await service.update(db, readable_id=readable_id, collection_in=collection, ctx=ctx)
+    except CollectionNotFoundError:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
+
+@router.patch(
+    "/{readable_id}/visibility",
+    response_model=schemas.Collection,
+    summary="Set Collection Visibility",
+    description="""Make a collection Public (readable by every organization) or Private
+(readable only by its owning organization) again.
+
+Gooclaim: restricted to a verified platform admin (Console). A collection
+marked Public is used for shared/regulatory knowledge every tenant should
+be able to search against — write access to the collection itself is
+unaffected, only who can READ it.""",
+    responses={
+        200: {"model": schemas.Collection, "description": "Updated collection"},
+        403: {"description": "Caller is not a platform admin"},
+        404: {"model": NotFoundErrorResponse, "description": "Collection Not Found"},
+        429: {"model": RateLimitErrorResponse, "description": "Rate Limit Exceeded"},
+    },
+)
+async def set_visibility(
+    visibility: schemas.CollectionVisibilityUpdate,
+    readable_id: str = Path(
+        ...,
+        description="The unique readable identifier of the collection",
+        json_schema_extra={"example": "irdai-regulations-a1b2c3"},
+    ),
+    db: AsyncSession = Depends(deps.get_db),
+    ctx: ApiContext = Depends(deps.get_context),
+    service: CollectionServiceProtocol = Inject(CollectionServiceProtocol),
+) -> schemas.Collection:
+    """Set a collection's Public/Private flag. Platform admin only in Gooclaim mode."""
+    if settings.EXTERNAL_ORG_ID_PROVISIONING and not (ctx.auth_metadata or {}).get(
+        "platform_admin"
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to change this collection's visibility",
+        )
+    try:
+        return await service.set_visibility(
+            db, readable_id=readable_id, is_public=visibility.is_public, ctx=ctx
+        )
     except CollectionNotFoundError:
         raise HTTPException(status_code=404, detail="Collection not found")
 

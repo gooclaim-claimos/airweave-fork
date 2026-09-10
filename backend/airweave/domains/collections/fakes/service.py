@@ -95,6 +95,17 @@ class FakeCollectionService:
             raise CollectionNotFoundError(readable_id)
         return obj
 
+    async def set_visibility(
+        self, db: AsyncSession, *, readable_id: str, is_public: bool, ctx: ApiContext
+    ) -> schemas.Collection:
+        """Set is_public on the seeded collection after recording the call."""
+        self._calls.append(("set_visibility", db, readable_id, is_public, ctx))
+        obj = self._readable_store.get(readable_id)
+        if obj is None:
+            raise CollectionNotFoundError(readable_id)
+        obj.is_public = is_public
+        return obj
+
     async def delete(
         self, db: AsyncSession, *, readable_id: str, ctx: ApiContext
     ) -> schemas.Collection:

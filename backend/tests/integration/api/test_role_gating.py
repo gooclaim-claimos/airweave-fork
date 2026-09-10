@@ -770,3 +770,105 @@ class TestRequireOrgRoleEdgeCases:
             },
         )
         assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Collection visibility endpoint tests (Gooclaim Public/Private)
+# ---------------------------------------------------------------------------
+#
+# PATCH /collections/{readable_id}/visibility is gated to a verified Gooclaim
+# platform admin (X-Gck-Platform-Admin, surfaced as ctx.auth_metadata
+# ["platform_admin"]) ONLY when EXTERNAL_ORG_ID_PROVISIONING is on — the
+# same gate as organizations.py's create/delete. It is a DIFFERENT axis from
+# org role: even an "owner" must be a platform admin to flip this flag.
+
+
+def _make_fake_context_with_platform_admin(is_platform_admin: bool) -> ApiContext:
+    """Build an ApiContext with the given platform_admin auth_metadata flag."""
+    now = datetime.now(timezone.utc)
+    org = Organization(id=TEST_ORG_ID, name="Test Organization", created_at=now, modified_at=now)
+    return ApiContext(
+        request_id=TEST_REQUEST_ID,
+        organization=org,
+        auth_method=AuthMethod.SYSTEM,
+        auth_metadata={"platform_admin": is_platform_admin},
+        logger=logger.with_context(request_id=TEST_REQUEST_ID),
+    )
+
+
+def _make_fake_collection_for_visibility(readable_id: str, is_public: bool):
+    """Minimal valid schemas.Collection for FakeCollectionService.seed_readable."""
+    from airweave.schemas.collection import Collection as CollectionSchema
+
+    now = datetime.now(timezone.utc)
+    return CollectionSchema(
+        id=uuid4(),
+        name="Regs",
+        readable_id=readable_id,
+        vector_db_deployment_metadata_id=uuid4(),
+        created_at=now,
+        modified_at=now,
+        organization_id=TEST_ORG_ID,
+        vector_size=1536,
+        embedding_model_name="text-embedding-3-small",
+        is_public=is_public,
+    )
+
+
+class TestCollectionVisibilityRoleGating:
+    """PATCH .../visibility requires a verified platform admin in Gooclaim mode."""
+
+    @pytest.mark.asyncio
+    async def test_regular_tenant_rejected_in_gooclaim_mode(self, _role_client, test_container):
+        """A non-platform-admin tenant cannot flip Public/Private, even as owner."""
+        ctx = _make_fake_context_with_platform_admin(is_platform_admin=False)
+        client = await _role_client(ctx)
+        with patch(
+            "airweave.api.v1.endpoints.collections.settings.EXTERNAL_ORG_ID_PROVISIONING", True
+        ):
+            response = await client.patch(
+                "/collections/test-collection/visibility", json={"is_public": True}
+            )
+        assert response.status_code == 403
+        assert "permission" in response.json()["detail"].lower()
+        # Never reached the service — confirms the gate short-circuits.
+        assert ("set_visibility",) not in [
+            c[:1] for c in test_container.collection_service._calls
+        ]
+
+    @pytest.mark.asyncio
+    async def test_platform_admin_allowed_in_gooclaim_mode(self, _role_client, test_container):
+        """A verified platform admin (Console) can flip Public/Private."""
+        ctx = _make_fake_context_with_platform_admin(is_platform_admin=True)
+        client = await _role_client(ctx)
+        test_container.collection_service.seed_readable(
+            "test-collection",
+            _make_fake_collection_for_visibility("test-collection", is_public=False),
+        )
+        with patch(
+            "airweave.api.v1.endpoints.collections.settings.EXTERNAL_ORG_ID_PROVISIONING", True
+        ):
+            response = await client.patch(
+                "/collections/test-collection/visibility", json={"is_public": True}
+            )
+        assert response.status_code == 200
+        assert response.json()["is_public"] is True
+
+    @pytest.mark.asyncio
+    async def test_regular_tenant_allowed_outside_gooclaim_mode(
+        self, _role_client, test_container
+    ):
+        """Off Gooclaim mode (upstream OSS behavior), the gate doesn't apply."""
+        ctx = _make_fake_context_with_platform_admin(is_platform_admin=False)
+        client = await _role_client(ctx)
+        test_container.collection_service.seed_readable(
+            "test-collection",
+            _make_fake_collection_for_visibility("test-collection", is_public=False),
+        )
+        with patch(
+            "airweave.api.v1.endpoints.collections.settings.EXTERNAL_ORG_ID_PROVISIONING", False
+        ):
+            response = await client.patch(
+                "/collections/test-collection/visibility", json={"is_public": True}
+            )
+        assert response.status_code == 200
