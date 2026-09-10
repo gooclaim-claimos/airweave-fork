@@ -64,8 +64,15 @@ export const CollectionFormView: React.FC<CollectionFormViewProps> = ({ humanRea
       setCollectionData(name.trim());
       setCollectionId(collection.readable_id || collection.id);
 
-      // Move to next step based on whether source is pre-selected
-      if (selectedSource) {
+      // Move to next step based on whether source is pre-selected.
+      // Gooclaim native upload uses its own step instead of the generic
+      // source-config form (no auth fields, files come in via a separate
+      // multipart endpoint) — same special case as SourceSelectView's
+      // handleSelectSource, which this path bypasses when the source was
+      // already chosen before the collection-name step ran.
+      if (selectedSource === 'gooclaim_upload') {
+        setStep('native-upload');
+      } else if (selectedSource) {
         setStep('source-config');
       } else {
         setStep('source-select');
