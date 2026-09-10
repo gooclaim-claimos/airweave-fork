@@ -57,6 +57,7 @@ from airweave.platform.entities.sharepoint_online import (
 from airweave.platform.http_client.airweave_client import AirweaveHttpClient
 from airweave.platform.sources._base import BaseSource
 from airweave.platform.sources.http_helpers import raise_for_status
+from airweave.platform.sources.microsoft_sensitivity_labels import SensitivityLabelFilter
 from airweave.platform.sources.retry_helpers import (
     retry_if_rate_limit_or_timeout,
     wait_rate_limit_with_backoff,
@@ -131,6 +132,10 @@ class SharePointOnlineBase(BaseSource):
         self._item_level_entra_groups = set()
         self._item_level_sp_groups = {}
         self._needs_internal_user_enum = False
+        self._excluded_sensitivity_label_ids = list(config.excluded_sensitivity_label_ids)
+        self._skip_encrypted_files = config.skip_encrypted_files
+        self._skip_unlabeled_files = config.skip_unlabeled_files
+        self._label_filter: Optional[SensitivityLabelFilter] = None
 
     # -- Auth hooks (subclasses override) --
 
@@ -651,6 +656,41 @@ class SharePointOnlineBase(BaseSource):
         """Return True if any permission carries a sharing-link block."""
         return any(p.get("link") for p in (permissions or []))
 
+    def _get_label_filter(self) -> Optional[SensitivityLabelFilter]:
+        """Lazily build a Purview sensitivity-label filter from config.
+
+        Returns None when no filtering is configured.
+        """
+        if self._label_filter is not None:
+            return self._label_filter
+        if not self._excluded_sensitivity_label_ids and not self._skip_unlabeled_files:
+            return None
+        self._label_filter = SensitivityLabelFilter(
+            excluded_label_ids=self._excluded_sensitivity_label_ids,
+            skip_encrypted=self._skip_encrypted_files,
+            skip_unlabeled=self._skip_unlabeled_files,
+            http_client=self.http_client,
+            token_provider=self._get_access_token,
+            logger=self.logger,
+        )
+        return self._label_filter
+
+    @staticmethod
+    def _extract_group_id_from_drives(drives: List[Dict[str, Any]]) -> Optional[str]:
+        """Pull the backing M365 Group ID off any drive in the site, if present.
+
+        Group-connected SharePoint sites surface their group as
+        ``drive.owner.group.id``. Non-group sites (classic comms sites, etc.)
+        won't have this; the site short-circuit is skipped in that case.
+        """
+        for drive in drives:
+            owner = drive.get("owner") or {}
+            group = owner.get("group") if isinstance(owner, dict) else None
+            raw_id = group.get("id") if isinstance(group, dict) else None
+            if isinstance(raw_id, str) and raw_id:
+                return raw_id
+        return None
+
     async def _full_sync(  # noqa: C901
         self,
         cursor: SyncCursor | None,
@@ -658,6 +698,7 @@ class SharePointOnlineBase(BaseSource):
     ) -> AsyncGenerator[BaseEntity, None]:
         entity_count = 0
         graph_client = self._create_graph_client()
+        label_filter = self._get_label_filter()
 
         sites = await self._discover_sites(graph_client)
 
@@ -669,6 +710,14 @@ class SharePointOnlineBase(BaseSource):
             all_drives = []
             async for drive_data in graph_client.get_drives(site_id):
                 all_drives.append(drive_data)
+
+            # Container-label short-circuit: if the site's backing M365 Group
+            # carries a blocked Purview label, skip the whole site before we
+            # walk any drives.
+            if label_filter is not None:
+                group_id = self._extract_group_id_from_drives(all_drives)
+                if await label_filter.should_skip_site(site_id=site_id, group_id=group_id):
+                    continue
 
             # Fetch site-level permissions from the first drive's root.
             site_access = None
@@ -732,6 +781,12 @@ class SharePointOnlineBase(BaseSource):
                             continue
 
                         if item_data.get("file"):
+                            if label_filter is not None and await label_filter.should_skip_item(
+                                drive_id=drive_id,
+                                item_id=item_data["id"],
+                                item_name=item_data.get("name", ""),
+                            ):
+                                continue
                             try:
                                 permissions = await graph_client.get_item_permissions(
                                     drive_id,
@@ -868,6 +923,7 @@ class SharePointOnlineBase(BaseSource):
 
         changes_processed = 0
         graph_client = self._create_graph_client()
+        label_filter = self._get_label_filter()
 
         for drive_id, token in delta_tokens.items():
             try:
@@ -904,6 +960,12 @@ class SharePointOnlineBase(BaseSource):
                     continue
 
                 if item_data.get("file"):
+                    if label_filter is not None and await label_filter.should_skip_item(
+                        drive_id=drive_id,
+                        item_id=item_id,
+                        item_name=item_data.get("name", ""),
+                    ):
+                        continue
                     try:
                         permissions = await graph_client.get_item_permissions(drive_id, item_id)
                         sp_unique_id = None
@@ -1159,9 +1221,16 @@ class SharePointOnlineBase(BaseSource):
     ) -> AsyncGenerator[BaseEntity, None]:
         """Iterate drive items, build file entities, and yield with batched downloads."""
         pending_files: List[PendingFileDownload] = []
+        label_filter = self._get_label_filter()
 
         async for item_data in item_stream:
             if item_data.get("folder") or not item_data.get("file"):
+                continue
+            if label_filter is not None and await label_filter.should_skip_item(
+                drive_id=drive_id,
+                item_id=item_data["id"],
+                item_name=item_data.get("name", ""),
+            ):
                 continue
             try:
                 permissions = await graph_client.get_item_permissions(drive_id, item_data["id"])
