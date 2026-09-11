@@ -7,7 +7,8 @@ logic lives in ``context_resolver.py``. This module just wires FastAPI
 
 from typing import Any, Callable, Optional
 
-from fastapi import Depends, Header, HTTPException, Request
+from fastapi import Depends, Header, HTTPException, Request, Security
+from fastapi.security import APIKeyHeader
 from fastapi_auth0 import Auth0User
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,6 +31,15 @@ from airweave.domains.users.repository import UserRepository
 _user_repo = UserRepository()
 _api_key_repo = ApiKeyRepository()
 _org_repo = OrganizationRepository()
+
+# Gooclaim: registers X-API-Key/X-Organization-ID as real OpenAPI security
+# schemes (not just plain header params) so Swagger's /docs shows a single
+# "Authorize" button — set both headers once instead of retyping them into
+# every endpoint's "Try it out" form. auto_error=False preserves existing
+# behavior: a missing/invalid key still surfaces as get_context's own 401,
+# not FastAPI's generic security-scheme 403.
+_api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
+_org_id_scheme = APIKeyHeader(name="X-Organization-ID", auto_error=False)
 
 
 def get_container() -> Container:
@@ -89,8 +99,8 @@ def require_org_role(
 async def get_context(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
-    x_organization_id: Optional[str] = Header(None, alias="X-Organization-ID"),
+    x_api_key: Optional[str] = Security(_api_key_scheme),
+    x_organization_id: Optional[str] = Security(_org_id_scheme),
     x_gck_platform_admin: Optional[str] = Header(None, alias="X-Gck-Platform-Admin"),
     x_gck_return_url: Optional[str] = Header(None, alias="X-Gck-Return-Url"),
     x_gck_tenant_name: Optional[str] = Header(None, alias="X-Gck-Tenant-Name"),
