@@ -17,6 +17,7 @@ from airweave.domains.collections.protocols import (
 from airweave.domains.source_connections.protocols import SourceConnectionRepositoryProtocol
 from airweave.domains.sources.protocols import SourceRegistryProtocol
 from airweave.models.collection import Collection
+from airweave.models.source_connection import SourceConnection
 from airweave.schemas.collection import SourceConnectionSummary
 
 
@@ -75,8 +76,34 @@ class CollectionRepository(CollectionRepositoryProtocol):
             return CollectionStatus.ERROR
         return CollectionStatus.NEEDS_SOURCE
 
+    async def _fetch_connections_by_owning_org(
+        self, db: AsyncSession, collections: List[Collection]
+    ) -> List[SourceConnection]:
+        """Fetch source connections for each collection's OWN organization.
+
+        A Public collection can belong to a different org than the caller's
+        (crud_collection.py ORs in is_public on every read path), and source
+        connections live under the collection's owning org, not the viewer's
+        — so each owning org is looked up separately rather than assuming a
+        single ctx.organization.id covers every collection passed in.
+        """
+        readable_ids_by_org: Dict[UUID, List[str]] = {}
+        for c in collections:
+            readable_ids_by_org.setdefault(c.organization_id, []).append(c.readable_id)
+
+        all_connections: List[SourceConnection] = []
+        for org_id, readable_ids in readable_ids_by_org.items():
+            all_connections.extend(
+                await self._sc_repo.get_by_collection_ids(
+                    db,
+                    organization_id=org_id,
+                    readable_collection_ids=readable_ids,
+                )
+            )
+        return all_connections
+
     async def _attach_ephemeral_status(
-        self, db: AsyncSession, collections: List[Collection], ctx: ApiContext
+        self, db: AsyncSession, collections: List[Collection]
     ) -> CollectionListResult:
         """Compute ephemeral status and build source connection summaries."""
         summaries: Dict[str, List[SourceConnectionSummary]] = {}
@@ -84,13 +111,7 @@ class CollectionRepository(CollectionRepositoryProtocol):
         if not collections:
             return CollectionListResult(collections=[])
 
-        collection_ids = [c.readable_id for c in collections]
-
-        all_connections = await self._sc_repo.get_by_collection_ids(
-            db,
-            organization_id=ctx.organization.id,
-            readable_collection_ids=collection_ids,
-        )
+        all_connections = await self._fetch_connections_by_owning_org(db, collections)
 
         if not all_connections:
             for collection in collections:
@@ -133,7 +154,7 @@ class CollectionRepository(CollectionRepositoryProtocol):
         """Get a collection by ID with ephemeral status."""
         collection = await crud.collection.get(db, id, ctx)
         if collection:
-            result = await self._attach_ephemeral_status(db, [collection], ctx)
+            result = await self._attach_ephemeral_status(db, [collection])
             collection = result.collections[0]
         return collection
 
@@ -148,7 +169,7 @@ class CollectionRepository(CollectionRepositoryProtocol):
         except NotFoundException:
             return None
         if collection:
-            result = await self._attach_ephemeral_status(db, [collection], ctx)
+            result = await self._attach_ephemeral_status(db, [collection])
             collection = result.collections[0]
         return collection
 
@@ -165,7 +186,7 @@ class CollectionRepository(CollectionRepositoryProtocol):
         collections = await crud.collection.get_multi(
             db, ctx=ctx, skip=skip, limit=limit, search_query=search_query
         )
-        return await self._attach_ephemeral_status(db, collections, ctx)
+        return await self._attach_ephemeral_status(db, collections)
 
     async def count(
         self, db: AsyncSession, *, ctx: ApiContext, search_query: Optional[str] = None

@@ -203,19 +203,15 @@ def _sc(
     )
 
 
-def _col(readable_id: str) -> Any:
-    return SimpleNamespace(readable_id=readable_id)
-
-
-def _ctx() -> Any:
-    return SimpleNamespace(organization=SimpleNamespace(id=uuid4()))
+def _col(readable_id: str, organization_id: Any = None) -> Any:
+    return SimpleNamespace(readable_id=readable_id, organization_id=organization_id or uuid4())
 
 
 @pytest.mark.asyncio
 class TestAttachEphemeralStatus:
     async def test_empty_collections_returns_empty(self):
         repo = _repo()
-        result = await repo._attach_ephemeral_status(None, [], _ctx())
+        result = await repo._attach_ephemeral_status(None, [])
         assert isinstance(result, CollectionListResult)
         assert result.collections == []
         assert result.summaries_by_collection == {}
@@ -224,7 +220,7 @@ class TestAttachEphemeralStatus:
         repo = _repo()
         col = _col("test-col")
 
-        result = await repo._attach_ephemeral_status(None, [col], _ctx())
+        result = await repo._attach_ephemeral_status(None, [col])
         assert len(result.collections) == 1
         assert result.collections[0].status == CollectionStatus.NEEDS_SOURCE
         assert result.summaries_by_collection == {}
@@ -239,7 +235,7 @@ class TestAttachEphemeralStatus:
 
         col = _col("my-col")
 
-        result = await repo._attach_ephemeral_status(None, [col], _ctx())
+        result = await repo._attach_ephemeral_status(None, [col])
 
         assert len(result.collections) == 1
         assert result.collections[0].status == CollectionStatus.ACTIVE
@@ -256,7 +252,7 @@ class TestAttachEphemeralStatus:
 
         col = _col("slack-col")
 
-        result = await repo._attach_ephemeral_status(None, [col], _ctx())
+        result = await repo._attach_ephemeral_status(None, [col])
 
         assert result.collections[0].status == CollectionStatus.ACTIVE
         assert result.summaries_by_collection == {
@@ -275,12 +271,46 @@ class TestAttachEphemeralStatus:
 
         col = _col("my-col")
 
-        result = await repo._attach_ephemeral_status(None, [col], _ctx())
+        result = await repo._attach_ephemeral_status(None, [col])
 
         assert result.collections[0].status == CollectionStatus.ACTIVE
         assert len(result.summaries_by_collection["my-col"]) == 2
         short_names = {s.short_name for s in result.summaries_by_collection["my-col"]}
         assert short_names == {"github", "slack"}
+
+    async def test_public_collection_from_other_org_gets_real_status(self):
+        """A Public collection viewed by a different org resolves its real status.
+
+        A Public collection viewed by a different org must still resolve its
+        real status from its OWNING org's source connections, not the viewer's.
+        Regression test for the bug found 2026-09-11: a Public collection
+        showed "Needs Source" to every other tenant regardless of its actual
+        state, because the lookup was scoped to the viewer's organization_id
+        instead of the collection's own.
+        """
+        owner_org = uuid4()
+        viewer_org = uuid4()
+
+        sc = _sc(readable_collection_id="public-col", short_name="github", name="GitHub")
+        sc_repo = FakeSourceConnectionRepository()
+        sc_repo.seed(sc.id, sc)
+        sc_repo.seed_last_jobs({sc.id: {"status": "completed"}})
+        repo = _repo({"github": False}, sc_repo=sc_repo)
+
+        # Simulates crud_collection.py's OR-in-is_public: the viewer's own
+        # (empty) collection plus a Public one owned by a different org.
+        viewer_col = _col("viewer-col", organization_id=viewer_org)
+        public_col = _col("public-col", organization_id=owner_org)
+
+        result = await repo._attach_ephemeral_status(None, [viewer_col, public_col])
+
+        by_readable_id = {c.readable_id: c for c in result.collections}
+        assert by_readable_id["viewer-col"].status == CollectionStatus.NEEDS_SOURCE
+        assert by_readable_id["public-col"].status == CollectionStatus.ACTIVE
+
+        get_calls = [c for c in sc_repo._calls if c[0] == "get_by_collection_ids"]
+        queried_orgs = {c[2] for c in get_calls}
+        assert queried_orgs == {viewer_org, owner_org}
 
 
 # ---------------------------------------------------------------------------
