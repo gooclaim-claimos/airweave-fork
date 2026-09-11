@@ -7,9 +7,17 @@ json_schema response_format directly.
 For tool-calling conversations (chat), translates between the
 provider-generic OpenAI-compatible message format and Anthropic's native
 tool_use/tool_result content block format.
+
+Gooclaim patch: supports routing through the LLM gateway (LiteLLM) via
+ANTHROPIC_BASE_URL, mirroring the embedder's OPENAI_BASE_URL pattern
+(domains/embedders/dense/openai.py). Point it at LiteLLM's Anthropic-
+compatible passthrough (e.g. http://<gateway>/anthropic) — the response
+shape matches Anthropic's native API exactly, so no other code here
+needs to change.
 """
 
 import json
+import os
 import time
 from typing import Any, TypeVar
 
@@ -45,8 +53,18 @@ class AnthropicLLM(BaseLLM):
                 "ANTHROPIC_API_KEY not configured. Set it in your environment or .env file."
             )
 
+        # Gooclaim patch: honor ANTHROPIC_BASE_URL for LLM-gateway routing.
+        # Must resolve to a real URL, never None — passing base_url=None
+        # would make the SDK fall back to re-reading the raw environment
+        # itself, and a present-but-empty ANTHROPIC_BASE_URL would then
+        # silently win over this line the same way OPENAI_BASE_URL did
+        # for the embedder (see that file's own comment + T194, confirmed
+        # live 2026-09-10). Resolve to the real default explicitly instead.
+        base_url = os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
         try:
-            self._client = AsyncAnthropic(api_key=api_key, timeout=self.DEFAULT_TIMEOUT)
+            self._client = AsyncAnthropic(
+                api_key=api_key, base_url=base_url, timeout=self.DEFAULT_TIMEOUT
+            )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize Anthropic client: {e}") from e
 

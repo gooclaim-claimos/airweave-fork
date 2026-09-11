@@ -75,6 +75,40 @@ def anthropic_llm():
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# ANTHROPIC_BASE_URL routing (Gooclaim patch — LLM gateway support)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def test_defaults_to_real_anthropic_when_base_url_unset(monkeypatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+    with patch("airweave.adapters.llm.anthropic.settings") as mock_settings:
+        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        llm = AnthropicLLM(model_spec=_make_spec(), max_retries=0)
+    assert str(llm._client.base_url) == "https://api.anthropic.com"
+
+
+def test_honors_anthropic_base_url_for_gateway_routing(monkeypatch) -> None:
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "http://litellm.internal:4000/anthropic")
+    with patch("airweave.adapters.llm.anthropic.settings") as mock_settings:
+        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        llm = AnthropicLLM(model_spec=_make_spec(), max_retries=0)
+    assert str(llm._client.base_url) == "http://litellm.internal:4000/anthropic/"
+
+
+def test_present_but_empty_base_url_falls_back_to_real_anthropic(monkeypatch) -> None:
+    """A present-but-empty env var must not crash the client.
+
+    Same gotcha the embedder's OPENAI_BASE_URL handling guards against
+    (confirmed live 2026-09-10, T194).
+    """
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "")
+    with patch("airweave.adapters.llm.anthropic.settings") as mock_settings:
+        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        llm = AnthropicLLM(model_spec=_make_spec(), max_retries=0)
+    assert str(llm._client.base_url) == "https://api.anthropic.com"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # structured_output tests
 # ═══════════════════════════════════════════════════════════════════════════
 
