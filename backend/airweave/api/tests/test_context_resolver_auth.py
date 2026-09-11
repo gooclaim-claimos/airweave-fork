@@ -94,6 +94,44 @@ class TestAuthDispatch:
             )
         assert exc.value.status_code == 401
 
+    @pytest.mark.asyncio
+    @patch("airweave.api.context_resolver.settings")
+    async def test_api_key_checked_even_when_auth_disabled(self, mock_settings):
+        """A presented X-API-Key is validated for real regardless of AUTH_ENABLED.
+
+        Previously AUTH_ENABLED=false short-circuited straight to SYSTEM
+        auth before x_api_key was even looked at, silently trusting any
+        caller (real key, wrong key, or none at all).
+        """
+        mock_settings.AUTH_ENABLED = False
+        resolver = _make_resolver()
+
+        with patch.object(resolver, "_authenticate_api_key", new_callable=AsyncMock) as mock_api:
+            mock_api.return_value = AuthResult(
+                method=AuthMethod.API_KEY, api_key_org_id=str(ORG_ID),
+            )
+            result = await resolver._authenticate(
+                db=AsyncMock(), auth0_user=None, x_api_key="mcp-key", request=MagicMock(),
+            )
+            mock_api.assert_called_once()
+            assert result.method == AuthMethod.API_KEY
+
+    @pytest.mark.asyncio
+    @patch("airweave.api.context_resolver.settings")
+    async def test_no_api_key_still_falls_back_to_system_when_auth_disabled(self, mock_settings):
+        """No credential presented at all — unchanged nginx-trusted-header path."""
+        mock_settings.AUTH_ENABLED = False
+        mock_settings.FIRST_SUPERUSER = "admin@test.com"
+        resolver = _make_resolver()
+
+        with patch.object(resolver, "_authenticate_system", new_callable=AsyncMock) as mock_sys:
+            mock_sys.return_value = AuthResult(method=AuthMethod.SYSTEM)
+            result = await resolver._authenticate(
+                db=AsyncMock(), auth0_user=None, x_api_key=None, request=MagicMock(),
+            )
+            mock_sys.assert_called_once()
+            assert result.method == AuthMethod.SYSTEM
+
 
 class TestAuth0CacheIntegration:
     """Verify Auth0 auth uses the cache correctly."""
