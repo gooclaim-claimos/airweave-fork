@@ -71,16 +71,23 @@ class CRUDSourceConnection(
         *,
         ctx: BaseContext,
         collection_id: Optional[str] = None,
+        organization_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """Get source connections with all necessary stats in minimal queries.
 
         Returns list of dictionaries with complete data for the list endpoint.
+
+        ``organization_id`` overrides ``ctx.organization.id`` as the scoping
+        org — needed when listing connections for a Public collection owned
+        by a different org than the caller's (see collections/repository.py's
+        ``_fetch_connections_by_owning_org`` for the equivalent fix on the
+        collection-status path).
         """
         # 1. Get base source connections
         query = select(SourceConnection).where(
-            SourceConnection.organization_id == ctx.organization.id
+            SourceConnection.organization_id == (organization_id or ctx.organization.id)
         )
 
         if collection_id:

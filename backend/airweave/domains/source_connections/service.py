@@ -99,8 +99,25 @@ class SourceConnectionService(SourceConnectionServiceProtocol):
         limit: int = 100,
     ) -> List[SourceConnectionListItem]:
         """List source connections with complete stats."""
+        # A Public collection can belong to a different org than the caller's
+        # (crud_collection.py ORs in is_public on every read) — its source
+        # connections live under ITS org, not the viewer's, so resolve the
+        # collection's real organization_id before scoping the query.
+        organization_id: Optional[UUID] = None
+        if readable_collection_id is not None:
+            collection = await self.collection_repo.get_by_readable_id(
+                db, readable_collection_id, ctx
+            )
+            if collection is not None:
+                organization_id = collection.organization_id
+
         connections_with_stats = await self.sc_repo.get_multi_with_stats(
-            db, ctx=ctx, collection_id=readable_collection_id, skip=skip, limit=limit
+            db,
+            ctx=ctx,
+            collection_id=readable_collection_id,
+            organization_id=organization_id,
+            skip=skip,
+            limit=limit,
         )
 
         result = []

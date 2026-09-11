@@ -67,12 +67,18 @@ class SourceConnectionRepository(SourceConnectionRepositoryProtocol):
         *,
         ctx: ApiContext,
         collection_id: Optional[str] = None,
+        organization_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[SourceConnectionStats]:
         """Get source connections with complete stats."""
         stat_rows = await crud.source_connection.get_multi_with_stats(
-            db, ctx=ctx, collection_id=collection_id, skip=skip, limit=limit
+            db,
+            ctx=ctx,
+            collection_id=collection_id,
+            organization_id=organization_id,
+            skip=skip,
+            limit=limit,
         )
         for row in stat_rows:
             try:

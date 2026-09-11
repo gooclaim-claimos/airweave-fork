@@ -89,10 +89,11 @@ def _make_stats(
 def _build_service(
     sc_repo: Optional[FakeSourceConnectionRepository] = None,
     redirect_session_repo: Optional[FakeOAuthRedirectSessionRepository] = None,
+    collection_repo: Optional[FakeCollectionRepository] = None,
 ) -> SourceConnectionService:
     return SourceConnectionService(
         sc_repo=sc_repo or FakeSourceConnectionRepository(),
-        collection_repo=FakeCollectionRepository(),
+        collection_repo=collection_repo or FakeCollectionRepository(),
         connection_repo=FakeConnectionRepository(),
         redirect_session_repo=redirect_session_repo or FakeOAuthRedirectSessionRepository(),
         source_registry=FakeSourceRegistry(),
@@ -124,6 +125,33 @@ async def _list_single(stats: SourceConnectionStats) -> SourceConnectionListItem
 async def test_empty_repo_returns_empty_list():
     svc = _build_service()
     assert await svc.list(AsyncMock(), ctx=_make_ctx()) == []
+
+
+async def test_list_for_public_collection_scopes_by_owning_org():
+    """A Public collection's source connections are queried under its own org.
+
+    Must be queried under the collection's OWN org, not the caller's —
+    regression test for the bug found 2026-09-11 where a Public
+    collection's detail page always showed "no sources yet" for every
+    other tenant.
+    """
+    owner_org = uuid4()
+    collection = MagicMock()
+    collection.organization_id = owner_org
+
+    collection_repo = FakeCollectionRepository()
+    collection_repo.seed_readable("public-col", collection)
+
+    sc_repo = FakeSourceConnectionRepository()
+    svc = _build_service(sc_repo=sc_repo, collection_repo=collection_repo)
+
+    await svc.list(AsyncMock(), ctx=_make_ctx(), readable_collection_id="public-col")
+
+    calls = [c for c in sc_repo._calls if c[0] == "get_multi_with_stats"]
+    assert len(calls) == 1
+    queried_organization_id = calls[0][4]
+    assert queried_organization_id == owner_org
+    assert queried_organization_id != ORG_ID
 
 
 async def test_maps_all_fields():

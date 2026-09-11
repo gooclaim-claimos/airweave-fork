@@ -64,6 +64,7 @@ class SourceConnectionRepositoryProtocol(Protocol):
         *,
         ctx: ApiContext,
         collection_id: Optional[str] = None,
+        organization_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[SourceConnectionStats]:

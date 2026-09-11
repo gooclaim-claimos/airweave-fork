@@ -105,11 +105,14 @@ class FakeSourceConnectionRepository(SourceConnectionRepositoryProtocol):
         *,
         ctx: ApiContext,
         collection_id: Optional[str] = None,
+        organization_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 100,
     ) -> List[SourceConnectionStats]:
         """Return seeded stats filtered by collection_id."""
-        self._calls.append(("get_multi_with_stats", db, ctx, collection_id, skip, limit))
+        self._calls.append(
+            ("get_multi_with_stats", db, ctx, collection_id, organization_id, skip, limit)
+        )
         stats = self._stats
         if collection_id is not None:
             stats = [s for s in stats if s.readable_collection_id == collection_id]
