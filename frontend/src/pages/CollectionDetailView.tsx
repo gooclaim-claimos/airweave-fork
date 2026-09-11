@@ -260,6 +260,15 @@ const Collections = () => {
     // same gate the backend enforces (PATCH .../visibility, 403 otherwise).
     // A regular tenant session (Portal) never sees the control at all.
     const canToggleVisibility = IS_GOOCLAIM_TENANT && user?.is_platform_admin;
+    // Gooclaim: true when viewing a Public collection owned by a different
+    // org — its source connections' owner-only detail/credential endpoints
+    // (auth secrets) aren't ours to call, so the UI renders read-only from
+    // the already-public list summary instead of treating a 403/404 there
+    // as a broken/expired connection.
+    const currentOrganizationId = useOrganizationStore(state => state.currentOrganization?.id);
+    const isForeignCollection = !!(
+        collection && currentOrganizationId && collection.organization_id !== currentOrganizationId
+    );
 
     // Source connection state
     const [sourceConnections, setSourceConnections] = useState<SourceConnection[]>([]);
@@ -299,7 +308,7 @@ const Collections = () => {
      ********************************************/
 
     // Fetch source connections for a collection with detailed sync job status
-    const fetchSourceConnections = async (collectionId: string) => {
+    const fetchSourceConnections = async (collectionId: string, collectionOverride?: Collection) => {
         try {
             console.log("Fetching source connections for collection:", collectionId);
             const response = await apiClient.get(`/source-connections/?collection=${collectionId}`);
@@ -308,9 +317,36 @@ const Collections = () => {
                 const listData = await response.json();
                 console.log("Loaded source connection list:", listData);
 
+                // Gooclaim: a Public collection owned by a different org — its
+                // connections' owner-only detail endpoint (auth/credential
+                // internals) isn't ours to call. Use collectionOverride since
+                // the `collection` state var may not have committed yet on the
+                // very first load (called right after setCollection above).
+                const activeCollection = collectionOverride ?? collection;
+                const isForeign = !!(
+                    activeCollection &&
+                    currentOrganizationId &&
+                    activeCollection.organization_id !== currentOrganizationId
+                );
+
                 // Fetch detailed data for each connection to get sync job status
                 const detailedConnections = await Promise.all(
                     listData.map(async (connection: any) => {
+                        if (isForeign) {
+                            // Read-only summary card, built from the already-public
+                            // list fields — no owner-only detail/credential fetch.
+                            return {
+                                ...connection,
+                                auth: {
+                                    method: connection.auth_method,
+                                    authenticated: connection.is_authenticated,
+                                },
+                                entities: {
+                                    total_entities: connection.entity_count ?? 0,
+                                    by_type: {},
+                                },
+                            };
+                        }
                         try {
                             const detailResponse = await apiClient.get(`/source-connections/${connection.id}`);
                             if (detailResponse.ok) {
@@ -378,7 +414,8 @@ const Collections = () => {
                 const data = await response.json();
                 setCollection(data);
                 // After successful collection fetch, fetch source connections
-                fetchSourceConnections(data.readable_id);
+                // (pass data directly — collection state won't have committed yet)
+                fetchSourceConnections(data.readable_id, data);
             } else {
                 if (response.status === 404) {
                     setError("Collection not found");
@@ -1085,17 +1122,17 @@ const Collections = () => {
                                                     DESIGN_SYSTEM.radius.button,
                                                     DESIGN_SYSTEM.transitions.standard,
                                                     "border border-dashed",
-                                                    (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage)
+                                                    (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection)
                                                         ? "opacity-50 cursor-not-allowed border-gray-300 dark:border-gray-700"
                                                         : isDark
                                                             ? "border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/15 hover:border-blue-400/40"
                                                             : "border-blue-400/40 bg-blue-50/30 hover:bg-blue-50/70 hover:border-blue-400/50"
                                                 )}
-                                                onClick={(!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage) ? undefined : handleAddSource}
+                                                onClick={(!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection) ? undefined : handleAddSource}
                                             >
                                                 <Plus className={cn(
                                                     DESIGN_SYSTEM.icons.large,
-                                                    (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage)
+                                                    (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection)
                                                         ? "text-gray-400"
                                                         : isDark ? "text-blue-400" : "text-blue-500"
                                                 )} strokeWidth={1.5} />
@@ -1106,7 +1143,14 @@ const Collections = () => {
                                                 )}>Add Source</span>
                                             </div>
                                         </TooltipTrigger>
-                                        {(!entitiesAllowed || !sourceConnectionsAllowed) && (
+                                        {isForeignCollection && (
+                                            <TooltipContent className="max-w-xs">
+                                                <p className={DESIGN_SYSTEM.typography.sizes.body}>
+                                                    This Public collection belongs to another organization — view only.
+                                                </p>
+                                            </TooltipContent>
+                                        )}
+                                        {!isForeignCollection && (!entitiesAllowed || !sourceConnectionsAllowed) && (
                                             <TooltipContent className="max-w-xs">
                                                 <p className={DESIGN_SYSTEM.typography.sizes.body}>
                                                     {(!entitiesAllowed && entitiesCheckDetails?.reason === 'usage_limit_exceeded') && (
@@ -1186,21 +1230,28 @@ const Collections = () => {
                                                         "rounded-md",
                                                         "transition-all duration-200",
                                                         "border",
-                                                        (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage)
+                                                        (!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection)
                                                             ? "opacity-50 cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400"
                                                             : isDark
                                                                 ? "border-blue-500 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:border-blue-400"
                                                                 : "border-blue-500 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:border-blue-600"
                                                     )}
-                                                    onClick={(!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage) ? undefined : handleAddSource}
-                                                    disabled={!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage}
+                                                    onClick={(!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection) ? undefined : handleAddSource}
+                                                    disabled={!sourceConnectionsAllowed || !entitiesAllowed || isCheckingUsage || isForeignCollection}
                                                 >
                                                     <Plus className="h-4 w-4 mr-1.5" strokeWidth={2} />
                                                     Connect a source
                                                 </button>
                                             </span>
                                         </TooltipTrigger>
-                                        {(!entitiesAllowed || !sourceConnectionsAllowed) && (
+                                        {isForeignCollection && (
+                                            <TooltipContent className="max-w-xs">
+                                                <p className={DESIGN_SYSTEM.typography.sizes.body}>
+                                                    This Public collection belongs to another organization — view only.
+                                                </p>
+                                            </TooltipContent>
+                                        )}
+                                        {!isForeignCollection && (!entitiesAllowed || !sourceConnectionsAllowed) && (
                                             <TooltipContent className="max-w-xs">
                                                 <p className={DESIGN_SYSTEM.typography.sizes.body}>
                                                     {(!entitiesAllowed && entitiesCheckDetails?.reason === 'usage_limit_exceeded') && (
@@ -1259,6 +1310,7 @@ const Collections = () => {
                                 sourceConnectionData={selectedConnection}
                                 collectionId={collection?.readable_id}
                                 collectionName={collection?.name}
+                                readOnly={isForeignCollection}
                                 onConnectionDeleted={() => {
                                     // Clear selection and reload connections
                                     setSelectedConnection(null);

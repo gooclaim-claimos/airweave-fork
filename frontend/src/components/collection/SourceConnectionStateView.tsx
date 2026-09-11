@@ -41,6 +41,11 @@ interface Props {
   onConnectionUpdated?: () => void;  // Callback to refresh data in parent
   collectionId?: string;  // Collection ID for opening add source flow
   collectionName?: string;  // Collection name for opening add source flow
+  // Gooclaim: true when viewing a Public collection owned by a different
+  // org — the owner-only detail/credential endpoints aren't ours to call,
+  // so hide the mutating controls (sync trigger, settings/delete) and show
+  // status only, built from the already-public list summary.
+  readOnly?: boolean;
 }
 
 const SourceConnectionStateView: React.FC<Props> = ({
@@ -49,7 +54,8 @@ const SourceConnectionStateView: React.FC<Props> = ({
   onConnectionDeleted,
   onConnectionUpdated,
   collectionId,
-  collectionName
+  collectionName,
+  readOnly = false
 }) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [sourceConnection, setSourceConnection] = useState<SourceConnection | null>(sourceConnectionData || null);
@@ -750,7 +756,8 @@ const SourceConnectionStateView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Settings and Action Buttons */}
+          {/* Settings and Action Buttons - hidden in read-only (foreign Public collection) mode */}
+          {!readOnly && (
           <div className="flex gap-1.5 items-center">
             {/* Refresh/Cancel Button - Hide for federated sources */}
             {!isFederatedSource && (
@@ -840,14 +847,15 @@ const SourceConnectionStateView: React.FC<Props> = ({
               </div>
             )}
           </div>
+          )}
         </div>
       )}
 
       {/* Only show sync-related UI when authenticated */}
       {!isNotAuthorized && (
         <>
-          {/* Show credential error view for needs_reauth status */}
-          {!isFederatedSource && sourceConnection?.status === 'needs_reauth' && sourceConnection?.error_category && (
+          {/* Show credential error view for needs_reauth status (owner only — re-auth isn't ours to trigger cross-org) */}
+          {!readOnly && !isFederatedSource && sourceConnection?.status === 'needs_reauth' && sourceConnection?.error_category && (
             <CredentialErrorView
               sourceConnection={sourceConnection}
               onRefreshAuthUrl={handleRefreshAuthUrl}
@@ -892,7 +900,7 @@ const SourceConnectionStateView: React.FC<Props> = ({
               state={storeConnection}  // Pass store connection for real-time updates
               sourceShortName={sourceConnection?.short_name || ''}
               isDark={isDark}
-              onStartSync={handleRunSync}
+              onStartSync={readOnly ? () => {} : handleRunSync}
               isRunning={isRunning}
               isPending={isPending}
               entityStates={sourceConnection?.entities ?
