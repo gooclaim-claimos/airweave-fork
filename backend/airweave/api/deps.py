@@ -38,8 +38,12 @@ _org_repo = OrganizationRepository()
 # every endpoint's "Try it out" form. auto_error=False preserves existing
 # behavior: a missing/invalid key still surfaces as get_context's own 401,
 # not FastAPI's generic security-scheme 403.
-_api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
-_org_id_scheme = APIKeyHeader(name="X-Organization-ID", auto_error=False)
+_api_key_scheme = APIKeyHeader(
+    name="X-API-Key", scheme_name="ApiKeyAuth", auto_error=False
+)
+_org_id_scheme = APIKeyHeader(
+    name="X-Organization-ID", scheme_name="OrganizationIdAuth", auto_error=False
+)
 
 
 def get_container() -> Container:
