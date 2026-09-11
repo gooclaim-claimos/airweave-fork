@@ -248,6 +248,7 @@ class FakeApiKeyRepository:
             id=uuid4(),
             organization_id=organization_id,
             created_by_email=extra.get("created_by_email", "test@test.com"),
+            is_master=extra.get("is_master", False),
         )
 
     async def get_by_key(self, db: AsyncSession, *, key: str):

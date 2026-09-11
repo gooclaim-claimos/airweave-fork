@@ -379,6 +379,14 @@ class ContextResolver:
 
         elif auth.method == AuthMethod.API_KEY and x_api_key:
             api_key_obj = await self._api_keys.get_by_key(db, key=x_api_key)
+            # Gooclaim: a Master key (see migration 0002) may act on behalf
+            # of ANY organization — trusted internal services (e.g.
+            # gooclaim-datasources-mcp) serve many tenants through one
+            # credential instead of a key per tenant. The caller still
+            # supplies X-Organization-ID per request; only the strict
+            # own-org-match check below is skipped.
+            if getattr(api_key_obj, "is_master", False):
+                return
             if str(api_key_obj.organization_id) != organization_id:
                 raise HTTPException(
                     status_code=403,

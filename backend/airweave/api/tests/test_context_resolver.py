@@ -11,7 +11,7 @@ that can be tested without a database:
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -294,5 +294,57 @@ class TestValidateOrganizationAccess:
         with pytest.raises(HTTPException) as exc_info:
             await resolver._validate_organization_access(
                 db=MagicMock(), organization_id=str(target_org), auth=auth, x_api_key=None
+            )
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_api_key_matching_org_succeeds(self):
+        resolver = _make_resolver()
+        resolver._api_keys.get_by_key = AsyncMock(
+            return_value=SimpleNamespace(organization_id=ORG_ID, is_master=False)
+        )
+        auth = AuthResult(method=AuthMethod.API_KEY, api_key_org_id=str(ORG_ID))
+        await resolver._validate_organization_access(
+            db=MagicMock(), organization_id=str(ORG_ID), auth=auth, x_api_key="sk-test"
+        )
+
+    @pytest.mark.asyncio
+    async def test_api_key_wrong_org_raises_403(self):
+        """A regular (non-master) key stays strictly bound to its own org."""
+        resolver = _make_resolver()
+        other_org = uuid4()
+        resolver._api_keys.get_by_key = AsyncMock(
+            return_value=SimpleNamespace(organization_id=other_org, is_master=False)
+        )
+        auth = AuthResult(method=AuthMethod.API_KEY, api_key_org_id=str(other_org))
+        with pytest.raises(HTTPException) as exc_info:
+            await resolver._validate_organization_access(
+                db=MagicMock(), organization_id=str(ORG_ID), auth=auth, x_api_key="sk-test"
+            )
+        assert exc_info.value.status_code == 403
+
+    @pytest.mark.asyncio
+    async def test_master_api_key_any_org_succeeds(self):
+        """A Master key (migration 0002) may act on behalf of any org."""
+        resolver = _make_resolver()
+        master_key_own_org = uuid4()
+        target_org = uuid4()
+        resolver._api_keys.get_by_key = AsyncMock(
+            return_value=SimpleNamespace(organization_id=master_key_own_org, is_master=True)
+        )
+        auth = AuthResult(method=AuthMethod.API_KEY, api_key_org_id=str(master_key_own_org))
+        # No exception even though target_org != the master key's own org.
+        await resolver._validate_organization_access(
+            db=MagicMock(), organization_id=str(target_org), auth=auth, x_api_key="sk-master"
+        )
+
+    @pytest.mark.asyncio
+    async def test_api_key_without_header_raises_401(self):
+        """API_KEY auth method but no x_api_key forwarded — falls to the else branch."""
+        resolver = _make_resolver()
+        auth = AuthResult(method=AuthMethod.API_KEY, api_key_org_id=str(ORG_ID))
+        with pytest.raises(HTTPException) as exc_info:
+            await resolver._validate_organization_access(
+                db=MagicMock(), organization_id=str(ORG_ID), auth=auth, x_api_key=None
             )
         assert exc_info.value.status_code == 401
