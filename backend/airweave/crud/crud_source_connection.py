@@ -3,12 +3,14 @@
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from airweave.core.context import BaseContext
+from airweave.core.exceptions import NotFoundException
 from airweave.core.shared_models import SourceConnectionStatus, SyncJobStatus
+from airweave.models.collection import Collection
 from airweave.models.connection import Connection
 from airweave.models.source_connection import SourceConnection
 from airweave.models.sync import Sync
@@ -31,6 +33,46 @@ class CRUDSourceConnection(
     - Clean separation of concerns
     - No exposure of internal sync/job IDs
     """
+
+    async def get(
+        self,
+        db: AsyncSession,
+        id: UUID,
+        ctx: BaseContext,
+    ) -> SourceConnection:
+        """Get a source connection by ID — own-org, OR any org if its collection is Public.
+
+        Gooclaim: mirrors crud_collection.py's own-org-OR-public override.
+        Without this, a Public collection's connections are listable
+        cross-org (get_multi_with_stats is already public-aware) but the
+        detail fetch for one of them would 404, since the base class's
+        get() hard-filters SourceConnection.organization_id ==
+        ctx.organization.id at the SQL level — that 404 read as "expired
+        auth" on the frontend.
+        """
+        query = (
+            select(SourceConnection)
+            .join(
+                Collection,
+                Collection.readable_id == SourceConnection.readable_collection_id,
+            )
+            .where(
+                SourceConnection.id == id,
+                or_(
+                    SourceConnection.organization_id == ctx.organization.id,
+                    Collection.is_public.is_(True),
+                ),
+            )
+        )
+        result = await db.execute(query)
+        db_obj = result.unique().scalar_one_or_none()
+        if db_obj is None:
+            raise NotFoundException(f"{self.model.__name__} not found")
+
+        if db_obj.organization_id == ctx.organization.id:
+            await self._validate_organization_access(ctx, db_obj.organization_id)
+
+        return db_obj
 
     async def get_with_relations(
         self,
