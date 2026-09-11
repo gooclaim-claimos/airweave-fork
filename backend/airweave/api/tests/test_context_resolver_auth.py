@@ -52,19 +52,28 @@ class TestAuthDispatch:
 
     @pytest.mark.asyncio
     @patch("airweave.api.context_resolver.settings")
-    async def test_auth0_user_takes_priority_over_api_key(self, mock_settings):
+    async def test_api_key_takes_priority_over_auth0_user(self, mock_settings):
+        """x_api_key must win over auth0_user, not the other way round.
+
+        AUTH_ENABLED=false's MockAuth0 (airweave/api/auth.py) unconditionally
+        returns a truthy stub Auth0User — if auth0_user were checked first,
+        that stub would always win and a real X-API-Key would never be
+        reached. Checking x_api_key first avoids the mock entirely.
+        """
         mock_settings.AUTH_ENABLED = True
         resolver = _make_resolver()
 
         auth0_user = MagicMock(email="user@test.com", id="auth0|123")
 
-        with patch.object(resolver, "_authenticate_auth0", new_callable=AsyncMock) as mock_auth0:
-            mock_auth0.return_value = AuthResult(method=AuthMethod.AUTH0)
+        with patch.object(resolver, "_authenticate_api_key", new_callable=AsyncMock) as mock_api:
+            mock_api.return_value = AuthResult(
+                method=AuthMethod.API_KEY, api_key_org_id=str(ORG_ID),
+            )
             result = await resolver._authenticate(
                 db=AsyncMock(), auth0_user=auth0_user, x_api_key="some-key", request=MagicMock(),
             )
-            mock_auth0.assert_called_once()
-            assert result.method == AuthMethod.AUTH0
+            mock_api.assert_called_once()
+            assert result.method == AuthMethod.API_KEY
 
     @pytest.mark.asyncio
     @patch("airweave.api.context_resolver.settings")
@@ -112,6 +121,37 @@ class TestAuthDispatch:
             )
             result = await resolver._authenticate(
                 db=AsyncMock(), auth0_user=None, x_api_key="mcp-key", request=MagicMock(),
+            )
+            mock_api.assert_called_once()
+            assert result.method == AuthMethod.API_KEY
+
+    @pytest.mark.asyncio
+    @patch("airweave.api.context_resolver.settings")
+    async def test_api_key_used_over_mock_auth0_stub_when_auth_disabled(self, mock_settings):
+        """The exact real-world scenario that broke live on the EC2 box.
+
+        AUTH_ENABLED=false's MockAuth0 stub is present (FastAPI always
+        calls the auth0_user dependency) alongside a real X-API-Key from a
+        trusted caller — the key must win, or the caller is silently
+        routed into the stub's dead-end auth0 lookup instead of ever
+        having its real credential checked. A first fix put auth0_user
+        first "to preserve precedence" and every API-key request 401'd
+        this exact way.
+        """
+        mock_settings.AUTH_ENABLED = False
+        resolver = _make_resolver()
+
+        mock_auth0_stub = MagicMock(email="admin@example.com", id="mock-user-id")
+
+        with patch.object(resolver, "_authenticate_api_key", new_callable=AsyncMock) as mock_api:
+            mock_api.return_value = AuthResult(
+                method=AuthMethod.API_KEY, api_key_org_id=str(ORG_ID),
+            )
+            result = await resolver._authenticate(
+                db=AsyncMock(),
+                auth0_user=mock_auth0_stub,
+                x_api_key="mcp-key",
+                request=MagicMock(),
             )
             mock_api.assert_called_once()
             assert result.method == AuthMethod.API_KEY

@@ -136,24 +136,29 @@ class ContextResolver:
         x_api_key: Optional[str],
         request: Request,
     ) -> AuthResult:
-        # Gooclaim: a presented X-API-Key is now ALWAYS validated for real —
-        # checked before the AUTH_ENABLED short-circuit below (still after
-        # Auth0, preserving the original auth0 > api_key precedence when a
-        # caller somehow presents both). AUTH_ENABLED=true requires full
-        # Auth0 config (see Settings' validator) which this deployment
-        # deliberately never set up (own auth system, not Auth0) — so it
-        # must stay false, which used to mean the API_KEY branch was
-        # unreachable dead code and ANY caller (real key, wrong key, or no
-        # key at all) was silently trusted as SYSTEM. A trusted internal
-        # caller (e.g. gooclaim-datasources-mcp) now gets its key checked
-        # against the DB regardless of AUTH_ENABLED; only a request with NO
-        # key at all still falls back to the SYSTEM/nginx-trusted-header path.
-        if auth0_user:
-            return await self._authenticate_auth0(db, auth0_user)
+        # Gooclaim: a presented X-API-Key is now ALWAYS checked before the
+        # AUTH_ENABLED short-circuit — checked before auth0_user too, not
+        # after. When AUTH_ENABLED=false (this deployment's permanent
+        # state — AUTH_ENABLED=true requires full Auth0 config this
+        # deployment never set up), `airweave/api/auth.py`'s MockAuth0
+        # unconditionally returns a truthy stub Auth0User bound to
+        # FIRST_SUPERUSER's email — it exists specifically to be bypassed
+        # by short-circuiting to SYSTEM before it's ever inspected.
+        # Checking auth0_user before x_api_key (as this used to) makes the
+        # mock win every time in AUTH_ENABLED=false mode, so a trusted
+        # caller's real X-API-Key was never even reached; confirmed live
+        # (a first attempt at this fix put auth0_user first "to preserve
+        # precedence" and every API-key request 401'd via the mock's own
+        # dead-end auth0 lookup instead). x_api_key first avoids the mock
+        # entirely; a request with no key falls through to the ORIGINAL
+        # `not AUTH_ENABLED -> SYSTEM` short-circuit unchanged, so the
+        # mock is still never reached under AUTH_ENABLED=false either way.
         if x_api_key:
             return await self._authenticate_api_key(db, x_api_key, request)
         if not settings.AUTH_ENABLED:
             return await self._authenticate_system(db)
+        if auth0_user:
+            return await self._authenticate_auth0(db, auth0_user)
         raise HTTPException(status_code=401, detail="No valid authentication provided")
 
     async def _authenticate_system(self, db: AsyncSession) -> AuthResult:
