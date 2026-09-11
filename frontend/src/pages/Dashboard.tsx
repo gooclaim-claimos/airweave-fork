@@ -10,6 +10,7 @@ import {
   ExampleProjectCard,
   RequestConnectorButton,
 } from "@/components/dashboard";
+import { IS_GOOCLAIM_TENANT } from "@/config/env";
 import { getStoredErrorDetails } from "@/lib/error-utils";
 import { useCollectionCreationStore } from "@/stores/collectionCreationStore";
 import { useCollectionsStore, useSourcesStore } from "@/lib/stores";
@@ -230,8 +231,9 @@ const Dashboard = () => {
 
         {/* Right Column */}
         <div className="md:col-span-1 space-y-6">
-          {/* API Key Card */}
-          <ApiKeyCard />
+          {/* API Key Card — Gooclaim mode uses one Gooclaim-managed master
+              key, not per-tenant self-service keys, so hide this here. */}
+          {!IS_GOOCLAIM_TENANT && <ApiKeyCard />}
 
           {/* Example Projects Section */}
           <div className="space-y-4">
