@@ -264,6 +264,23 @@ services:
       # "completed" with entities_encountered {"GooclaimUploadConnectionEntity": 1}
       # and nothing else, for every native-upload sync run).
       - ../local_storage:/app/local_storage
+    # 🔴 The WORKER embeds, so the worker is what needs the gateway — and it
+    # did not have this while the backend did. Both carry the same
+    # `OPENAI_BASE_URL=http://host.docker.internal:4000/v1` (our LiteLLM, never
+    # OpenAI direct), but only the backend could resolve the name: the worker's
+    # ExtraHosts was `[]`. Every Native Upload sync therefore died at
+    #
+    #   destination[VespaDestination] failed: OpenAI connection failed
+    #
+    # which reads like a provider outage and is a missing host mapping.
+    # Confirmed live 2026-09-30: backend reached :4000, worker got
+    # "Name or service not known".
+    #
+    # 📏 In the compose file, not on the box. A `--add-host` added by hand is
+    # lost on the next recreate, silently — that has happened here before with
+    # `gooclaim-auth-host`.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     entrypoint: [ "python", "-m", "airweave.domains.temporal.worker" ]
     depends_on:
       postgres:
