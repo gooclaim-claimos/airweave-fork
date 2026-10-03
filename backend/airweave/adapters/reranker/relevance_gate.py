@@ -67,34 +67,31 @@ Give every passage exactly one grade:
 
 Judge only from the passage text, never from what you know. The question may be in \
 English, Hindi or Hinglish and the passages in another language: judge meaning, not \
-shared words. Return a grade for every passage index you were given."""
+shared words. Answer with an object mapping every passage number you were given to its \
+grade, e.g. {"0": 3, "1": 0}."""
 
-_RESPONSE_FORMAT: dict[str, Any] = {
-    "type": "json_schema",
-    "json_schema": {
-        "name": "passage_grades",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "grades": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "index": {"type": "integer"},
-                            "grade": {"type": "integer", "enum": [0, 1, 2, 3]},
-                        },
-                        "required": ["index", "grade"],
-                        "additionalProperties": False,
-                    },
-                }
+
+def _response_format(count: int) -> dict[str, Any]:
+    """A schema with ONE required key per passage, built for this call.
+
+    A list of {index, grade} let the model skip a passage — seen live: two
+    passages in, one grade back — and a skipped passage is dropped, so an
+    answer could vanish. Strict mode cannot leave out a required key.
+    """
+    keys = [str(i) for i in range(count)]
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "passage_grades",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {k: {"type": "integer", "enum": [0, 1, 2, 3]} for k in keys},
+                "required": keys,
+                "additionalProperties": False,
             },
-            "required": ["grades"],
-            "additionalProperties": False,
         },
-    },
-}
+    }
 
 
 def _chat_url(gateway_url: str) -> str:
@@ -114,26 +111,22 @@ def _user_prompt(query: str, documents: list[str]) -> str:
 def _parse_grades(body: dict[str, Any], count: int) -> dict[int, int]:
     """Map each passage index to its grade, trusting nothing the model got wrong.
 
-    A skipped passage counts as 0 (dropped); for a repeated index the first
-    grade wins; an invented index or an impossible grade is ignored.
+    A missing or impossible grade leaves that passage out (dropped); a key that
+    names no passage is ignored. The schema makes a missing key a provider fault,
+    not a model choice — it is still not trusted.
     """
     try:
         content = body["choices"][0]["message"]["content"]
-        items = json.loads(content)["grades"]
+        data = json.loads(content)
+        if not isinstance(data, dict):
+            raise TypeError("not an object")
     except (KeyError, IndexError, TypeError, ValueError) as e:
         raise RerankerError(f"relevance gate: unreadable model reply ({type(e).__name__})") from e
     grades: dict[int, int] = {}
-    for item in items if isinstance(items, list) else []:
-        if not isinstance(item, dict):
-            continue
-        index, grade = item.get("index"), item.get("grade")
-        if (
-            isinstance(index, int)
-            and isinstance(grade, int)
-            and 0 <= index < count
-            and 0 <= grade <= MAX_GRADE
-        ):
-            grades.setdefault(index, grade)
+    for i in range(count):
+        grade = data.get(str(i))
+        if isinstance(grade, int) and 0 <= grade <= MAX_GRADE:
+            grades[i] = grade
     return grades
 
 
@@ -171,7 +164,7 @@ class GatewayRelevanceGate(RerankerProtocol):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": _user_prompt(query, documents)},
             ],
-            "response_format": _RESPONSE_FORMAT,
+            "response_format": _response_format(len(documents)),
             "reasoning_effort": "minimal",
         }
         try:
