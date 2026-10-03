@@ -10,7 +10,7 @@ pipeline that all FileEntity-typed entities use.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal, Optional
+from typing import ClassVar, Literal, Optional
 
 from pydantic import computed_field
 
@@ -22,8 +22,11 @@ class GooclaimUploadConnectionEntity(BaseEntity):
     """Container entity for one Gooclaim native upload source connection.
 
     Emitted once per sync run so the connection itself shows up in the
-    browse tree alongside the files under it.
+    browse tree alongside the files under it. Browse ONLY: its text is the
+    connection's name, which answers nothing, so ranked search never returns it.
     """
+
+    browse_only: ClassVar[bool] = True
 
     connection_id: str = AirweaveField(
         ...,

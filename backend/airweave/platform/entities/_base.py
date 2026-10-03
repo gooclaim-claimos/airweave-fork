@@ -117,6 +117,13 @@ class BaseEntity(BaseModel):
         None, description="Access control - who can view this entity (not expanded)"
     )
 
+    # Gooclaim fork (T420): an entity that only anchors the browse tree — a
+    # connection, a container — and has no content of its own. It stays indexed
+    # (browse lists it) but ranked search never returns it: its text is just a
+    # name, and nearest-neighbour search hands back the nearest thing even when
+    # nothing matches, so the name of an upload was being served as an answer.
+    browse_only: ClassVar[bool] = False
+
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="ignore")
 
     @model_validator(mode="after")
@@ -210,6 +217,25 @@ class BaseEntity(BaseModel):
             )
 
         return self
+
+
+def browse_only_entity_types() -> list[str]:
+    """Every entity type ranked search must not return (see ``BaseEntity.browse_only``).
+
+    Class names, because that is what the sync pipeline stores in
+    ``data_sources_system_metadata.entity_type`` — derived from the classes, so a
+    rename cannot leave a stale string behind.
+    """
+    import airweave.platform.entities  # noqa: F401, PLC0415 — load every entity class
+
+    found: set[str] = set()
+    stack: list[type[BaseEntity]] = list(BaseEntity.__subclasses__())
+    while stack:
+        cls = stack.pop()
+        stack.extend(cls.__subclasses__())
+        if cls.browse_only:
+            found.add(cls.__name__)
+    return sorted(found)
 
 
 class FileEntity(BaseEntity):

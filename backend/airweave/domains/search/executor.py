@@ -40,7 +40,7 @@ from airweave.domains.sources.protocols import (
     SourceLifecycleServiceProtocol,
     SourceRegistryProtocol,
 )
-from airweave.platform.entities._base import BaseEntity
+from airweave.platform.entities._base import BaseEntity, browse_only_entity_types
 from airweave.platform.sources._base import BaseSource
 
 # RRF constant (standard value used in hybrid search systems)
@@ -103,8 +103,9 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
             db, ctx, user_principal, collection_readable_id
         )
 
-        # 1. Merge plan filters with user filters
-        complete_plan = SearchPlanBuilder.build(plan, user_filter)
+        # 1. Merge plan filters with user filters — plus the browse-only
+        #    exclusion, which SearchPlanBuilder ANDs into every group (T420).
+        complete_plan = SearchPlanBuilder.build(plan, [*user_filter, *_browse_only_exclusion()])
 
         # 2. Discover federated sources for this collection
         federated_sources = await self._discover_federated_sources(db, ctx, collection_readable_id)
@@ -517,6 +518,25 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
 
 
 # ── In-memory filter helpers (module-level for testability) ──────────
+
+
+def _browse_only_exclusion() -> list[FilterGroup]:
+    """Keep browse-only entities out of ranked results (Gooclaim fork, T420).
+
+    Such an entity — an upload connection — has no content, only a name.
+    Nearest-neighbour search returns the nearest thing even when nothing
+    matches, so without this the name of an upload came back as a result for
+    any question at all. Browse does not use this executor and still lists it.
+    """
+    types = browse_only_entity_types()
+    if not types:
+        return []
+    condition = FilterCondition(
+        field=FilterableField.SYSTEM_METADATA_ENTITY_TYPE,
+        operator=FilterOperator.NOT_IN,
+        value=types,
+    )
+    return [FilterGroup(conditions=[condition])]
 
 
 def _get_field_value(result: SearchResult, field: FilterableField) -> Any:

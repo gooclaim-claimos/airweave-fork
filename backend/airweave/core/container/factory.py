@@ -10,6 +10,7 @@ Design principles:
 - Testable: can unit test factory logic with mock settings
 """
 
+import os
 from typing import Optional
 
 from prometheus_client import CollectorRegistry
@@ -42,6 +43,7 @@ from airweave.adapters.metrics import (
 )
 from airweave.adapters.pubsub.redis import RedisPubSub
 from airweave.adapters.reranker.cohere import CohereReranker
+from airweave.adapters.reranker.relevance_gate import GatewayRelevanceGate
 from airweave.adapters.tokenizer.registry import get_model_spec as get_tokenizer_spec
 from airweave.adapters.tokenizer.tiktoken import TiktokenTokenizer
 from airweave.adapters.webhooks.endpoint_verifier import HttpEndpointVerifier
@@ -1329,6 +1331,16 @@ def _create_search_services(
         reranker = CohereReranker(api_key=settings.COHERE_API_KEY)
         logger.info("[SearchFactory] Cohere reranker enabled")
 
+    # Gooclaim fork (T420): classic search answers questions, so it must be able
+    # to say "nothing matches" — the relevance gate keeps only passages graded
+    # as answering, and may keep none. Through the LLM gateway, like every AI
+    # call here; without a gateway, classic keeps upstream behaviour.
+    classic_reranker = reranker
+    gateway_url, gateway_key = os.getenv("LLM_GATEWAY_URL"), os.getenv("LLM_GATEWAY_API_KEY")
+    if gateway_url and gateway_key:
+        classic_reranker = GatewayRelevanceGate(gateway_url, gateway_key)
+        logger.info("[SearchFactory] Relevance gate enabled for classic search")
+
     # 4. CollectionMetadataBuilder
     metadata_builder = CollectionMetadataBuilder(
         collection_repo=collection_repo,
@@ -1361,7 +1373,7 @@ def _create_search_services(
     )
     classic_search = ClassicSearchService(
         llm=llm,
-        reranker=reranker,
+        reranker=classic_reranker,
         executor=executor,
         collection_repo=collection_repo,
         metadata_builder=metadata_builder,
