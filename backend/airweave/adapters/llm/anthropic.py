@@ -21,7 +21,7 @@ import os
 import time
 from typing import Any, TypeVar
 
-from anthropic import AsyncAnthropic
+from anthropic import AsyncAnthropic, DefaultAsyncHttpxClient
 from pydantic import BaseModel
 
 from airweave.adapters.llm.base import BaseLLM
@@ -32,6 +32,7 @@ from airweave.adapters.llm.tool_response import (
     LLMToolCall,
 )
 from airweave.core.config import settings
+from airweave.core.gateway_tenant import tenant_event_hooks
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -61,19 +62,36 @@ class AnthropicLLM(BaseLLM):
         # for the embedder (see that file's own comment + T194, confirmed
         # live 2026-09-10). Resolve to the real default explicitly instead.
         base_url = os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com"
+        # Gooclaim (T418): through the gateway, every search call names its tenant
+        # (x-litellm-customer-id — core/gateway_tenant.py); not sent when there is
+        # no gateway in between.
+        http_client = (
+            DefaultAsyncHttpxClient(event_hooks=tenant_event_hooks())
+            if os.getenv("ANTHROPIC_BASE_URL")
+            else None
+        )
         try:
             self._client = AsyncAnthropic(
-                api_key=api_key, base_url=base_url, timeout=self.DEFAULT_TIMEOUT
+                api_key=api_key,
+                base_url=base_url,
+                timeout=self.DEFAULT_TIMEOUT,
+                http_client=http_client,
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize Anthropic client: {e}") from e
+
+        # Gooclaim (T418): the name the GATEWAY knows this model by. LiteLLM's routed
+        # /v1/messages serves the alias (`smart`) — one model, one name — and refuses
+        # the vendor name a key is not granted. The spec still decides context
+        # window, output cap and thinking; only the `model` field on the wire changes.
+        self._api_model = os.getenv("ANTHROPIC_GATEWAY_MODEL") or model_spec.api_model_name
 
         self._effort = model_spec.thinking_config.effort  # e.g., "high"
 
         thinking_mode = f"adaptive (effort={self._effort})" if self._effort else "on-demand"
 
         self._logger.debug(
-            f"[AnthropicLLM] Initialized model={model_spec.api_model_name}, "
+            f"[AnthropicLLM] Initialized model={self._api_model} ({model_spec.api_model_name}), "
             f"context={model_spec.context_window}, "
             f"max_output={model_spec.max_output_tokens}, "
             f"thinking={thinking_mode}"
@@ -99,7 +117,7 @@ class AnthropicLLM(BaseLLM):
 
         api_start = time.monotonic()
         response = await self._client.messages.create(  # type: ignore[call-overload]
-            model=self._model_spec.api_model_name,
+            model=self._api_model,
             max_tokens=self._model_spec.max_output_tokens,
             system=system_prompt,
             messages=[{"role": "user", "content": prompt}],
@@ -171,7 +189,7 @@ class AnthropicLLM(BaseLLM):
 
         # Build API kwargs
         kwargs: dict[str, Any] = {
-            "model": self._model_spec.api_model_name,
+            "model": self._api_model,
             "max_tokens": max_tokens or self._model_spec.max_output_tokens,
             "system": cached_system,
             "messages": anthropic_messages,

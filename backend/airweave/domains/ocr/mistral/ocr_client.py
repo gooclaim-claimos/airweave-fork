@@ -11,14 +11,17 @@ All network calls go through :meth:`_api_call` which applies rate-limiting
 from __future__ import annotations
 
 import asyncio
+import base64
 import os
 from typing import Any, Callable, Optional
 
 import aiofiles
+import httpx
 from httpx import HTTPStatusError
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from airweave.core.config import settings
+from airweave.core.gateway_tenant import tenant_event_hooks
 from airweave.core.logging import logger
 from airweave.domains.ocr.mistral.models import (
     FileChunk,
@@ -38,6 +41,18 @@ RETRY_MULTIPLIER = 2
 
 # Concurrent OCR calls cap (can be higher than batch uploads since OCR is the bottleneck)
 DEFAULT_OCR_CONCURRENCY = 10
+
+# Gooclaim (T418): the gateway's OCR route takes the document inline as a data
+# URL, so its media type has to be stated. Exactly the formats the converter
+# hands over (models.SUPPORTED_EXTENSIONS) — no guessing.
+_GATEWAY_MEDIA_TYPES: dict[str, str] = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+}
 
 
 def _is_retryable(exc: BaseException) -> bool:
@@ -64,6 +79,9 @@ class MistralOcrClient:
         self._initialized = False
         self._rate_limiter = MistralRateLimiter()
         self._concurrency = concurrency
+        # Gooclaim (T418): set when OCR goes through the LLM gateway (LiteLLM).
+        self._gateway_url: Optional[str] = None
+        self._gateway_key: Optional[str] = None
 
     # ------------------------------------------------------------------
     # Lazy client initialisation
@@ -76,6 +94,22 @@ class MistralOcrClient:
             SyncFailureError: If the API key is missing or the SDK is not installed.
         """
         if self._initialized:
+            return
+
+        # Gooclaim (T418): through the LLM gateway when one is configured. Every
+        # AI call goes through it (a provider key lives ONLY in the gateway), so
+        # this mode needs no MISTRAL_API_KEY: the gateway key is ours, the gateway
+        # holds Mistral's, and each page is billed to the tenant it was read for.
+        gateway_url = os.getenv("LLM_GATEWAY_URL")
+        if gateway_url:
+            gateway_key = os.getenv("LLM_GATEWAY_API_KEY")
+            if not gateway_key:
+                raise SyncFailureError("LLM_GATEWAY_API_KEY required when LLM_GATEWAY_URL is set")
+            self._gateway_url = gateway_url.rstrip("/")
+            self._gateway_key = gateway_key
+            self._client = httpx.AsyncClient(timeout=120.0, event_hooks=tenant_event_hooks())
+            self._initialized = True
+            logger.debug("Mistral OCR client initialized (through the LLM gateway)")
             return
 
         if not getattr(settings, "MISTRAL_API_KEY", None):
@@ -148,6 +182,15 @@ class MistralOcrClient:
             async with aiofiles.open(chunk.chunk_path, "rb") as fh:
                 content = await fh.read()
 
+            if self._gateway_url:
+                ocr_resp = await self._api_call(
+                    lambda: self._ocr_via_gateway(chunk, content),
+                    operation_name=f"ocr_{file_name}",
+                )
+                markdown = self._extract_markdown(ocr_resp, file_name)
+                logger.debug(f"OCR completed for {file_name} (through the LLM gateway)")
+                return OcrResult(chunk=chunk, markdown=markdown)
+
             # 2. Upload file to get file_id
             file_resp = await self._api_call(
                 lambda: self._client.files.upload_async(
@@ -180,6 +223,25 @@ class MistralOcrClient:
         except Exception as exc:
             logger.error(f"OCR failed for {file_name}: {exc}")
             raise
+
+    async def _ocr_via_gateway(self, chunk: FileChunk, content: bytes) -> dict[str, Any]:
+        """Gooclaim (T418): one OCR call through the gateway's ``/v1/ocr``.
+
+        The gateway does not proxy Mistral's Files API, so there is no upload,
+        no ``file_id`` and nothing to delete afterwards: the document travels
+        inline as a data URL (server to server — it never enters a model's
+        context). Returns the Mistral-shaped JSON (``pages[].markdown``).
+        """
+        media_type = _GATEWAY_MEDIA_TYPES[chunk.extension]
+        data_url = f"data:{media_type};base64,{base64.b64encode(content).decode('ascii')}"
+        kind = "image_url" if chunk.is_image else "document_url"
+        response = await self._client.post(
+            f"{self._gateway_url}/v1/ocr",
+            headers={"Authorization": f"Bearer {self._gateway_key}"},
+            json={"model": "mistral-ocr-latest", "document": {"type": kind, kind: data_url}},
+        )
+        response.raise_for_status()  # HTTPStatusError → _is_retryable decides
+        return response.json()
 
     # ------------------------------------------------------------------
     # Batch OCR with bounded concurrency
@@ -248,7 +310,11 @@ class MistralOcrClient:
     @staticmethod
     def _extract_markdown(ocr_resp: Any, file_name: str) -> Optional[str]:
         """Extract markdown text from OCR response."""
-        pages = getattr(ocr_resp, "pages", None) or []
+        # The SDK returns an object; the gateway route returns JSON (Gooclaim, T418).
+        if isinstance(ocr_resp, dict):
+            pages = ocr_resp.get("pages") or []
+        else:
+            pages = getattr(ocr_resp, "pages", None) or []
 
         if not pages:
             logger.warning(f"No pages in OCR response for {file_name}")
@@ -256,7 +322,10 @@ class MistralOcrClient:
 
         markdown_parts = []
         for page in pages:
-            md = getattr(page, "markdown", "") or ""
+            if isinstance(page, dict):
+                md = page.get("markdown") or ""
+            else:
+                md = getattr(page, "markdown", "") or ""
             if md:
                 markdown_parts.append(md)
 

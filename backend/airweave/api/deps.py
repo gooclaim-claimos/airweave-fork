@@ -20,6 +20,7 @@ from airweave.api.inject import Inject  # noqa: F401 — re-exported for backwar
 from airweave.core import container as container_mod
 from airweave.core.config import settings
 from airweave.core.container import Container
+from airweave.core.gateway_tenant import set_gateway_tenant
 from airweave.core.logging import ContextualLogger
 from airweave.core.protocols.cache import ContextCache
 from airweave.core.protocols.rate_limiter import RateLimiter
@@ -143,6 +144,11 @@ async def get_context(
         "return_url": x_gck_return_url or None,
         "user_email": x_gck_user_email or None,
     }
+    # Gooclaim: every AI call this request makes (search answer, query embedding)
+    # is billed to THIS organization = the Gooclaim tenant (core/gateway_tenant.py).
+    # Set on every request, so a keep-alive connection reusing a task can never
+    # carry the previous caller's tenant into this one.
+    set_gateway_tenant(ctx.organization.id if ctx.organization else None)
     return ctx
 
 

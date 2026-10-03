@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from airweave import schemas
 from airweave.core.context import BaseContext
+from airweave.core.gateway_tenant import set_gateway_tenant
 from airweave.core.logging import ContextualLogger, LoggerConfigurator
 from airweave.domains.sync_pipeline.config import SyncConfig
 from airweave.domains.sync_pipeline.contexts.sync import SyncContext
@@ -60,6 +61,12 @@ class SyncContextBuilder:
             source_connection_id=source_connection_id,
             ctx=ctx,
         )
+
+        # Gooclaim: every embedding and OCR page of this sync is billed to the
+        # organization it syncs for = the Gooclaim tenant (core/gateway_tenant.py).
+        # `build` is awaited in the task that runs the sync, so the value holds for
+        # the whole run and for every task it spawns.
+        set_gateway_tenant(ctx.organization.id if ctx.organization else None)
 
         return SyncContext(
             organization=ctx.organization,

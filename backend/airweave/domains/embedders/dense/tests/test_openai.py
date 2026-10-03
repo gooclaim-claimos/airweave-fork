@@ -3,12 +3,15 @@
 All OpenAI SDK and tiktoken interactions are mocked — no network calls.
 """
 
+import json
 from dataclasses import dataclass, field
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
+from airweave.core.gateway_tenant import set_gateway_tenant
 from airweave.domains.embedders.exceptions import (
     EmbedderAuthError,
     EmbedderConnectionError,
@@ -422,3 +425,58 @@ async def test_close_calls_client_close():
     await embedder.close()
 
     client.close.assert_awaited_once()
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Gooclaim (T418) — through the gateway, every embedding names its tenant
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def _wire_embedder(monkeypatch, base_url: str | None) -> tuple[OpenAIDenseEmbedder, list]:
+    """A REAL AsyncOpenAI client whose transport records what leaves for the wire."""
+    if base_url is None:
+        monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
+    else:
+        monkeypatch.setenv("OPENAI_BASE_URL", base_url)
+    sent: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append(request)
+        n = len(json.loads(request.content)["input"])
+        data = [{"object": "embedding", "index": i, "embedding": [0.1] * 8} for i in range(n)]
+        return httpx.Response(
+            200,
+            json={
+                "object": "list",
+                "data": data,
+                "model": _MODEL,
+                "usage": {"prompt_tokens": 1, "total_tokens": 1},
+            },
+        )
+
+    with patch("airweave.domains.embedders.dense.openai.tiktoken") as mock_tiktoken:
+        mock_tiktoken.get_encoding.return_value.encode.side_effect = _fake_encode
+        embedder = OpenAIDenseEmbedder(api_key=_API_KEY, model=_MODEL, dimensions=8)
+    embedder._client._client._transport = httpx.MockTransport(handler)
+    return embedder, sent
+
+
+@pytest.fixture
+def _tenant():
+    set_gateway_tenant("0e2b24f0-e6e3-4161-be0f-5a8164aa01a5")
+    yield "0e2b24f0-e6e3-4161-be0f-5a8164aa01a5"
+    set_gateway_tenant(None)
+
+
+@pytest.mark.asyncio
+async def test_an_embedding_through_the_gateway_names_its_tenant(monkeypatch, _tenant):
+    embedder, sent = _wire_embedder(monkeypatch, "http://gateway:4000/v1")
+    await embedder.embed_many(["claim documents"])
+    assert sent[-1].headers["x-litellm-customer-id"] == _tenant
+
+
+@pytest.mark.asyncio
+async def test_the_tenant_is_never_sent_to_a_provider_called_directly(monkeypatch, _tenant):
+    embedder, sent = _wire_embedder(monkeypatch, None)
+    await embedder.embed_many(["claim documents"])
+    assert "x-litellm-customer-id" not in sent[-1].headers

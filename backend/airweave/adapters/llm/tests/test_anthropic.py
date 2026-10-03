@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from pydantic import BaseModel
 
@@ -12,6 +14,7 @@ from airweave.adapters.llm.anthropic import AnthropicLLM
 from airweave.adapters.llm.exceptions import LLMProviderExhaustedError, LLMTransientError
 from airweave.adapters.llm.registry import LLMModelSpec, ThinkingConfig
 from airweave.adapters.tokenizer.registry import TokenizerEncoding, TokenizerType
+from airweave.core.gateway_tenant import set_gateway_tenant
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -561,3 +564,83 @@ def test_convert_messages_merges_consecutive_user():
 
     assert len(result) == 1
     assert result[0]["role"] == "user"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Gooclaim (T418) — through the gateway: the alias on the wire + the tenant
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def _wire_llm(monkeypatch, *, base_url: str | None, gateway_model: str | None):
+    """A REAL AsyncAnthropic client whose transport records what leaves for the wire."""
+    env = (("ANTHROPIC_BASE_URL", base_url), ("ANTHROPIC_GATEWAY_MODEL", gateway_model))
+    for name, value in env:
+        if value is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, value)
+    sent: list[dict] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        sent.append({"headers": request.headers, "body": json.loads(request.content)})
+        tool = {"type": "tool_use", "id": "tu_1", "name": "generate__dummyoutput"}
+        tool["input"] = {"key": "v"}
+        return httpx.Response(
+            200,
+            json={
+                "id": "msg_1",
+                "type": "message",
+                "role": "assistant",
+                "model": "x",
+                "content": [tool],
+                "stop_reason": "tool_use",
+                "stop_sequence": None,
+                "usage": {"input_tokens": 10, "output_tokens": 5},
+            },
+        )
+
+    with patch("airweave.adapters.llm.anthropic.settings") as mock_settings:
+        mock_settings.ANTHROPIC_API_KEY = "test-key"
+        llm = AnthropicLLM(model_spec=_make_spec(), max_retries=0)
+    llm._client._client._transport = httpx.MockTransport(handler)
+    return llm, sent
+
+
+@pytest.fixture
+def _tenant():
+    set_gateway_tenant("0e2b24f0-e6e3-4161-be0f-5a8164aa01a5")
+    yield "0e2b24f0-e6e3-4161-be0f-5a8164aa01a5"
+    set_gateway_tenant(None)
+
+
+@pytest.mark.asyncio
+async def test_through_the_gateway_the_search_call_asks_for_the_alias_and_names_the_tenant(
+    monkeypatch, _tenant
+) -> None:
+    llm, sent = _wire_llm(monkeypatch, base_url="http://gateway:4000", gateway_model="smart")
+    result = await llm.structured_output(prompt="q", schema=_DummyOutput, system_prompt="s")
+    assert result.key == "v"
+    assert sent[-1]["body"]["model"] == "smart"
+    assert sent[-1]["headers"]["x-litellm-customer-id"] == _tenant
+
+
+@pytest.mark.asyncio
+async def test_the_agentic_chat_call_asks_for_the_alias_too(monkeypatch, _tenant) -> None:
+    llm, sent = _wire_llm(monkeypatch, base_url="http://gateway:4000", gateway_model="smart")
+    await llm.chat(messages=[{"role": "user", "content": "q"}], tools=[], system_prompt="s")
+    assert sent[-1]["body"]["model"] == "smart"
+    assert sent[-1]["headers"]["x-litellm-customer-id"] == _tenant
+
+
+@pytest.mark.asyncio
+async def test_without_a_gateway_model_the_spec_name_is_sent(monkeypatch, _tenant) -> None:
+    llm, sent = _wire_llm(monkeypatch, base_url="http://gateway:4000", gateway_model=None)
+    await llm.structured_output(prompt="q", schema=_DummyOutput, system_prompt="s")
+    assert sent[-1]["body"]["model"] == "test-model"
+
+
+@pytest.mark.asyncio
+async def test_the_tenant_is_never_sent_to_anthropic_called_directly(monkeypatch, _tenant) -> None:
+    llm, sent = _wire_llm(monkeypatch, base_url=None, gateway_model=None)
+    await llm.structured_output(prompt="q", schema=_DummyOutput, system_prompt="s")
+    assert "x-litellm-customer-id" not in sent[-1]["headers"]

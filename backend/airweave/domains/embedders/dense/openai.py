@@ -14,8 +14,9 @@ import asyncio
 import os
 
 import tiktoken
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, DefaultAsyncHttpxClient
 
+from airweave.core.gateway_tenant import tenant_event_hooks
 from airweave.domains.embedders.exceptions import (
     EmbedderAuthError,
     EmbedderConnectionError,
@@ -74,11 +75,20 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
         # `httpcore.UnsupportedProtocol: ... missing a protocol`. Confirmed
         # live on the EC2 sandbox, 2026-09-10 (T194).
         base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+        # Gooclaim (T418): through the gateway, every embedding names its tenant
+        # (x-litellm-customer-id — core/gateway_tenant.py). Only then: the header
+        # is not sent to OpenAI when there is no gateway in between.
+        http_client = (
+            DefaultAsyncHttpxClient(event_hooks=tenant_event_hooks())
+            if os.getenv("OPENAI_BASE_URL")
+            else None
+        )
         self._client = AsyncOpenAI(
             api_key=api_key,
             base_url=base_url,
             timeout=self._CLIENT_TIMEOUT,
             max_retries=self._CLIENT_MAX_RETRIES,
+            http_client=http_client,
         )
         self._encoder = tiktoken.get_encoding("cl100k_base")
         self._semaphore = asyncio.Semaphore(self._MAX_CONCURRENT_REQUESTS)
