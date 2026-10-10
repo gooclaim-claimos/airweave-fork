@@ -3,7 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, ForeignKey, Index, String
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -45,6 +45,18 @@ class Collection(OrganizationBase, UserMixin):
         Boolean, nullable=False, default=False, server_default="false"
     )
 
+    # Gooclaim: who the collection's documents may answer. `members` — the
+    # tenant's members' library (the Portal's Data Sources): anything in it may
+    # be used to answer a member. `staff` — the tenant's staff library: only
+    # Orion, the staff coworker, may search it; a member-facing service never
+    # can (gooclaim-datasources-mcp enforces it by caller). Set when the
+    # collection is made and never changed: turning a staff library into a
+    # members' one would hand its documents to member answers. default= and
+    # server_default= for the same reason as is_public above.
+    audience: Mapped[str] = mapped_column(
+        String, nullable=False, default="members", server_default="members"
+    )
+
     # Relationships
     vector_db_deployment_metadata: Mapped["VectorDbDeploymentMetadata"] = relationship(
         "VectorDbDeploymentMetadata", lazy="joined"
@@ -66,4 +78,7 @@ class Collection(OrganizationBase, UserMixin):
         passive_deletes=True,
     )
 
-    __table_args__ = (Index("idx_collection_vdb_metadata_id", "vector_db_deployment_metadata_id"),)
+    __table_args__ = (
+        Index("idx_collection_vdb_metadata_id", "vector_db_deployment_metadata_id"),
+        CheckConstraint("audience IN ('members', 'staff')", name="ck_collection_audience"),
+    )

@@ -4,7 +4,7 @@ A collection is a group of different data sources that you can search using a si
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
@@ -88,6 +88,16 @@ class CollectionCreate(CollectionBase):
         description=(
             "Default sync configuration for all syncs in this collection. "
             "This provides collection-level defaults that can be overridden at sync or job level."
+        ),
+    )
+
+    audience: Literal["members", "staff"] = Field(
+        "members",
+        description=(
+            "Gooclaim: who this collection's documents may answer. 'members' — the "
+            "members' library: anything in it may be used to answer a member. "
+            "'staff' — only Orion (the staff coworker) may search it. Fixed when the "
+            "collection is created."
         ),
     )
 
@@ -223,6 +233,13 @@ class CollectionInDBBase(CollectionBase):
             "PATCH /collections/{readable_id}/visibility."
         ),
     )
+    audience: Literal["members", "staff"] = Field(
+        "members",
+        description=(
+            "Gooclaim: 'members' — the members' library; 'staff' — searched by Orion "
+            "only. Fixed when the collection is created."
+        ),
+    )
     created_by_email: Optional[EmailStr] = Field(
         None,
         description="Email address of the user who created this collection.",
@@ -244,6 +261,15 @@ class CollectionInDBBase(CollectionBase):
         Optional[bool], so validation would otherwise reject that None.
         """
         return v if v is not None else False
+
+    @field_validator("audience", mode="before")
+    @classmethod
+    def _default_audience_when_none(cls, v: Optional[str]) -> str:
+        """Treat missing/None as the members' library.
+
+        The same unflushed-ORM case as is_public above.
+        """
+        return v if v is not None else "members"
 
     model_config = ConfigDict(from_attributes=True)
 
