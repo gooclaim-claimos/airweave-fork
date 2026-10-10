@@ -237,6 +237,7 @@ async def test_run_sync_happy_path():
     collection_model.created_by_email = None
     collection_model.modified_by_email = None
     collection_model.status = "ACTIVE"
+    collection_model.audience = "members"
     collection_model.created_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
     collection_model.modified_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
     collection_repo = FakeCollectionRepo(collection_model=collection_model)

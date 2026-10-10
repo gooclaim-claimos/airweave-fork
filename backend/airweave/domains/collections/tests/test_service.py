@@ -77,6 +77,7 @@ def _collection(
     col.modified_by_email = None
     col.status = "NEEDS SOURCE"
     col.is_public = is_public
+    col.audience = "members"
     return col
 
 

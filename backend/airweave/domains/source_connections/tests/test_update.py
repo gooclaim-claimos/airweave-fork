@@ -270,6 +270,7 @@ async def test_schedule_update(case: ScheduleCase):
         col.modified_at = NOW
         col.created_by_email = None
         col.modified_by_email = None
+        col.audience = "members"
         col_repo = FakeCollectionRepository()
         col_repo.seed_readable("test-col", col)
     else:
@@ -331,6 +332,7 @@ async def test_schedule_add_rejects_federated_source():
     col.modified_at = NOW
     col.created_by_email = None
     col.modified_by_email = None
+    col.audience = "members"
     col_repo = FakeCollectionRepository()
     col_repo.seed_readable("test-col", col)
 

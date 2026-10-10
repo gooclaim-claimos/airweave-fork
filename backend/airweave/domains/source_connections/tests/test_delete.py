@@ -69,6 +69,7 @@ def _make_collection(*, id=None, readable_id="test-col"):
     col.modified_at = NOW
     col.created_by_email = None
     col.modified_by_email = None
+    col.audience = "members"
     return col
 
 
