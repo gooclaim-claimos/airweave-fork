@@ -96,7 +96,7 @@ services:
       timeout: 30s
       retries: 10
       start_period: 60s
-    restart: on-failure
+    restart: unless-stopped
 
   frontend:
     container_name: airweave-frontend
@@ -126,7 +126,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    restart: on-failure
+    restart: unless-stopped
 
   connect:
     container_name: airweave-connect
@@ -223,7 +223,7 @@ services:
     depends_on:
       temporal:
         condition: service_healthy
-    restart: on-failure
+    restart: unless-stopped
 
   temporal-worker:
     container_name: airweave-temporal-worker
@@ -289,7 +289,7 @@ services:
         condition: service_healthy
       svix:
         condition: service_healthy
-    restart: on-failure
+    restart: unless-stopped
 
   # Vespa single-node for development (config server + content + container combined)
   vespa:
