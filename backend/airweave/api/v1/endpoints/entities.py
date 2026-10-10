@@ -1,7 +1,10 @@
 """API endpoints for entity definitions, relations, and direct doc lookup."""
 
+import re
+from typing import Optional
+
 import httpx
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Response
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +16,7 @@ from airweave.core.config import settings
 from airweave.domains.entities.protocols import EntityDefinitionRegistryProtocol
 from airweave.domains.entities.types import EntityDefinitionMetadata
 from airweave.models.collection import Collection
+from airweave.platform.sources.gooclaim_upload import BUCKET_PATTERN, bucket_dir
 
 router = TrailingSlashRouter()
 
@@ -76,6 +80,49 @@ async def _readable_collection_ids(db: AsyncSession, ctx: ApiContext) -> set[str
     return {str(cid) for cid in rows.scalars()}
 
 
+async def _find_entity(
+    entity_id: str, ctx: ApiContext, db: AsyncSession
+) -> Optional[tuple[str, dict]]:
+    """The entity's Vespa schema and fields — only in a collection the caller may read."""
+    base = f"{settings.VESPA_URL}:{settings.VESPA_PORT}"
+    readable = await _readable_collection_ids(db, ctx)
+
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        for schema in _VESPA_SCHEMAS:
+            # Vespa YQL: exact attribute match on the entity_id field.
+            # Use parameter binding via the JSON query API to avoid YQL
+            # injection from user-supplied entity_ids.
+            body = {
+                "yql": f"select * from {schema} where entity_id contains @eid",
+                "eid": entity_id,
+                "hits": _ENTITY_MATCHES,
+            }
+            try:
+                resp = await client.post(f"{base}/search/", json=body)
+            except httpx.HTTPError as exc:
+                ctx.logger.warning(f"[entities] Vespa search {schema}/{entity_id} errored: {exc}")
+                continue
+            if resp.status_code >= 400:
+                ctx.logger.warning(
+                    f"[entities] Vespa search {schema}/{entity_id} → "
+                    f"HTTP {resp.status_code}: {resp.text[:200]}"
+                )
+                continue
+            data = resp.json()
+            children = data.get("root", {}).get("children") or []
+            for hit in children:
+                fields = hit.get("fields", {})
+                # The exact entity_id (not a substring), in a collection the
+                # caller may read.
+                if fields.get("entity_id") != entity_id:
+                    continue
+                if str(fields.get("data_sources_system_metadata_collection_id")) not in readable:
+                    continue
+                return schema, fields
+
+    return None
+
+
 @router.get("/{entity_id}/content")
 async def get_entity_content_by_id(
     entity_id: str,
@@ -112,47 +159,52 @@ async def get_entity_content_by_id(
             tenant's chunk id read that tenant's text. Another organisation's
             entity now reads exactly like one that does not exist.
     """
-    base = f"{settings.VESPA_URL}:{settings.VESPA_PORT}"
-    readable = await _readable_collection_ids(db, ctx)
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for schema in _VESPA_SCHEMAS:
-            # Vespa YQL: exact attribute match on the entity_id field.
-            # Use parameter binding via the JSON query API to avoid YQL
-            # injection from user-supplied entity_ids.
-            body = {
-                "yql": f"select * from {schema} where entity_id contains @eid",
-                "eid": entity_id,
-                "hits": _ENTITY_MATCHES,
-            }
-            try:
-                resp = await client.post(f"{base}/search/", json=body)
-            except httpx.HTTPError as exc:
-                ctx.logger.warning(f"[entities] Vespa search {schema}/{entity_id} errored: {exc}")
-                continue
-            if resp.status_code >= 400:
-                ctx.logger.warning(
-                    f"[entities] Vespa search {schema}/{entity_id} → "
-                    f"HTTP {resp.status_code}: {resp.text[:200]}"
-                )
-                continue
-            data = resp.json()
-            children = data.get("root", {}).get("children") or []
-            for hit in children:
-                fields = hit.get("fields", {})
-                # The exact entity_id (not a substring), in a collection the
-                # caller may read.
-                if fields.get("entity_id") != entity_id:
-                    continue
-                if str(fields.get("data_sources_system_metadata_collection_id")) not in readable:
-                    continue
-                return {
-                    "entity_id": entity_id,
-                    "schema": schema,
-                    "fields": fields,
-                }
+    found = await _find_entity(entity_id, ctx, db)
+    if found is not None:
+        schema, fields = found
+        return {"entity_id": entity_id, "schema": schema, "fields": fields}
 
     raise HTTPException(
         status_code=404,
         detail=f"Entity not found: {entity_id}",
+    )
+
+
+#: Where a native upload's original lives, as its entity records it:
+#: ``gooclaim-upload://{bucket}/{upload_id}__{file name}``.
+_UPLOAD_URL = re.compile(r"^gooclaim-upload://([^/]+)/([^/]+)$")
+
+
+@router.get("/{entity_id}/original")
+async def get_entity_original(
+    entity_id: str,
+    ctx: ApiContext = Depends(deps.get_context),
+    db: AsyncSession = Depends(deps.get_db),
+) -> Response:
+    """The original file a passage came from — Gooclaim native uploads only.
+
+    A cited passage is opened at its page in the file it was read from. The
+    entity is found exactly as ``/content`` finds it (only in a collection the
+    caller may read); its file is then read from the CALLER'S OWN bucket of
+    that name (``bucket_dir``), never a path the index names — an entity whose
+    record points anywhere else reads as not found. Other sources keep no
+    original here: 404.
+    """
+    found = await _find_entity(entity_id, ctx, db)
+    if found is None:
+        raise HTTPException(status_code=404, detail=f"Entity not found: {entity_id}")
+    _schema, fields = found
+    match = _UPLOAD_URL.match(str(fields.get("url") or ""))
+    if match is None or not BUCKET_PATTERN.match(match.group(1)):
+        raise HTTPException(status_code=404, detail="No original is kept for this document")
+    bucket = bucket_dir(ctx.organization.id, match.group(1))
+    # The pattern allows no "/" in the name, so the path stays in the bucket;
+    # "." and ".." are directories and fail the file check.
+    path = bucket / match.group(2)
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="The original file is no longer kept")
+    return Response(
+        content=path.read_bytes(),
+        media_type=str(fields.get("mime_type") or "application/octet-stream"),
+        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"},
     )
