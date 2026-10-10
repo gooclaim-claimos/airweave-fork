@@ -21,6 +21,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import HTTPException, UploadFile
 
+from airweave import schemas
 from airweave.api.v1.endpoints import uploads
 from airweave.core.config import settings
 from airweave.domains.storage.file_service import FileService
@@ -151,3 +152,50 @@ async def test_without_the_syncs_file_service_no_original_is_handed_out() -> Non
     (bucket / "u1__wording.pdf").write_bytes(PDF)
     with pytest.raises(RuntimeError):
         await _sync(bucket, None)
+
+
+# ─── a library says who it answers ─────────────────────────────────
+
+
+class _Collections:
+    """The collection service: one existing library, or none."""
+
+    def __init__(self, existing: object | None) -> None:
+        self.existing = existing
+        self.created: list[object] = []
+
+    async def get(self, db: object, *, readable_id: str, ctx: object) -> object:
+        if self.existing is None:
+            raise LookupError(readable_id)
+        return self.existing
+
+    async def create(self, db: object, *, collection_in: object, ctx: object) -> object:
+        self.created.append(collection_in)
+        return collection_in
+
+
+async def _commit_to(service: _Collections, audience: str | None) -> object:
+    return await uploads._find_or_create_collection(
+        MagicMock(), _ctx(), service, readable_id="sops", name="Claims SOPs", audience=audience
+    )
+
+
+async def test_a_new_library_is_made_only_when_the_uploader_chose_who_it_answers() -> None:
+    nobody_chose = _Collections(None)
+    with pytest.raises(HTTPException) as caught:
+        await _commit_to(nobody_chose, None)
+    assert caught.value.status_code == 400 and nobody_chose.created == []
+    assert "Choose who these documents may answer" in str(caught.value.detail)
+
+    staff = _Collections(None)
+    made = await _commit_to(staff, "staff")
+    assert isinstance(made, schemas.CollectionCreate) and made.audience == "staff"
+
+
+async def test_files_never_land_in_a_library_made_for_the_other_audience() -> None:
+    members = _Collections(SimpleNamespace(audience="members"))
+    with pytest.raises(HTTPException) as caught:
+        await _commit_to(members, "staff")
+    assert caught.value.status_code == 409
+    assert await _commit_to(members, "members") is members.existing
+    assert await _commit_to(members, None) is members.existing  # re-sync, nothing chosen

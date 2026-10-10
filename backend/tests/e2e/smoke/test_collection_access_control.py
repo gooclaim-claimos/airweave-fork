@@ -126,7 +126,7 @@ class TestCollectionAccessControl:
     async def test_search_after_deletion(self, api_client: httpx.AsyncClient):
         """Test that searching a deleted collection returns 404."""
         # Create a collection
-        collection_data = {"name": f"Temp Collection {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Temp Collection {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -152,7 +152,7 @@ class TestCollectionAccessControl:
     async def test_advanced_search_after_deletion(self, api_client: httpx.AsyncClient):
         """Test that advanced searching a deleted collection returns 404."""
         # Create a collection
-        collection_data = {"name": f"Temp Collection {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Temp Collection {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()

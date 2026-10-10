@@ -91,7 +91,7 @@ async def test_sync_with_special_tokens_inject_flag(
         # Step 1: Create collection
         collection_response = await client.post(
             "/collections/",
-            json={"name": f"Special Token Test {int(time.time())}"},
+            json={"audience": "members", "name": f"Special Token Test {int(time.time())}"},
         )
         assert collection_response.status_code == 200, (
             f"Failed to create collection: {collection_response.text}"
@@ -244,7 +244,7 @@ async def test_sync_with_custom_content_prefix_special_token(
         # Create collection
         collection_response = await client.post(
             "/collections/",
-            json={"name": f"Custom Prefix Token Test {int(time.time())}"},
+            json={"audience": "members", "name": f"Custom Prefix Token Test {int(time.time())}"},
         )
         assert collection_response.status_code == 200
         collection = collection_response.json()

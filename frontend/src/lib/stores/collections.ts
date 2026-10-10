@@ -1,3 +1,4 @@
+import type { LibraryAudience } from '@/components/collection/LibraryBadge';
 import { create } from 'zustand';
 import { apiClient } from '@/lib/api';
 import { onCollectionEvent, COLLECTION_DELETED, COLLECTION_CREATED, COLLECTION_UPDATED } from "@/lib/events";
@@ -14,6 +15,8 @@ export interface Collection {
   name: string;
   readable_id: string;
   status: string;
+  /** Gooclaim: who the collection's documents may answer. */
+  audience?: LibraryAudience;
   source_connection_summaries?: SourceConnectionSummary[];
 }
 

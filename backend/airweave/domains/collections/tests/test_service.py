@@ -262,7 +262,7 @@ async def test_create_happy_path():
         settings=_fake_settings(),
     )
 
-    collection_in = schemas.CollectionCreate(name="New Collection", readable_id="new-collection")
+    collection_in = schemas.CollectionCreate(name="New Collection", readable_id="new-collection", audience="members")
 
     result = await svc.create(AsyncMock(), collection_in=collection_in, ctx=_ctx())
 
@@ -286,7 +286,7 @@ async def test_create_duplicate_raises():
 
     svc = _build_service(collection_repo=repo)
 
-    collection_in = schemas.CollectionCreate(name="Duplicate", readable_id="existing")
+    collection_in = schemas.CollectionCreate(name="Duplicate", readable_id="existing", audience="members")
 
     with pytest.raises(CollectionAlreadyExistsError) as exc_info:
         await svc.create(AsyncMock(), collection_in=collection_in, ctx=_ctx())
@@ -300,7 +300,7 @@ async def test_create_sets_deployment_metadata_id():
     repo = FakeCollectionRepository()
     svc = _build_service(collection_repo=repo)
 
-    collection_in = schemas.CollectionCreate(name="Embedding Test", readable_id="embed-test")
+    collection_in = schemas.CollectionCreate(name="Embedding Test", readable_id="embed-test", audience="members")
 
     await svc.create(AsyncMock(), collection_in=collection_in, ctx=_ctx())
 

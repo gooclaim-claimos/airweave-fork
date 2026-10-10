@@ -131,6 +131,8 @@ export function usePlaygroundState() {
       if (isNewCollection) {
         const colRes = await apiClient.post("/collections", {
           name: `Playground ${new Date().toLocaleDateString()}`,
+          // A test collection must never answer a member.
+          audience: "staff",
         });
         if (!colRes.ok) return null;
         const col = await colRes.json();

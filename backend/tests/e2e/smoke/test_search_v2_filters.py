@@ -186,7 +186,7 @@ async def _create_v2_filter_collection(client: httpx.AsyncClient) -> Dict:
     connections_to_cleanup: List[str] = []
 
     # Create collection
-    collection_data = {"name": f"SearchV2 Filter Test {int(time.time())}"}
+    collection_data = {"audience": "members", "name": f"SearchV2 Filter Test {int(time.time())}"}
     response = await client.post("/collections/", json=collection_data)
 
     if response.status_code != 200:

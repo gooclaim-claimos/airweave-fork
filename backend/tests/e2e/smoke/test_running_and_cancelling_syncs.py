@@ -634,7 +634,7 @@ class TestRunningAndCancellingSyncs:
         cleanup runs and the CASCADE delete fires.
         """
         # Create a dedicated collection for this test
-        collection_data = {"name": f"Delete Test Collection {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Delete Test Collection {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -688,7 +688,7 @@ class TestRunningAndCancellingSyncs:
         This exercises the barrier's ability to wait on multiple Temporal workflows
         concurrently. All workflows must reach terminal state before cleanup runs.
         """
-        collection_data = {"name": f"Multi Sync Delete {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Multi Sync Delete {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -762,7 +762,7 @@ class TestRunningAndCancellingSyncs:
         The barrier should only wait for the running sync while the completed
         sync's data is cleaned up immediately.
         """
-        collection_data = {"name": f"Mixed State Delete {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Mixed State Delete {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -841,7 +841,7 @@ class TestRunningAndCancellingSyncs:
         cancellation completes, deletes the collection. The barrier should
         recognize the CANCELLING job and wait for it to reach CANCELLED.
         """
-        collection_data = {"name": f"Cancelling Delete {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Cancelling Delete {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -899,7 +899,7 @@ class TestRunningAndCancellingSyncs:
         This is the clean path: no running workflows, just data cleanup.
         Verifies that cleanup handles the completed-sync case correctly.
         """
-        collection_data = {"name": f"Clean Delete {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Clean Delete {int(time.time())}"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()

@@ -20,6 +20,7 @@ import {
   FileText, // Change from Book to FileText
   Webhook,
   Plug,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -128,6 +129,9 @@ const CollectionsSection = memo(() => {
                 >
                   <LayoutGrid className="mr-2 h-3.5 w-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
                   <span className="truncate">{collection.name}</span>
+                  {collection.audience === 'staff' && (
+                    <Lock className="ml-1.5 h-3 w-3 flex-shrink-0 opacity-70" aria-label="Staff only" />
+                  )}
                   {isActive(`/collections/${collection.readable_id}`) && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-full transform -translate-x-1.5" />
                   )}

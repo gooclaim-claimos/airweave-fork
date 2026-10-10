@@ -161,7 +161,7 @@ async def test_incremental_sync_three_phases(api_client: httpx.AsyncClient):
     # Setup: Create collection
     # =========================================================================
     collection_name = f"Incremental Sync Test {int(time.time())}"
-    response = await client.post("/collections/", json={"name": collection_name})
+    response = await client.post("/collections/", json={"audience": "members", "name": collection_name})
     assert response.status_code == 200, f"Failed to create collection: {response.text}"
 
     collection = response.json()
@@ -343,7 +343,7 @@ async def test_force_full_sync_ignores_cursor(api_client: httpx.AsyncClient):
 
     # Create collection
     collection_name = f"Force Full Sync Test {int(time.time())}"
-    response = await client.post("/collections/", json={"name": collection_name})
+    response = await client.post("/collections/", json={"audience": "members", "name": collection_name})
     assert response.status_code == 200, f"Failed to create collection: {response.text}"
 
     collection = response.json()

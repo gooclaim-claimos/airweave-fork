@@ -19,6 +19,7 @@ import { apiClient } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme-provider';
 import { useCollectionCreationStore } from '@/stores/collectionCreationStore';
+import { LibraryBadge } from '@/components/collection/LibraryBadge';
 
 interface NativeUploadViewProps {
   humanReadableId: string;
@@ -66,6 +67,7 @@ export const NativeUploadView: React.FC<NativeUploadViewProps> = ({ humanReadabl
 
   const setStep = useCollectionCreationStore((s) => s.setStep);
   const collectionName = useCollectionCreationStore((s) => s.collectionName);
+  const audience = useCollectionCreationStore((s) => s.audience);
 
   // The connection_id the upload endpoint scopes by. We keep it stable
   // across renders by deriving it once from the collection's readable id.
@@ -178,7 +180,9 @@ export const NativeUploadView: React.FC<NativeUploadViewProps> = ({ humanReadabl
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div className="flex-1">
-          <h2 className="text-base font-semibold">Native Upload</h2>
+          <h2 className="text-base font-semibold flex items-center gap-2">
+            Native Upload <LibraryBadge audience={audience} />
+          </h2>
           <p className={cn('text-xs', isDark ? 'text-gray-400' : 'text-gray-500')}>
             Connection: <code className="font-mono">{connectionId}</code>
           </p>
@@ -293,6 +297,9 @@ export const NativeUploadView: React.FC<NativeUploadViewProps> = ({ humanReadabl
                   ? collectionName
                   : 'Gooclaim Native Upload',
               );
+              // The library's audience, as chosen when it was made: the
+              // server refuses files meant for one audience in the other's library.
+              if (audience) form.append('audience', audience);
               const resp = await apiClient.postFormData(
                 `/uploads/${encodeURIComponent(connectionId)}/commit`,
                 form,

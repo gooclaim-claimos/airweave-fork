@@ -164,7 +164,7 @@ def _create_collection(name: str) -> Dict[str, Any]:
         Created collection data
     """
     try:
-        return http_utils.http_post("/collections", json={"name": name})
+        return http_utils.http_post("/collections", json={"audience": "members", "name": name})
     except Exception as e:
         logger.error(f"Failed to create collection: {e}")
         raise

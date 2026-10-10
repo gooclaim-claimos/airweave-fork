@@ -211,7 +211,7 @@ class TestStorageBackend:
 
         # Create test collection
         collection_response = await api_client.post(
-            "/collections/", json={"name": collection_name}
+            "/collections/", json={"audience": "members", "name": collection_name}
         )
         assert collection_response.status_code == 200, (
             f"Failed to create collection: {collection_response.text}"

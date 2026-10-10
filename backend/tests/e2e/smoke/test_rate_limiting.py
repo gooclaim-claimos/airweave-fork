@@ -188,7 +188,7 @@ class TestRateLimiting:
         # Make many POST requests to trigger rate limiting
         async def create_collection(index: int) -> int:
             """Attempt to create a collection."""
-            collection_data = {"name": f"Rate Limit Test {index} {int(time.time())}"}
+            collection_data = {"audience": "members", "name": f"Rate Limit Test {index} {int(time.time())}"}
             try:
                 response = await api_client.post("/sources/github", json=collection_data)
 

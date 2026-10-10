@@ -6,12 +6,14 @@ import { useTheme } from "@/lib/theme-provider";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { SourceConnectionSummary } from "@/lib/stores/collections";
+import { LibraryBadge, type LibraryAudience } from "@/components/collection/LibraryBadge";
 
 interface CollectionCardProps {
   id: string;
   name: string;
   readableId: string;
   status?: string;
+  audience?: LibraryAudience;
   sourceConnectionSummaries?: SourceConnectionSummary[];
   onClick?: () => void;
 }
@@ -21,6 +23,7 @@ export const CollectionCard = ({
   name,
   readableId,
   status = "active",
+  audience,
   sourceConnectionSummaries = [],
   onClick,
 }: CollectionCardProps) => {
@@ -63,8 +66,11 @@ export const CollectionCard = ({
             {readableId}.gooclaim.com
           </p>
 
-          {/* Status badge */}
-          <StatusBadge status={status} showTooltip={true} tooltipContext="collection" />
+          {/* Status badge, and which library it is (Gooclaim) */}
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={status} showTooltip={true} tooltipContext="collection" />
+            <LibraryBadge audience={audience} />
+          </div>
         </div>
 
         {/* Card Footer */}

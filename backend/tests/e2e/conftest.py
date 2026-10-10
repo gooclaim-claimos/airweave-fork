@@ -45,7 +45,7 @@ async def api_client() -> AsyncGenerator[httpx.AsyncClient, None]:
 async def collection(api_client: httpx.AsyncClient) -> AsyncGenerator[Dict, None]:
     """Create a test collection that's cleaned up after use."""
     # Create collection
-    collection_data = {"name": f"Test Collection {int(time.time())}"}
+    collection_data = {"audience": "members", "name": f"Test Collection {int(time.time())}"}
     response = await api_client.post("/collections/", json=collection_data)
 
     if response.status_code != 200:
@@ -80,7 +80,7 @@ async def module_api_client() -> AsyncGenerator[httpx.AsyncClient, None]:
 async def module_collection(module_api_client: httpx.AsyncClient) -> AsyncGenerator[Dict, None]:
     """Create a test collection that's shared across the entire module."""
     # Create collection
-    collection_data = {"name": f"Module Test Collection {int(time.time())}"}
+    collection_data = {"audience": "members", "name": f"Module Test Collection {int(time.time())}"}
     response = await module_api_client.post("/collections/", json=collection_data)
 
     if response.status_code != 200:

@@ -104,7 +104,7 @@ class TestCleanup:
     async def test_cascade_deletion(self, api_client: httpx.AsyncClient, config):
         """Test cascade deletion behavior."""
         # Create a collection
-        collection_data = {"name": "Cascade Test Collection"}
+        collection_data = {"audience": "members", "name": "Cascade Test Collection"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -147,7 +147,7 @@ class TestCleanup:
     async def test_list_after_deletion(self, api_client: httpx.AsyncClient):
         """Test that deleted items don't appear in lists."""
         # Create and delete a collection
-        collection_data = {"name": "List Test Collection"}
+        collection_data = {"audience": "members", "name": "List Test Collection"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()
@@ -168,7 +168,7 @@ class TestCleanup:
     async def test_cleanup_order(self, api_client: httpx.AsyncClient, config):
         """Test proper cleanup order (connections before collections)."""
         # Create collection
-        collection_data = {"name": "Order Test Collection"}
+        collection_data = {"audience": "members", "name": "Order Test Collection"}
         response = await api_client.post("/collections/", json=collection_data)
         assert response.status_code == 200
         collection = response.json()

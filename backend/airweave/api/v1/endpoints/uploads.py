@@ -22,7 +22,7 @@ import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import Depends, File, Form, HTTPException, UploadFile, status
 from fastapi import Path as PathParam
@@ -169,12 +169,35 @@ async def _find_or_create_collection(
     cc_service: CollectionServiceProtocol,
     readable_id: str,
     name: str,
+    audience: Optional[Literal["members", "staff"]],
 ) -> "schemas.Collection":
-    """Idempotently locate (or auto-create) a Collection by readable_id."""
+    """Idempotently locate (or auto-create) a Collection by readable_id.
+
+    A library says who its documents may answer (Gooclaim ``audience``). A new
+    one is made only when the uploader chose; an existing one is used only when
+    the uploader's choice — if they made one — is what it already says, so
+    files meant for staff never land in the members' library by a wrong click.
+    """
+    existing: Optional[schemas.Collection] = None
     try:
-        return await cc_service.get(db, readable_id=readable_id, ctx=ctx)
+        existing = await cc_service.get(db, readable_id=readable_id, ctx=ctx)
     except Exception:  # noqa: BLE001 — service raises CollectionNotFoundError on miss
         pass
+    if existing is not None:
+        if audience is not None and existing.audience != audience:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"This library is for {existing.audience}, not {audience}. "
+                    "Upload into a library made for that audience."
+                ),
+            )
+        return existing
+    if audience is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Choose who these documents may answer: members or staff.",
+        )
     try:
         return await cc_service.create(
             db,
@@ -182,6 +205,7 @@ async def _find_or_create_collection(
                 name=name,
                 readable_id=readable_id,
                 sync_config=None,
+                audience=audience,
             ),
             ctx=ctx,
         )
@@ -407,6 +431,13 @@ async def commit_uploads(
         max_length=255,
         description="Optional description stored on the SourceConnection",
     ),
+    audience: Optional[Literal["members", "staff"]] = Form(
+        None,
+        description=(
+            "Who these documents may answer: 'members' or 'staff' (Orion only). "
+            "Required when the library does not exist yet; when it does, it must match."
+        ),
+    ),
     db: AsyncSession = Depends(deps.get_db),
     ctx: ApiContext = Depends(deps.get_context),
     cc_service: CollectionServiceProtocol = Inject(CollectionServiceProtocol),
@@ -418,7 +449,7 @@ async def commit_uploads(
     # 1) Find or create the Collection — connection_id IS the readable_id
     #    so the collection ↔ bucket mapping stays predictable.
     collection = await _find_or_create_collection(
-        db, ctx, cc_service, readable_id=connection_id, name=collection_name
+        db, ctx, cc_service, readable_id=connection_id, name=collection_name, audience=audience
     )
 
     # 2) Find or create the SourceConnection for this bucket.

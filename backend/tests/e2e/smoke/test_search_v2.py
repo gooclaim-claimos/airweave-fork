@@ -85,7 +85,7 @@ async def _create_stub_collection(client: httpx.AsyncClient) -> Dict:
     """Create a collection with deterministic stub data (seed=42, 20 entities)."""
     connections: List[str] = []
 
-    resp = await client.post("/collections/", json={"name": f"SearchV2 Test {int(time.time())}"})
+    resp = await client.post("/collections/", json={"audience": "members", "name": f"SearchV2 Test {int(time.time())}"})
     if resp.status_code != 200:
         pytest.fail(f"Failed to create collection: {resp.text}")
     collection = resp.json()

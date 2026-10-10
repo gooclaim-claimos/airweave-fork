@@ -92,12 +92,14 @@ class CollectionCreate(CollectionBase):
     )
 
     audience: Literal["members", "staff"] = Field(
-        "members",
+        ...,
         description=(
-            "Gooclaim: who this collection's documents may answer. 'members' — the "
-            "members' library: anything in it may be used to answer a member. "
-            "'staff' — only Orion (the staff coworker) may search it. Fixed when the "
-            "collection is created."
+            "Gooclaim: who this collection's documents may answer — REQUIRED, no "
+            "default. 'members' — the members' library: anything in it may be used to "
+            "answer a member. 'staff' — only Orion (the staff coworker) may search it. "
+            "Fixed when the collection is created. Required because a default would "
+            "decide for whoever did not choose, and a staff SOP defaulted into the "
+            "members' library is a staff document in a member's answer."
         ),
     )
 

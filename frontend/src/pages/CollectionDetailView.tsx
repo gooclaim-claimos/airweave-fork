@@ -46,6 +46,7 @@ import { useCollectionCreationStore } from "@/stores/collectionCreationStore";
 import { redirectWithError } from "@/lib/error-utils";
 import { SingleActionCheckResponse } from "@/types";
 import { DESIGN_SYSTEM } from "@/lib/design-system";
+import { LibraryBadge, type LibraryAudience } from "@/components/collection/LibraryBadge";
 
 
 interface DeleteCollectionDialogProps {
@@ -196,6 +197,8 @@ interface Collection {
     // Gooclaim: readable by every organization when true — see
     // PATCH /collections/{readable_id}/visibility (platform admin only).
     is_public?: boolean;
+    // Gooclaim: who its documents may answer — fixed when it was made.
+    audience?: LibraryAudience;
 }
 
 interface SourceConnection {
@@ -903,6 +906,7 @@ const Collections = () => {
                                 ) : (
                                     <div className="flex items-center gap-2">
                                         <h1 className="text-2xl font-bold tracking-tight text-foreground py-1 pl-0">{collection?.name}</h1>
+                                        <LibraryBadge audience={collection?.audience} />
                                         <Button
                                             variant="ghost"
                                             size="icon"

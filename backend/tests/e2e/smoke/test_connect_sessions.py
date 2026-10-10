@@ -1313,8 +1313,8 @@ class TestConnectSourceConnectionCreation:
     ):
         """Test that collection_id from request body is ignored (uses session's)."""
         # Create two collections
-        col1 = await api_client.post("/collections/", json={"name": f"Col1 {int(time.time())}"})
-        col2 = await api_client.post("/collections/", json={"name": f"Col2 {int(time.time())}"})
+        col1 = await api_client.post("/collections/", json={"audience": "members", "name": f"Col1 {int(time.time())}"})
+        col2 = await api_client.post("/collections/", json={"audience": "members", "name": f"Col2 {int(time.time())}"})
         collection1 = col1.json()
         collection2 = col2.json()
 

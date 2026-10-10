@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import type { LibraryAudience } from '@/components/collection/LibraryBadge';
+
 export type CreationStep =
   | 'collection-form'
   | 'source-select'
@@ -26,6 +28,8 @@ interface CollectionCreationState {
   // Collection data
   collectionName: string;
   collectionDescription: string;
+  // Gooclaim: who the new collection's documents may answer — chosen, never defaulted
+  audience?: LibraryAudience;
   collectionId?: string; // Set after creation or passed in for add-to-collection
   existingCollectionId?: string; // For add-to-collection flow
   existingCollectionName?: string; // For add-to-collection flow
@@ -63,6 +67,7 @@ interface CollectionCreationState {
   // Collection actions
   setCollectionData: (name: string, description?: string) => void;
   setCollectionId: (id: string) => void;
+  setAudience: (audience: LibraryAudience) => void;
 
   // Source actions
   selectSource: (shortName: string, displayName: string) => void;
@@ -97,6 +102,7 @@ const initialState = {
   flowType: 'create-collection' as FlowType,
   collectionName: '',
   collectionDescription: '',
+  audience: undefined,
   collectionId: undefined,
   existingCollectionId: undefined,
   existingCollectionName: undefined,
@@ -231,6 +237,8 @@ export const useCollectionCreationStore = create<CollectionCreationState>()(
       }),
 
       setCollectionId: (id) => set({ collectionId: id }),
+
+      setAudience: (audience) => set({ audience }),
 
       selectSource: (shortName, displayName) => set({
         selectedSource: shortName,

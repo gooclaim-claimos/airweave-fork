@@ -213,7 +213,7 @@ async def synced_file_stub() -> SyncedFileStubContext:
         # ── create collection ─────────────────────────────────────────
         coll_resp = await client.post(
             "/collections/",
-            json={"name": f"File Stub E2E {int(time.time())}"},
+            json={"audience": "members", "name": f"File Stub E2E {int(time.time())}"},
         )
         assert coll_resp.status_code == 200, (
             f"Collection creation failed: {coll_resp.text}"

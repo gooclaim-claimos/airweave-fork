@@ -18,7 +18,7 @@ class TestCollections:
     @pytest.mark.asyncio
     async def test_create_collection(self, api_client: httpx.AsyncClient):
         """Test creating a new collection."""
-        collection_data = {"name": f"Test Collection {int(time.time())}"}
+        collection_data = {"audience": "members", "name": f"Test Collection {int(time.time())}"}
 
         response = await api_client.post("/collections/", json=collection_data)
 
@@ -36,7 +36,7 @@ class TestCollections:
     @pytest.mark.asyncio
     async def test_create_collection_auto_readable_id(self, api_client: httpx.AsyncClient):
         """Test that readable_id is auto-generated if not provided."""
-        collection_data = {"name": "Auto ID Collection"}
+        collection_data = {"audience": "members", "name": "Auto ID Collection"}
 
         response = await api_client.post("/collections/", json=collection_data)
 
@@ -89,7 +89,7 @@ class TestCollections:
 
         # Create collections concurrently
         async def create_collection(i: int):
-            collection_data = {"name": f"List Test Collection {i}"}
+            collection_data = {"audience": "members", "name": f"List Test Collection {i}"}
             response = await api_client.post("/collections/", json=collection_data)
             if response.status_code == 200:
                 return response.json()["readable_id"]
@@ -115,7 +115,7 @@ class TestCollections:
 
         # Create multiple collections concurrently
         async def create_collection(i: int):
-            collection_data = {"name": f"Pagination Test {i}"}
+            collection_data = {"audience": "members", "name": f"Pagination Test {i}"}
             response = await api_client.post("/collections/", json=collection_data)
             if response.status_code == 200:
                 return response.json()["readable_id"]
@@ -143,7 +143,7 @@ class TestCollections:
     async def test_delete_collection(self, api_client: httpx.AsyncClient):
         """Test deleting a collection."""
         # Create a collection to delete
-        collection_data = {"name": "Collection to Delete"}
+        collection_data = {"audience": "members", "name": "Collection to Delete"}
         response = await api_client.post("/collections/", json=collection_data)
 
         assert response.status_code == 200
@@ -172,7 +172,7 @@ class TestCollections:
     async def test_create_collection_validation(self, api_client: httpx.AsyncClient):
         """Test validation when creating a collection."""
         # Test with empty name
-        response = await api_client.post("/collections/", json={"name": ""})
+        response = await api_client.post("/collections/", json={"audience": "members", "name": ""})
 
         assert response.status_code == 422
 
@@ -202,7 +202,7 @@ class TestCollections:
     async def test_collection_with_source_connections(self, api_client: httpx.AsyncClient, config):
         """Test that collections with source connections handle deletion properly."""
         # Create a collection
-        collection_data = {"name": "Collection with Connections"}
+        collection_data = {"audience": "members", "name": "Collection with Connections"}
         response = await api_client.post("/collections/", json=collection_data)
 
         assert response.status_code == 200

@@ -417,7 +417,7 @@ class TestWebhookDelivery:
 
             # Create collection
             coll_resp = await api_client.post(
-                "/collections/", json={"name": f"Lifecycle {uuid.uuid4().hex[:8]}"}
+                "/collections/", json={"audience": "members", "name": f"Lifecycle {uuid.uuid4().hex[:8]}"}
             )
             assert coll_resp.status_code == 200
             collection = coll_resp.json()
@@ -560,7 +560,7 @@ class TestWebhookDelivery:
 
             # Create collection + source connection, wait for sync
             coll_resp = await api_client.post(
-                "/collections/", json={"name": f"Cascade {uuid.uuid4().hex[:8]}"}
+                "/collections/", json={"audience": "members", "name": f"Cascade {uuid.uuid4().hex[:8]}"}
             )
             assert coll_resp.status_code == 200
             collection = coll_resp.json()
@@ -902,7 +902,7 @@ class TestWebhookDelivery:
 
             # Create a collection
             coll_resp = await api_client.post(
-                "/collections/", json={"name": f"Update Test {uuid.uuid4().hex[:8]}"}
+                "/collections/", json={"audience": "members", "name": f"Update Test {uuid.uuid4().hex[:8]}"}
             )
             assert coll_resp.status_code == 200
             collection = coll_resp.json()
