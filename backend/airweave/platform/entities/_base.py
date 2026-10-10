@@ -67,6 +67,10 @@ class DataSourcesSystemMetadata(BaseModel):
 
     # Set during chunking
     chunk_index: Optional[int] = Field(None, description="Index of the chunk in the file.")
+    # Gooclaim: the first and last page a chunk came from (1-based), when the
+    # converted text carried page breaks (domains/ocr/pages.py).
+    page_start: Optional[int] = Field(None, description="First page of the chunk.")
+    page_end: Optional[int] = Field(None, description="Last page of the chunk.")
     original_entity_id: Optional[str] = Field(
         None, description="Original entity_id before chunking (for bulk deletes)"
     )

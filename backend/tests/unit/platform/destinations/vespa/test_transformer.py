@@ -132,6 +132,20 @@ class TestEntityTransformer:
         # Chunk entities should have chunk_index field
         assert result.fields["data_sources_system_metadata_chunk_index"] == 5
 
+    def test_transform_chunk_entity_includes_its_pages(self, transformer, mock_chunk_entity):
+        """Gooclaim: a citation names the page — the chunk's pages reach Vespa."""
+        mock_chunk_entity.data_sources_system_metadata.page_start = 4
+        mock_chunk_entity.data_sources_system_metadata.page_end = 5
+        result = transformer.transform(mock_chunk_entity)
+        assert result.fields["data_sources_system_metadata_page_start"] == 4
+        assert result.fields["data_sources_system_metadata_page_end"] == 5
+
+    def test_transform_leaves_unknown_pages_out(self, transformer, mock_chunk_entity):
+        mock_chunk_entity.data_sources_system_metadata.page_start = None
+        mock_chunk_entity.data_sources_system_metadata.page_end = None
+        result = transformer.transform(mock_chunk_entity)
+        assert "data_sources_system_metadata_page_start" not in result.fields
+
     def test_transform_includes_required_base_fields(self, transformer, mock_entity):
         """Test transform includes required base fields."""
         result = transformer.transform(mock_entity)

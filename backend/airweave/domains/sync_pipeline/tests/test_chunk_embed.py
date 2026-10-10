@@ -142,6 +142,36 @@ class TestChunkEmbedProcessor:
         assert result[0].data_sources_system_metadata.chunk_index == 0
 
     @pytest.mark.asyncio
+    async def test_multiply_entities_names_each_chunks_pages_and_drops_the_breaks(
+        self, processor, mock_sync_context
+    ):
+        """Gooclaim: a citation says "page 4" — the chunk carries its pages."""
+        from airweave.domains.ocr.pages import PAGE_JOIN
+
+        text = PAGE_JOIN.join(["Cover page", "Clause 4: waiting period", "Clause 5"])
+        mock_entity = MagicMock()
+        mock_entity.entity_id = "doc-1"
+        mock_entity.textual_representation = text
+
+        def create_chunk_entity(deep=False):
+            chunk = MagicMock()
+            chunk.data_sources_system_metadata = MagicMock()
+            return chunk
+
+        mock_entity.model_copy = MagicMock(side_effect=create_chunk_entity)
+        clause4 = text.index("Clause 4")
+        spans = [
+            {"text": text[:clause4], "start_index": 0, "end_index": clause4},
+            {"text": text[clause4:], "start_index": clause4, "end_index": len(text)},
+            {"text": "no offsets"},
+        ]
+        result = processor._multiply_entities([mock_entity], [spans], mock_sync_context)
+
+        meta = [r.data_sources_system_metadata for r in result]
+        assert [(m.page_start, m.page_end) for m in meta] == [(1, 1), (2, 3), (None, None)]
+        assert all("\f" not in r.textual_representation for r in result)
+
+    @pytest.mark.asyncio
     async def test_multiply_entities_skips_empty_chunks(self, processor, mock_sync_context):
         mock_entity = MagicMock()
         mock_entity.entity_id = "test-123"

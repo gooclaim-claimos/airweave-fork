@@ -15,6 +15,7 @@ import pytest
 from airweave.core.gateway_tenant import set_gateway_tenant
 from airweave.domains.ocr.mistral.models import FileChunk
 from airweave.domains.ocr.mistral.ocr_client import MistralOcrClient
+from airweave.domains.ocr.pages import PAGE_JOIN
 from airweave.domains.sync_pipeline.exceptions import SyncFailureError
 
 TENANT = "0e2b24f0-e6e3-4161-be0f-5a8164aa01a5"
@@ -69,7 +70,8 @@ async def test_a_pdf_is_read_through_the_gateway_inline_and_billed_to_its_tenant
 
     result = await client.ocr_chunk(_chunk(tmp_path, "bill.pdf", b"%PDF-1.4 fake"))
 
-    assert result.markdown == "# Bill\n\nTotal 1200"
+    # page 1, the page break, page 2 — a passage can name its page (pages.py)
+    assert result.markdown == "# Bill" + PAGE_JOIN + "Total 1200"
     assert len(sent) == 1, "no upload and no delete — one OCR call"
     request = sent[0]
     assert str(request.url) == "http://gateway:4000/v1/ocr"

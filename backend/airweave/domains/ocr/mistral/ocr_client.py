@@ -27,6 +27,7 @@ from airweave.domains.ocr.mistral.models import (
     FileChunk,
     OcrResult,
 )
+from airweave.domains.ocr.pages import PAGE_JOIN
 from airweave.domains.sync_pipeline.exceptions import SyncFailureError
 from airweave.platform.rate_limiters import MistralRateLimiter
 
@@ -320,20 +321,22 @@ class MistralOcrClient:
             logger.warning(f"No pages in OCR response for {file_name}")
             return None
 
+        # Gooclaim: every page in its place — an empty page too, or every page
+        # after it would be numbered one short — joined by the page break, so a
+        # chunk can say which page it came from (see domains/ocr/pages.py).
         markdown_parts = []
         for page in pages:
             if isinstance(page, dict):
                 md = page.get("markdown") or ""
             else:
                 md = getattr(page, "markdown", "") or ""
-            if md:
-                markdown_parts.append(md)
+            markdown_parts.append(md)
 
-        if not markdown_parts:
+        if not any(part.strip() for part in markdown_parts):
             logger.warning(f"OCR returned empty markdown for {file_name}")
             return ""
 
-        return "\n\n".join(markdown_parts)
+        return PAGE_JOIN.join(markdown_parts)
 
     async def _delete_file(self, file_id: str) -> None:
         """Best-effort deletion of uploaded file from Mistral."""

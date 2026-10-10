@@ -15,9 +15,9 @@ from airweave.core.logging import ContextualLogger
 from airweave.core.logging import logger as default_logger
 from airweave.platform.destinations.vespa.types import VespaDocument
 from airweave.platform.entities._base import (
-    DataSourcesSystemMetadata,
     BaseEntity,
     CodeFileEntity,
+    DataSourcesSystemMetadata,
     EmailEntity,
     FileEntity,
     WebEntity,
@@ -316,6 +316,8 @@ class EntityTransformer:
             ("original_entity_id", "original_entity_id", None),
             ("source_name", "source_name", None),
             ("chunk_index", "chunk_index", None),
+            ("page_start", "page_start", None),
+            ("page_end", "page_end", None),
         ]
 
         for attr, field_name, transform in attr_mappings:

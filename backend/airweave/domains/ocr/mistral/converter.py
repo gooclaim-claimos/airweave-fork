@@ -41,6 +41,7 @@ from airweave.domains.ocr.mistral.splitters import (
     PdfSplitter,
     RecursiveSplitter,
 )
+from airweave.domains.ocr.pages import PAGE_JOIN
 from airweave.domains.sync_pipeline.exceptions import EntityProcessingError, SyncFailureError
 
 # Mistral upload limit.
@@ -303,7 +304,9 @@ class MistralOCR:
             return None
         if len(parts) == 1:
             return parts[0]
-        return "\n\n---\n\n".join(parts)  # type: ignore[arg-type]
+        # Gooclaim: the parts are consecutive page ranges, so where one ends the
+        # next page begins (domains/ocr/pages.py).
+        return PAGE_JOIN.join(parts)  # type: ignore[arg-type]
 
     @staticmethod
     def _build_final_results(

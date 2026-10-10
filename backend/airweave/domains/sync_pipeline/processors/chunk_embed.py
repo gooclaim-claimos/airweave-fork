@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 from airweave.domains.converters.protocols import ConverterRegistryProtocol
 from airweave.domains.embedders.exceptions import EmbedderProviderError
 from airweave.domains.embedders.protocols import DenseEmbedderProtocol, SparseEmbedderProtocol
+from airweave.domains.ocr.pages import pages_of, without_breaks
 from airweave.domains.sync_pipeline.exceptions import EntityProcessingError, SyncFailureError
 from airweave.domains.sync_pipeline.pipeline.text_builder import TextualRepresentationBuilder
 from airweave.domains.sync_pipeline.processors.utils import filter_empty_representations
@@ -197,10 +198,19 @@ class ChunkEmbedProcessor:
                     continue
 
                 chunk_entity = entity.model_copy(deep=True)
-                chunk_entity.textual_representation = chunk_text
+                # Gooclaim: the page(s) the chunk came from, read from the page
+                # breaks before them; then the breaks leave the text.
+                page_start, page_end = pages_of(
+                    entity.textual_representation or "",
+                    chunk.get("start_index"),
+                    chunk.get("end_index"),
+                )
+                chunk_entity.textual_representation = without_breaks(chunk_text)
                 chunk_entity.entity_id = f"{original_id}__chunk_{idx}"
                 chunk_entity.data_sources_system_metadata.chunk_index = idx
                 chunk_entity.data_sources_system_metadata.original_entity_id = original_id
+                chunk_entity.data_sources_system_metadata.page_start = page_start
+                chunk_entity.data_sources_system_metadata.page_end = page_end
 
                 chunk_entities.append(chunk_entity)
 

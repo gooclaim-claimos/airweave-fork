@@ -110,6 +110,15 @@ schema base_entity {
             attribute: fast-search
         }
 
+        # Gooclaim: the first and last page the chunk came from (1-based); empty
+        # when the document had no pages. A citation names them.
+        field data_sources_system_metadata_page_start type int {
+            indexing: attribute | summary
+        }
+        field data_sources_system_metadata_page_end type int {
+            indexing: attribute | summary
+        }
+
         # =============================================================================
         # Access Control Fields (flattened from AccessControl model)
         # =============================================================================

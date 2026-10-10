@@ -517,6 +517,8 @@ class VespaVectorDB:
             sync_job_id=fields.get("data_sources_system_metadata_sync_job_id") or "",
             chunk_index=fields.get("data_sources_system_metadata_chunk_index") or 0,
             original_entity_id=fields.get("data_sources_system_metadata_original_entity_id") or "",
+            page_start=fields.get("data_sources_system_metadata_page_start"),
+            page_end=fields.get("data_sources_system_metadata_page_end"),
         )
 
     def _extract_access_control(self, fields: Dict[str, Any]) -> SearchAccessControl:

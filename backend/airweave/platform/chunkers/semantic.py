@@ -387,10 +387,14 @@ class SemanticChunker(BaseChunker):
                 )
 
                 if oversized_pos is not None:
-                    # Replace with split sub-chunks
+                    # Replace with split sub-chunks. Gooclaim: their offsets were
+                    # within the oversized chunk's text — shift them to the
+                    # document's, or a chunk's page (domains/ocr/pages.py) is wrong.
                     split_chunks = split_results_by_position[oversized_pos]
                     for sub_chunk in split_chunks:
-                        final_chunks.append(self._convert_chunk(sub_chunk))
+                        final_chunks.append(
+                            self._convert_chunk(sub_chunk, offset=chunk.start_index or 0)
+                        )
                 else:
                     # Keep original chunk
                     final_chunks.append(self._convert_chunk(chunk))
@@ -405,7 +409,7 @@ class SemanticChunker(BaseChunker):
 
         return final_results
 
-    def _convert_chunk(self, chunk) -> Dict[str, Any]:
+    def _convert_chunk(self, chunk, offset: int = 0) -> Dict[str, Any]:
         """Convert Chonkie Chunk object to dict format.
 
         Token counts have already been recounted with tiktoken in
@@ -413,13 +417,14 @@ class SemanticChunker(BaseChunker):
 
         Args:
             chunk: Chonkie Chunk object with tiktoken token_count
+            offset: Where the text the chunk was cut from begins in the document
 
         Returns:
             Dict with chunk data and accurate OpenAI token count
         """
         return {
             "text": chunk.text,
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
+            "start_index": None if chunk.start_index is None else chunk.start_index + offset,
+            "end_index": None if chunk.end_index is None else chunk.end_index + offset,
             "token_count": chunk.token_count,  # Already tiktoken count
         }

@@ -41,6 +41,9 @@ class SearchSystemMetadata(BaseModel):
 
     chunk_index: int = Field(..., description="Index of the chunk in the file.")
     original_entity_id: str = Field(..., description="Original entity ID")
+    # Gooclaim: the page(s) the chunk came from — None when unknown.
+    page_start: Optional[int] = Field(default=None, description="First page of the chunk.")
+    page_end: Optional[int] = Field(default=None, description="Last page of the chunk.")
 
     def to_md(self) -> str:
         """Render the system metadata as markdown."""
