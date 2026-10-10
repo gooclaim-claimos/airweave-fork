@@ -20,6 +20,8 @@ from typing import (
 if TYPE_CHECKING:
     from airweave.domains.access_control.schemas import MembershipTuple
 
+from uuid import UUID
+
 from pydantic import BaseModel
 
 from airweave.core.logging import ContextualLogger
@@ -172,6 +174,17 @@ class BaseSource:
     def does_require_byoc(cls) -> bool:
         """Check if source requires user to bring their own OAuth client credentials."""
         return cls.requires_byoc
+
+    @classmethod
+    def check_config(cls, config: BaseModel, *, organization_id: UUID) -> None:
+        """Refuse a config that reaches outside the organisation running it.
+
+        Called by the source lifecycle before every instance is built, with the
+        organisation the sync or search runs for. A source whose config names
+        something the platform itself owns per organisation (a storage path)
+        raises ``ValueError`` when it is not that organisation's. Default: none.
+        """
+        del config, organization_id
 
     # ------------------------------------------------------------------
     # Abstract methods — the source contract

@@ -26,13 +26,20 @@ from airweave.domains.sources.lifecycle import SourceLifecycleService
 from airweave.domains.sources.tests.conftest import _make_ctx, _make_entry
 from airweave.domains.sources.types import AuthConfig, SourceConnectionData
 from airweave.platform.configs._base import Fields
+from airweave.platform.sources._base import BaseSource
 
 # ---------------------------------------------------------------------------
 # Stub source classes
 # ---------------------------------------------------------------------------
 
 
-class _StubSourceValid:
+class _StubBase:
+    """What every real source inherits from BaseSource and the lifecycle calls."""
+
+    check_config = BaseSource.check_config
+
+
+class _StubSourceValid(_StubBase):
     """Source whose create() and validate() both succeed."""
 
     @classmethod
@@ -48,7 +55,7 @@ class _StubSourceValid:
         pass
 
 
-class _StubSourceValidateFalse:
+class _StubSourceValidateFalse(_StubBase):
     @classmethod
     async def create(cls, *, auth, logger, http_client, config=None):
         instance = cls()
@@ -61,7 +68,7 @@ class _StubSourceValidateFalse:
         return False
 
 
-class _StubSourceValidateRaises:
+class _StubSourceValidateRaises(_StubBase):
     @classmethod
     async def create(cls, *, auth, logger, http_client, config=None):
         instance = cls()
@@ -74,13 +81,13 @@ class _StubSourceValidateRaises:
         raise ConnectionError("cannot reach API")
 
 
-class _StubSourceCreateRaises:
+class _StubSourceCreateRaises(_StubBase):
     @classmethod
     async def create(cls, *, auth, logger, http_client, config=None):
         raise ValueError("bad credentials format")
 
 
-class _StubSourceMinimal:
+class _StubSourceMinimal(_StubBase):
     """Source with no set_* methods at all."""
 
     @classmethod
@@ -929,7 +936,7 @@ async def test_fake_lifecycle_service():
 def _make_validate_stub(exc: Exception) -> type:
     """Build a stub source class whose validate() raises *exc*."""
 
-    class _Stub:
+    class _Stub(_StubBase):
         @classmethod
         async def create(cls, *, auth, logger, http_client, config=None):
             inst = cls()
@@ -1068,3 +1075,30 @@ async def test_create_does_not_wrap_token_provider_server_error():
 
     with pytest.raises(TokenProviderServerError):
         await service.create(db=MagicMock(), source_connection_id=sc_id, ctx=_make_ctx())
+
+
+    with pytest.raises(TokenProviderServerError):
+        await service.create(db=MagicMock(), source_connection_id=sc_id, ctx=_make_ctx())
+
+
+@pytest.mark.asyncio
+async def test_create_refuses_a_config_outside_the_running_organisation():
+    """check_config runs with the ctx's organisation before the source is built."""
+    seen: list[Any] = []
+
+    class _Foreign(_StubSourceValid):
+        @classmethod
+        def check_config(cls, config, *, organization_id):
+            seen.append(organization_id)
+            raise ValueError("upload_dir is not one of this organisation's upload buckets")
+
+        @classmethod
+        async def create(cls, **kwargs):
+            raise AssertionError("a refused config must not build a source")
+
+    service, sc_id = _create_service_for_validate_test(_Foreign)
+    ctx = _make_ctx()
+    with pytest.raises(SourceValidationError) as exc_info:
+        await service.create(db=MagicMock(), source_connection_id=sc_id, ctx=ctx)
+    assert seen == [ctx.organization.id]
+    assert "upload buckets" in str(exc_info.value)

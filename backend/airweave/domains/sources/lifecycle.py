@@ -165,6 +165,18 @@ class SourceLifecycleService(SourceLifecycleServiceProtocol):
         entry = self._source_registry.get(source_connection_data.short_name)
         config = self._build_typed_config(entry, source_connection_data.config_fields)
 
+        # 5b. A config must not reach another organisation's data (Gooclaim:
+        #     an upload bucket is a path on the platform's own disk, and a
+        #     source connection's config is whatever its creator sent).
+        try:
+            source_connection_data.source_class.check_config(
+                config, organization_id=ctx.organization.id
+            )
+        except ValueError as exc:
+            raise SourceValidationError(
+                short_name=source_connection_data.short_name, reason=str(exc)
+            ) from exc
+
         # 6. Create source instance with all deps injected
         source = await source_connection_data.source_class.create(
             auth=token_provider,

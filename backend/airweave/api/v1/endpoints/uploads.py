@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,28 +34,19 @@ from airweave.api import deps
 from airweave.api.context import ApiContext
 from airweave.api.deps import Inject
 from airweave.api.router import TrailingSlashRouter
-from airweave.core.config import settings
 from airweave.domains.collections.protocols import CollectionServiceProtocol
 from airweave.domains.source_connections.protocols import SourceConnectionServiceProtocol
-from airweave.schemas.source_connection import DirectAuthentication, SourceConnectionCreate
-
-# Match the source connector's supported file set so what the endpoint
-# accepts and what the indexer can read stay in sync.
-_SUPPORTED_EXTENSIONS: frozenset[str] = frozenset(
-    {".pdf", ".docx", ".doc", ".pptx", ".txt", ".md", ".html", ".htm", ".csv", ".json"}
+from airweave.platform.sources.gooclaim_upload import (
+    SIDECAR_SUFFIX,
+    SUPPORTED_EXTENSIONS,
+    bucket_dir,
 )
-
-# Same sidecar suffix the source connector reads on sync.
-_SIDECAR_SUFFIX: str = ".gooclaim.json"
+from airweave.schemas.source_connection import DirectAuthentication, SourceConnectionCreate
 
 # Per-upload hard cap. Larger files would also need streaming-to-disk
 # instead of the read-into-memory pattern below, so we enforce the
 # limit at request-edge for now. Tune as the demo dataset grows.
 _MAX_FILE_BYTES: int = 50 * 1024 * 1024  # 50 MiB
-
-# Connection IDs are URL path segments — restrict to a safe alphabet so
-# a crafted `..` or absolute path can't escape STORAGE_PATH.
-_CONNECTION_ID_PATTERN: re.Pattern[str] = re.compile(r"^[a-zA-Z0-9_-]{1,128}$")
 
 
 router = TrailingSlashRouter()
@@ -117,20 +107,23 @@ class CommitResponse(BaseModel):
 # ── Helpers ─────────────────────────────────────────────────────────────
 
 
-def _resolve_upload_dir(connection_id: str) -> Path:
-    """Resolve the on-disk directory for a connection's uploads.
+def _resolve_upload_dir(ctx: ApiContext, connection_id: str) -> Path:
+    """The caller's OWN bucket of that name — never another organisation's.
 
-    Raises HTTPException(400) if the connection id is unsafe.
+    🔴 This was `STORAGE_PATH/uploads/{connection_id}` for every organisation:
+    any API caller could list, or write into, another tenant's bucket by its
+    name. Raises HTTPException(400) if the connection id is unsafe.
     """
-    if not _CONNECTION_ID_PATTERN.match(connection_id):
+    try:
+        return bucket_dir(ctx.organization.id, connection_id)
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
                 "connection_id must match [a-zA-Z0-9_-]{1,128}; "
                 "path separators and dots are not allowed."
             ),
-        )
-    return Path(settings.STORAGE_PATH) / "uploads" / connection_id
+        ) from None
 
 
 def _safe_basename(filename: str) -> str:
@@ -234,9 +227,9 @@ def _count_bucket_files(upload_dir: Path) -> int:
         return 0
     count = 0
     for entry in upload_dir.iterdir():
-        if not entry.is_file() or entry.name.endswith(_SIDECAR_SUFFIX):
+        if not entry.is_file() or entry.name.endswith(SIDECAR_SUFFIX):
             continue
-        if entry.suffix.lower() in _SUPPORTED_EXTENSIONS:
+        if entry.suffix.lower() in SUPPORTED_EXTENSIONS:
             count += 1
     return count
 
@@ -264,17 +257,17 @@ async def upload_file(
     ctx: ApiContext = Depends(deps.get_context),
 ) -> UploadFileResponse:
     """Store an uploaded file and emit a sidecar with upload metadata."""
-    upload_dir = _resolve_upload_dir(connection_id)
+    upload_dir = _resolve_upload_dir(ctx, connection_id)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     original_name = _safe_basename(file.filename or "")
     ext = Path(original_name).suffix.lower()
-    if ext not in _SUPPORTED_EXTENSIONS:
+    if ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=(
                 f"File extension '{ext or '(none)'}' is not in the supported set: "
-                f"{sorted(_SUPPORTED_EXTENSIONS)}"
+                f"{sorted(SUPPORTED_EXTENSIONS)}"
             ),
         )
 
@@ -310,7 +303,7 @@ async def upload_file(
         "uploaded_by": uploaded_by,
         "description": description,
     }
-    sidecar_path = stored_path.with_suffix(stored_path.suffix + _SIDECAR_SUFFIX)
+    sidecar_path = stored_path.with_suffix(stored_path.suffix + SIDECAR_SUFFIX)
     sidecar_path.write_text(json.dumps(sidecar, indent=2, sort_keys=True), encoding="utf-8")
 
     return UploadFileResponse(
@@ -334,23 +327,23 @@ async def upload_file(
 async def list_uploads(
     *,
     connection_id: str = PathParam(..., description="Source connection identifier"),
-    ctx: ApiContext = Depends(deps.get_context),  # noqa: ARG001 — reserved for RBAC
+    ctx: ApiContext = Depends(deps.get_context),
 ) -> UploadListResponse:
     """Return all uploads under a connection (read from sidecars + filesystem stats)."""
-    upload_dir = _resolve_upload_dir(connection_id)
+    upload_dir = _resolve_upload_dir(ctx, connection_id)
 
     items: list[UploadListItem] = []
     if upload_dir.is_dir():
         for entry in sorted(upload_dir.iterdir()):
             if not entry.is_file():
                 continue
-            if entry.name.endswith(_SIDECAR_SUFFIX):
+            if entry.name.endswith(SIDECAR_SUFFIX):
                 continue
             ext = entry.suffix.lower()
-            if ext not in _SUPPORTED_EXTENSIONS:
+            if ext not in SUPPORTED_EXTENSIONS:
                 continue
 
-            sidecar_path = entry.with_suffix(entry.suffix + _SIDECAR_SUFFIX)
+            sidecar_path = entry.with_suffix(entry.suffix + SIDECAR_SUFFIX)
             sidecar: dict = {}
             if sidecar_path.is_file():
                 try:
@@ -420,7 +413,7 @@ async def commit_uploads(
     sc_service: SourceConnectionServiceProtocol = Inject(SourceConnectionServiceProtocol),
 ) -> CommitResponse:
     """Bind an upload bucket to a Collection + SourceConnection and run sync."""
-    upload_dir = _resolve_upload_dir(connection_id)
+    upload_dir = _resolve_upload_dir(ctx, connection_id)
 
     # 1) Find or create the Collection — connection_id IS the readable_id
     #    so the collection ↔ bucket mapping stays predictable.
