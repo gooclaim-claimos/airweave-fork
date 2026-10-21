@@ -11,10 +11,11 @@ to route through Azure OpenAI (Indian-region for IRDAI compliance).
 import os
 from typing import Any, Dict, List, Optional
 
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, DefaultAsyncHttpxClient
 from pydantic import BaseModel
 
 from airweave.api.context import ApiContext
+from airweave.core.gateway_tenant import tenant_event_hooks
 from airweave.platform.tokenizers import BaseTokenizer
 
 from ._base import BaseProvider, ProviderError
@@ -44,11 +45,20 @@ class OpenAIProvider(BaseProvider):
             # None, undoing this `or` for an env var that is present-but-
             # empty rather than truly unset).
             base_url = os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1"
+            # Gooclaim (T487): through the gateway, name the tenant and label the
+            # call like every other AI client here (core/gateway_tenant.py). This
+            # one was the gap: search answers were spend that belonged to nobody.
+            http_client = (
+                DefaultAsyncHttpxClient(event_hooks=tenant_event_hooks())
+                if os.getenv("OPENAI_BASE_URL")
+                else None
+            )
             self.client = AsyncOpenAI(
                 api_key=api_key,
                 base_url=base_url,
                 timeout=self.TIMEOUT,
                 max_retries=self.MAX_RETRIES,
+                http_client=http_client,
             )
         except Exception as e:
             raise RuntimeError(f"Failed to initialize OpenAI client: {e}") from e

@@ -16,6 +16,8 @@ import pytest
 from airweave.api import deps
 from airweave.core.gateway_tenant import (
     GATEWAY_CUSTOMER_HEADER,
+    GATEWAY_METADATA_HEADER,
+    GATEWAY_TAGS_HEADER,
     current_gateway_tenant,
     set_gateway_tenant,
     tenant_event_hooks,
@@ -48,6 +50,25 @@ async def test_a_call_names_the_tenant_it_was_made_for():
     set_gateway_tenant(ORG_A)
     request = await _send_through_hooks()
     assert request.headers[GATEWAY_CUSTOMER_HEADER] == str(ORG_A)
+
+
+@pytest.mark.asyncio
+async def test_every_call_is_labelled_documents_for_the_spend_log():
+    """T487: the gateway keeps these two headers on its spend log."""
+    set_gateway_tenant(ORG_A)
+    request = await _send_through_hooks()
+    assert request.headers[GATEWAY_METADATA_HEADER] == '{"feature":"documents"}'
+    assert request.headers[GATEWAY_TAGS_HEADER] == "feature:documents"
+
+
+@pytest.mark.asyncio
+async def test_a_label_the_caller_set_is_kept():
+    request = httpx.Request(
+        "POST", "http://gateway:4000/v1/chat", headers={GATEWAY_TAGS_HEADER: "feature:orion"}
+    )
+    for hook in tenant_event_hooks()["request"]:
+        await hook(request)
+    assert request.headers[GATEWAY_TAGS_HEADER] == "feature:orion"
 
 
 @pytest.mark.asyncio

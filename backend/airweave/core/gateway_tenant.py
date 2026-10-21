@@ -32,6 +32,15 @@ import httpx
 
 GATEWAY_CUSTOMER_HEADER = "x-litellm-customer-id"
 
+# Gooclaim (T487): what the call is FOR, in the two headers the gateway keeps on
+# every spend-log row — the same contract as gooclaim_shared.ai_usage
+# (`usage_headers`), written out here because this fork does not depend on that
+# library. Everything Airweave runs for a tenant is reading its documents.
+GATEWAY_METADATA_HEADER = "x-litellm-spend-logs-metadata"
+GATEWAY_TAGS_HEADER = "x-litellm-tags"
+DOCUMENTS_LABEL = '{"feature":"documents"}'
+DOCUMENTS_TAG = "feature:documents"
+
 _organization_id: ContextVar[str | None] = ContextVar(
     "gateway_tenant_organization_id", default=None
 )
@@ -51,6 +60,8 @@ async def _name_the_tenant(request: httpx.Request) -> None:
     organization_id = _organization_id.get()
     if organization_id:
         request.headers[GATEWAY_CUSTOMER_HEADER] = organization_id
+    request.headers.setdefault(GATEWAY_METADATA_HEADER, DOCUMENTS_LABEL)
+    request.headers.setdefault(GATEWAY_TAGS_HEADER, DOCUMENTS_TAG)
 
 
 def tenant_event_hooks() -> dict[str, list[Callable[[httpx.Request], Awaitable[Any]]]]:
