@@ -19,7 +19,7 @@ import { apiClient } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme-provider';
 import { useCollectionCreationStore } from '@/stores/collectionCreationStore';
-import { LibraryBadge } from '@/components/collection/LibraryBadge';
+import { LIBRARY_MEANING, LibraryBadge } from '@/components/collection/LibraryBadge';
 
 interface NativeUploadViewProps {
   humanReadableId: string;
@@ -186,6 +186,13 @@ export const NativeUploadView: React.FC<NativeUploadViewProps> = ({ humanReadabl
           <p className={cn('text-xs', isDark ? 'text-gray-400' : 'text-gray-500')}>
             Connection: <code className="font-mono">{connectionId}</code>
           </p>
+          {/* T421.14 — said in words where the files go, not only in a badge's
+              hover text: a staff-only document uploaded here would answer members. */}
+          {audience && (
+            <p className={cn('text-xs mt-1', isDark ? 'text-gray-300' : 'text-gray-700')}>
+              {LIBRARY_MEANING[audience]}
+            </p>
+          )}
         </div>
       </div>
 
