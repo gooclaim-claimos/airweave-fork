@@ -1,162 +1,113 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repository.
 
-## What is Airweave?
+## What this repo is
 
-Airweave is an open-source platform that makes any app searchable for AI agents by syncing data from 50+ sources into vector databases. It serves as a context retrieval layer for RAG systems and AI agents.
+Gooclaim's fork of upstream Airweave (`upstream` remote = airweave-ai/airweave). It runs
+as **Data Sources**, the document library of Gooclaim OS: tenants upload or connect
+documents; `gooclaim-datasources-mcp` (in `gooclaim-mcp-server`) searches them for the
+engine (members) and Orion (staff). In user-facing text it is "Data Sources", never
+"Airweave".
 
-## Architecture
+- Working branch: **`release/dev`** (the only branch with current code; `develop`,
+  `release/uat`, `release/prd` stopped in August 2026, `main` is the May upstream base).
+- Base: upstream commit `a9c8b1af7` (2026-05-18). Upstream has not been merged since.
+- Push and PR to `gooclaim-claimos/airweave-fork` only. `gh pr create` defaults to the
+  upstream parent — always pass `--repo gooclaim-claimos/airweave-fork`.
+- Gooclaim code is marked with `Gooclaim` comments. Find it with
+  `git log --oneline a9c8b1af7..release/dev` and `grep -rn Gooclaim backend/airweave`.
 
-Monorepo with four main components:
-- **Backend** (`backend/`): Python 3.13, FastAPI, SQLAlchemy async, PostgreSQL
-- **Frontend** (`frontend/`): React 18, TypeScript, Vite, ShadCN UI, TailwindCSS
-- **Workers**: Temporal for async sync orchestration, Redis for pub/sub
-- **MCP Server** (`mcp/`): Node.js, Streamable HTTP transport for AI assistant integration
+## Layout
 
-Data flow: Sources → Entity extraction → Transformation (DAG) → Embedding → Vector DB → Agent queries
+```
+backend/airweave/            FastAPI app (Python 3.13, Poetry)
+  api/context_resolver.py    auth order (X-API-Key first), org auto-provisioning, master key
+  api/deps.py                reads trusted X-Gck-* headers; sets the gateway tenant per request
+  api/v1/endpoints/          routes at the root, no /api/v1 prefix; uploads.py is Gooclaim's
+  core/gateway_tenant.py     x-litellm-customer-id + "documents" label on every gateway call
+  adapters/reranker/relevance_gate.py   classic-search relevance gate (gateway `fast`)
+  adapters/llm/anthropic.py  search LLM via ANTHROPIC_BASE_URL / ANTHROPIC_GATEWAY_MODEL
+  domains/embedders/dense/openai.py     embeddings via OPENAI_BASE_URL
+  domains/ocr/mistral/ocr_client.py     OCR via LLM_GATEWAY_URL /v1/ocr
+  domains/ocr/pages.py       page boundaries -> chunk page_start/page_end
+  platform/sources/gooclaim_upload.py, s3.py   Gooclaim connectors
+  domains/temporal/worker/   Temporal worker (python -m airweave.domains.temporal.worker)
+backend/alembic/versions/    0000 upstream baseline + 0001-0004 Gooclaim (run on backend start)
+backend/tests/               unit / integration / e2e
+backend/airweave/**/tests/   colocated domain tests (second test tree)
+frontend/                    React/Vite; .env.production sets VITE_GOOCLAIM_MODE=true
+docker/docker-compose.yml    the stack dev runs
+vespa/app/                   Vespa app package (fields data_sources_system_metadata_*)
+helm/datasources-*/          Kubernetes charts — NOT used by the running environment
+fern/ mcp/ connect/ monke/   upstream; do not edit for Gooclaim work
+```
 
-## Common Commands
+## Commands
 
-### Local Development (Docker)
 ```bash
-./start.sh                     # Start all services
-./start.sh --skip-frontend     # Backend only
-./start.sh --restart           # Restart services
-./start.sh --destroy           # Tear down everything
+# Backend tests — BOTH trees (pytest.ini collects only tests/)
+cd backend && poetry run pytest -q tests/unit airweave -n 4
+poetry run ruff check . && poetry run ruff format --check .
+
+# Frontend
+cd frontend && npm run lint && npm run build
+
+# Local stack — the env file is mandatory
+cd docker && docker compose --env-file ../.env up -d
+docker compose --env-file ../.env --profile frontend up -d frontend
 ```
 
-### Backend
-```bash
-cd backend
-poetry install                 # Install dependencies
-poetry run uvicorn airweave.main:app --host 0.0.0.0 --port 8001 --reload  # Dev server
+`backend/conftest.py` sets the env `Settings` needs; no `.env` for tests. Compare any
+failure with the same run on the base commit before calling it pre-existing.
+There is no server CI for `release/dev` (`gooclaim-ci.yml` triggers on `develop` only):
+run the checks locally before pushing.
 
-# Tests
-poetry run pytest tests/unit                          # Unit tests only
-poetry run pytest tests/integration                   # Integration tests
-poetry run pytest tests/e2e                           # E2E tests
-poetry run pytest tests/unit/test_foo.py              # Single file
-poetry run pytest tests/unit/test_foo.py::test_bar    # Single test
-poetry run pytest -m "not slow"                       # Skip slow tests
+## Non-negotiable rules
 
-# Code quality
-poetry run ruff check .        # Lint
-poetry run ruff format .       # Format
-poetry run black .             # Alt formatter (88 chars)
-poetry run mypy airweave       # Type checking
-lint-imports                   # Import architecture validation
-```
+1. **Organization id = Gooclaim tenant id.** Orgs are auto-created from
+   `X-Organization-ID` (`EXTERNAL_ORG_ID_PROVISIONING`). Never map or re-key them.
+2. **Every AI call goes through the LiteLLM gateway and names the tenant.** A new AI
+   client whose base URL is the gateway gets `event_hooks=tenant_event_hooks()`. Never
+   add a provider key or a direct provider call. Providers with a key set
+   (Together, Groq, Cerebras, Mistral, Cohere, Azure DI) bypass the gateway — keep them unset.
+3. **Trusted headers come only from the front proxy.** `X-Organization-ID`, `X-Gck-Platform-Admin`,
+   `X-Gck-User-Email`, `X-Gck-Return-Url`, `X-Gck-Tenant-Name` are believed as sent.
+   Do not add a route that acts on them without the platform-admin check where a
+   cross-tenant action is possible.
+4. **Platform-admin gates stay:** org create/delete, `/admin/*`, collection visibility.
+5. **`collection.audience` is required and fixed** (`members` / `staff`). No default.
+   The MCP enforces who may search which library.
+6. **Upload buckets:** only via `bucket_dir(organization_id, bucket)`
+   (`STORAGE_PATH/uploads/{org}/{bucket}`). Never read a path an entity or config names.
+   Never hand the original to the pipeline (it deletes `local_path` after a batch).
+7. **Relevance gate fails closed.** If it errors, classic search errors; never return
+   ungated results.
+8. **No query, passage or file content in logs** — a member's question can carry PHI.
+9. **`api_key.is_master`** is set only in the database, never through an API.
+10. **Compose:** backend and worker both mount `local_storage` and both need
+    `extra_hosts: host.docker.internal` (the worker embeds). Keep both.
 
-### Frontend
-```bash
-cd frontend
-npm install                    # Install dependencies
-npm run dev                    # Dev server on :8080
-npm run build                  # Production build
-npm run lint                   # ESLint
-```
+## Deploy (dev)
 
-## Backend Structure
+AWS EC2, `docker compose` from `docker/`. Backend and worker bind-mount `../backend:/app`:
+deploy = copy committed files (`git archive <sha> ...`) + recreate `backend temporal-worker`
+with `--env-file ../.env`. Without it compose runs the **upstream** image with an empty
+`SVIX_JWT_SECRET` and the backend crash-loops. The box's compose and `.env` differ from
+the repo — never copy the repo compose over them. Frontend = image in `FRONTEND_IMAGE`.
+See `docs/06-deployment.md`.
 
-```
-backend/airweave/
-├── api/v1/endpoints/    # FastAPI route handlers (one router per resource)
-├── models/              # SQLAlchemy ORM models (UUID PKs)
-├── schemas/             # Pydantic request/response schemas
-├── crud/                # Database access (base classes: _base_organization, _base_user, _base_public)
-├── domains/             # Business logic (service.py, repository.py, protocols.py per domain)
-├── platform/
-│   ├── sources/         # 50+ source connectors (Notion, Slack, etc.)
-│   ├── destinations/    # Vector DB adapters
-│   ├── embedding_models/# Embedding providers
-│   ├── entities/        # Entity type definitions per source
-│   └── temporal/        # Temporal worker and activities
-├── core/
-│   ├── config/          # Pydantic Settings (env vars)
-│   ├── container/       # Dependency injection container + factory
-│   ├── exceptions.py    # Custom exception hierarchy
-│   └── logging.py       # structlog-based logging
-├── adapters/            # External service adapters (PostHog, Stripe, etc.)
-└── search/              # Search providers (Vespa)
-```
+## Do not touch without discussion
 
-Key concepts:
-- `short_name` is a globally unique identifier for sources/entities (e.g., `slack`, `hubspot_crm`)
-- `ApiContext` is injected into every endpoint — contains user, org, logger, cache, rate limiter
-- Domain services use protocol-based DI; `Container` dataclass holds implementations, `Factory` builds it
-- Alembic migrations run automatically on startup (144+ migration files in `backend/alembic/versions/`)
+- `context_resolver.py` auth order and the provisioning / membership skip
+- `gateway_tenant.py` header names (the LiteLLM spend contract shared with `gooclaim_shared.ai_usage`)
+- Alembic `0001`–`0004` (new Gooclaim revisions continue the chain; check upstream's numbering first)
+- Vespa schema field names (`data_sources_system_metadata_*`) — renaming means reindexing
+- Upstream code outside Gooclaim changes: keep diffs small so rebases stay possible
 
-## Frontend Structure
+## Docs
 
-```
-frontend/src/
-├── components/
-│   ├── ui/              # ShadCN base components (40+)
-│   └── [feature]/       # Feature-grouped components
-├── pages/               # Route-level components
-├── lib/
-│   ├── api.ts           # API client (token mgmt, org context, SSE, retry)
-│   ├── stores/          # Zustand stores (organizations, collections, etc.)
-│   ├── auth-context.tsx # Auth0 wrapper with dev-mode fallback
-│   └── validation/      # Zod-based validation rules
-├── hooks/               # Custom React hooks
-├── config/              # env.ts, auth.ts
-└── types/index.ts       # Shared TypeScript types (mirrors backend Pydantic schemas)
-```
-
-Key patterns:
-- API client: always use relative paths, no `/api/v1` prefix — e.g., `apiClient.get('/collections')`
-- Auto-injected headers: `X-Organization-ID`, `X-Airweave-Session-ID` (PostHog session replay)
-- Zustand for global state, React Query for server state, local state for UI-only concerns
-- Component order: hooks → effects → handlers → render
-- Path alias: `@/` maps to `./src`
-
-## Code Style
-
-### Backend (Python)
-- Ruff: 100-char lines, Google docstrings, double quotes
-- Async for all I/O operations
-- Typed parameters and returns; functions under 50 lines
-- RESTful endpoints — version is NOT part of the URL path (just `host.com/{endpoint}`)
-- Use logger from `ctx` (API) or `sync_context` (during sync)
-- Security: never use `random.*` for security values (ruff S311); use `secrets` module
-
-### Frontend (TypeScript)
-- TailwindCSS with `cn()` utility for class merging
-- Strict typing; shared interfaces in `types/index.ts`
-- Never use `Math.random()` (ESLint ban); use `crypto.getRandomValues()` or `crypto.randomUUID()`
-- Toast notifications via Sonner: `toast.success()`, `toast.error()`, etc.
-
-## Testing
-
-### Backend test markers
-- `@pytest.mark.unit` — fast, isolated
-- `@pytest.mark.integration` — requires database/services
-- `@pytest.mark.live_integration` — requires live cloud infrastructure
-- `@pytest.mark.e2e` — end-to-end
-- `@pytest.mark.slow` — long-running
-
-Async mode is `auto` — async test functions are detected automatically.
-
-### Monke (E2E Framework)
-Located in `monke/`. Tests source connectors end-to-end by creating real test data in external systems, triggering syncs, and verifying results in the search index. Components:
-- `monke/bongos/{short_name}.py` — test data creation/cleanup
-- `monke/generation/schemas/{short_name}.py` — generation schemas
-- `monke/configs/{short_name}.yaml` — test configuration
-
-## OAuth Browser Flow Contract
-
-1. `POST /source-connections` returns `auth.claim_token` → store in `sessionStorage` as `oauth_claim_token:{source_connection_id}`
-2. After OAuth redirect, call `POST /source-connections/{id}/verify-oauth` with `{ claim_token }`
-3. Only remove sessionStorage entry after successful `verify-oauth` response
-
-Skipping `verify-oauth` leaves the sync stuck in `PENDING`.
-
-## Infrastructure Notes
-
-- Adjacent `infra-core` repository manages all infrastructure
-- Docker Compose for dev; Kubernetes for prod
-- PostgreSQL (metadata), Redis (pub/sub + caching), Vespa/Qdrant (vectors), Temporal (orchestration)
-- Auth0 for user auth (can disable with `AUTH_ENABLED=False` for local dev)
-- Pre-commit hooks enforce ruff, mypy, import-linter, ESLint
+`README.md` (overview), `docs/` (Gooclaim-specific set; index `docs/README.md`),
+`docs/gooclaim-fork-rebase.md` (upstream rebase runbook). Upstream docs live in `fern/`
+and at docs.airweave.ai — do not rewrite them. `GOOCLAIM-FORK.md` is older and partly
+stale; `README.md` and `docs/` win where they disagree.
