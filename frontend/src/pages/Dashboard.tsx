@@ -11,6 +11,9 @@ import {
   RequestConnectorButton,
 } from "@/components/dashboard";
 import { IS_GOOCLAIM_TENANT } from "@/config/env";
+
+/** Gooclaim OS documentation (docs.gooclaim.com). */
+const DOCS_URL = "https://docs.gooclaim.com";
 import { getStoredErrorDetails } from "@/lib/error-utils";
 import { useCollectionCreationStore } from "@/stores/collectionCreationStore";
 import { useCollectionsStore, useSourcesStore } from "@/lib/stores";
@@ -240,35 +243,35 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold">Learn & Explore</h3>
             <div className="space-y-3">
               <ExampleProjectCard
-                id="knowledge-sources-quickstart"
-                title="Knowledge Sources Quickstart"
-                description="Connect your first source in 4 steps — SharePoint, Drive, Confluence, S3, or custom APIs — and verify queries from your workflows."
+                id="data-sources-guide"
+                title="Gooclaim Data Sources guide"
+                description="Members and Staff only libraries, uploading files, connecting a source, and how often it is read again."
                 tags={["Documentation", "Getting Started"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://api.docs.gooclaim.com/home/knowledge-layer/knowledge-sources-quickstart', '_blank');
+                  window.open(`${DOCS_URL}/portal/data-sources`, '_blank', 'noopener,noreferrer');
                 }}
               />
 
               <ExampleProjectCard
-                id="advanced-search"
-                title="Advanced Search Guide"
-                description="Hybrid search, AI query expansion, metadata filtering, and AI-generated answers across your Knowledge Layer."
+                id="how-answers-use-documents"
+                title="How answers use your documents"
+                description="Search finds the passage; every answer quotes it, and the quote is checked against the document before it is sent."
                 tags={["Documentation", "Search"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://api.docs.gooclaim.com/home/knowledge-layer/advanced-search', '_blank');
+                  window.open(`${DOCS_URL}/portal/data-sources#how-your-documents-are-used`, '_blank', 'noopener,noreferrer');
                 }}
               />
 
               <ExampleProjectCard
-                id="authentication"
-                title="Authentication"
-                description="How Gooclaim signs requests, how the bridge cookie binds Sources to your Portal session, and where machine tokens fit in."
+                id="security"
+                title="Security and compliance"
+                description="Sign-in, access, encryption, AI safeguards and the audit trail across Gooclaim OS."
                 tags={["Documentation"]}
                 icon={<FileText className="h-5 w-5 text-primary" />}
                 onClick={() => {
-                  window.open('https://api.docs.gooclaim.com/home/get-started/authentication', '_blank');
+                  window.open(`${DOCS_URL}/security`, '_blank', 'noopener,noreferrer');
                 }}
               />
 
