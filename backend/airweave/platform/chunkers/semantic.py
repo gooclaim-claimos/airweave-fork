@@ -23,7 +23,13 @@ class SemanticChunker(BaseChunker):
 
     # Configuration constants
     MAX_TOKENS_PER_CHUNK = 8192  # OpenAI text-embedding-3-small hard limit (safety net)
-    SEMANTIC_CHUNK_SIZE = 4096  # Soft target for semantic groups (better search quality)
+    # Soft target for semantic groups. 512 (was 4096, Gooclaim 2026-11-19): policy wordings
+    # were stored as 5,000 to 19,000-character pieces, so a search found the right document
+    # but not the right clause (top hits led with unrelated sections), and a phone call —
+    # which can only be shown a short passage — never saw the clause at all. ~512 tokens
+    # (about 2,000 characters, a few paragraphs) is the common default for question
+    # answering (Retell's voice guidance, recursive/semantic benchmarks).
+    SEMANTIC_CHUNK_SIZE = 512
     OVERLAP_TOKENS = 128  # Token overlap between chunks
 
     # SemanticChunker configuration
