@@ -241,25 +241,29 @@ schema base_entity {
         }
 
         # -----------------------------------------------------------------------
-        # Keyword score using pre-computed FastEmbed sparse embeddings
-        # Replaces bm25() for consistent scoring with Qdrant
-        # Benefits: pre-trained IDF, stopword removal, learned term weights
+        # Keyword score: Vespa's own BM25 over the chunk text — with IDF.
+        # Gooclaim (2026-11-20): this was sum(query(q_sparse) * attribute(sparse_embedding)),
+        # FastEmbed Qdrant/bm25 vectors. Those carry NO IDF (Qdrant applies it with its IDF
+        # modifier; Vespa never did), so "covered" — in nearly every clause — weighed as
+        # much as "maternity": "Is maternity covered?" found no maternity clause in the
+        # top 10. Measured on the dev library (22 questions): top 5 19→22 keyword,
+        # 20→22 hybrid; first place 15→19 / 15→20.
         # -----------------------------------------------------------------------
         function keyword_score() {
-            expression: sum(query(q_sparse) * attribute(sparse_embedding))
+            expression: bm25(textual_representation)
         }
     }
 
     # =========================================================================
     # HYBRID RANK PROFILE with RRF (Reciprocal Rank Fusion)
-    # Uses FastEmbed sparse embeddings for keyword scoring instead of Vespa BM25
+    # Keyword part: Vespa BM25 (keyword_score above)
     # =========================================================================
     rank-profile hybrid inherits default {
 
         # -----------------------------------------------------------------------
         # FIRST PHASE: Runs on all matched candidates
         # Combines FastEmbed sparse dotproduct and semantic closeness
-        # Note: keyword_score() uses pre-computed FastEmbed embeddings
+        # Note: keyword_score() is Vespa BM25 over the chunk text
         # -----------------------------------------------------------------------
         first-phase {
             expression: keyword_score() + semantic_score()
@@ -304,7 +308,7 @@ schema base_entity {
 
     # =========================================================================
     # KEYWORD RANK PROFILE (for keyword-only search)
-    # Uses FastEmbed sparse embeddings for consistent behavior with Qdrant
+    # Vespa BM25 with IDF (keyword_score above)
     # =========================================================================
     rank-profile keyword inherits default {
         first-phase {
