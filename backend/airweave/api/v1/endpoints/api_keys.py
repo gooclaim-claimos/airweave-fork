@@ -45,7 +45,8 @@ async def create_api_key(
     expiration_days = (api_key_obj.expiration_date - api_key_obj.created_at).days
     audit_logger = ctx.logger.with_context(event_type="api_key_created")
     audit_logger.info(
-        f"API key created: {api_key_obj.id} by {api_key_obj.created_by_email} "
+        # Gooclaim: the actor as an id, never an email, in a log.
+        f"API key created: {api_key_obj.id} by user {ctx.user.id if ctx.user else '-'} "
         f"for org {ctx.organization.id}, expires in {expiration_days} days "
         f"({api_key_obj.expiration_date.isoformat()})"
     )
@@ -225,7 +226,7 @@ async def rotate_api_key(
     audit_logger = ctx.logger.with_context(event_type="api_key_rotated")
     audit_logger.info(
         f"API key rotated: old={old_key_schema.id}, new={new_key_schema.id} "
-        f"by {new_key_schema.created_by_email} for org {ctx.organization.id}, "
+        f"by user {ctx.user.id if ctx.user else '-'} for org {ctx.organization.id}, "
         f"new key expires {new_key_schema.expiration_date.isoformat()}"
     )
 

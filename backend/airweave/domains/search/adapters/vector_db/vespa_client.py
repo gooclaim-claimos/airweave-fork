@@ -129,16 +129,18 @@ class VespaVectorDB:
             error_str = str(e)
             if "NullItem" in error_str or "Invalid query parameter" in error_str:
                 self._logger.warning(
-                    f"[VespaVectorDB] Query not parseable by Vespa, returning empty: {e}"
+                    "[VespaVectorDB] Query not parseable by Vespa, returning empty"
                 )
                 return SearchResults(results=[])
-            self._logger.error(f"[VespaVectorDB] Query execution failed: {e}")
+            # Gooclaim: Vespa's error text can quote the query — the type, never the words.
+            self._logger.error(f"[VespaVectorDB] Query execution failed: {type(e).__name__}")
             raise VectorDBError(f"Vespa query failed: {e}", cause=e) from e
         query_time_ms = (time.monotonic() - start_time) * 1000
 
         if not response.is_successful():
             error_msg = getattr(response, "json", {}).get("error", str(response))
-            self._logger.error(f"[VespaVectorDB] Vespa returned error: {error_msg}")
+            status = getattr(response, "status_code", "?")
+            self._logger.error(f"[VespaVectorDB] Vespa returned error: status={status}")
             raise VectorDBError(f"Vespa query error: {error_msg}")
 
         raw_json = response.json if hasattr(response, "json") else {}

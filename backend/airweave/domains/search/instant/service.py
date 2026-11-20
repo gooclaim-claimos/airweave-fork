@@ -53,7 +53,10 @@ class InstantSearchService(InstantSearchServiceProtocol):
     ) -> SearchResults:
         """Build plan from request and execute."""
         start_time = time.monotonic()
-        ctx.logger.info(f"Instant search started collection={readable_id} query={request.query!r}")
+        # Gooclaim: a member's question can carry PHI — its length, never its words.
+        ctx.logger.info(
+            f"Instant search started collection={readable_id} query_chars={len(request.query)}"
+        )
 
         try:
             result = await self._execute(
@@ -69,7 +72,7 @@ class InstantSearchService(InstantSearchServiceProtocol):
             duration_ms = int((time.monotonic() - start_time) * 1000)
             ctx.logger.error(
                 f"Instant search failed collection={readable_id} "
-                f"duration_ms={duration_ms} error={e}"
+                f"duration_ms={duration_ms} error_type={type(e).__name__}"
             )
             await self._event_bus.publish(
                 SearchFailedEvent(

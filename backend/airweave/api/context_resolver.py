@@ -203,7 +203,7 @@ class ContextResolver:
             audit_logger = logger.with_context(event_type="api_key_usage")
             audit_logger.info(
                 f"API key usage: key={api_key_obj.id} org={org_id} ip={client_ip} "
-                f"endpoint={request.url.path} created_by={api_key_obj.created_by_email}"
+                f"endpoint={request.url.path}"  # Gooclaim: never a person's email in a log
             )
 
             await self._cache.set_api_key_org_id(api_key, org_id)

@@ -136,7 +136,8 @@ class Agent:
         diag = _DiagnosticsAccumulator()
         self._user_principal_override = user_principal_override
         ctx.logger.info(
-            f"Agentic search started collection={readable_id} query={request.query!r} "
+            # Gooclaim: a member's question can carry PHI — its length, never its words.
+            f"Agentic search started collection={readable_id} query_chars={len(request.query)} "
             f"thinking={request.thinking}"
         )
 

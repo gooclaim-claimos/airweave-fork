@@ -72,7 +72,10 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
     ) -> SearchResults:
         """Generate strategy via LLM, execute, optionally rerank, return results."""
         start_time = time.monotonic()
-        ctx.logger.info(f"Classic search started collection={readable_id} query={request.query!r}")
+        # Gooclaim: a member's question can carry PHI — its length, never its words.
+        ctx.logger.info(
+            f"Classic search started collection={readable_id} query_chars={len(request.query)}"
+        )
 
         try:
             result = await self._execute(
@@ -88,7 +91,7 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
             duration_ms = int((time.monotonic() - start_time) * 1000)
             ctx.logger.error(
                 f"Classic search failed collection={readable_id} "
-                f"duration_ms={duration_ms} error={e}"
+                f"duration_ms={duration_ms} error_type={type(e).__name__}"
             )
             await self._event_bus.publish(
                 SearchFailedEvent(
@@ -136,7 +139,8 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
         prompt = f"User query: {request.query}\nUser filter: {user_filter_md}"
         strategy = await self._llm.structured_output(prompt, ClassicSearchStrategy, system_prompt)
         ctx.logger.debug(
-            f"Classic search LLM strategy primary={strategy.query.primary!r} "
+            # Gooclaim: the rewritten query is the member's question — its length only.
+            f"Classic search LLM strategy primary_chars={len(strategy.query.primary)} "
             f"retrieval={strategy.retrieval_strategy} "
             f"filter_groups={len(strategy.filter_groups or [])}"
         )
@@ -145,8 +149,8 @@ class ClassicSearchService(ClassicSearchServiceProtocol):
         # user's original. LLMs sometimes return "", ".", or punctuation-only strings.
         if not strategy.query.primary or not any(c.isalnum() for c in strategy.query.primary):
             ctx.logger.warning(
-                f"Classic search LLM returned empty/invalid primary query, "
-                f"falling back to user query={request.query!r}"
+                "Classic search LLM returned empty/invalid primary query, "
+                "falling back to the user's query"
             )
             strategy.query.primary = request.query
 

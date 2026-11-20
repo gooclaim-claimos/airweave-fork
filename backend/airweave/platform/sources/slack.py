@@ -144,7 +144,7 @@ class SlackSource(BaseSource):
         content requires the full sync pipeline (download, chunking, vectorization)
         which federated search sources skip.
         """
-        self.logger.info(f"Searching Slack messages for query: '{query}' (limit: {limit})")
+        self.logger.info(f"Searching Slack messages (limit: {limit})")  # never the query (PHI)
         results = await self._paginate_search_results(query, limit)
         self.logger.info(f"Slack search complete: returned {len(results)} results")
         return results

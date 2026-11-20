@@ -357,7 +357,7 @@ class SearchPlanExecutor(SearchPlanExecutorProtocol):
     ) -> list[SearchResult]:
         """Search a single federated source with retries on transient errors."""
         source_name = source.__class__.__name__
-        ctx.logger.debug(f"[FederatedSearch] Searching {source_name} with query: '{query}'")
+        ctx.logger.debug(f"[FederatedSearch] Searching {source_name}")  # never the query (PHI)
 
         last_error: Exception | None = None
         delay = self._FEDERATED_INITIAL_DELAY
