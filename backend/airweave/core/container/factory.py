@@ -622,6 +622,7 @@ def create_container(settings: Settings) -> Container:
         classic_search=search_deps["classic_search"],
         agentic_search=search_deps["agentic_search"],
         browse_service=search_deps["browse_service"],
+        search_warmup=search_deps["search_warmup"],
     )
 
 
@@ -1393,12 +1394,21 @@ def _create_search_services(
         vector_db=vector_db,
         collection_repo=collection_repo,
     )
+    # Gooclaim: match-nothing queries at startup, so the first member's search is warm.
+    from airweave.domains.search.gooclaim_warmup import SearchWarmup  # noqa: PLC0415
+
+    search_warmup = SearchWarmup(
+        vector_db=vector_db,
+        sparse_embedder=sparse_embedder,
+        dimensions=dense_embedder.dimensions,
+    )
 
     return {
         "instant_search": instant_search,
         "classic_search": classic_search,
         "agentic_search": agentic_search,
         "browse_service": browse_service,
+        "search_warmup": search_warmup,
     }
 
 

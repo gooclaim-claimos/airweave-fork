@@ -22,15 +22,20 @@ RUN poetry config virtualenvs.create false \
 # Copy poetry files first for better layer caching
 COPY pyproject.toml poetry.lock ./
 
-# Install dependencies with cache mount
-RUN poetry install --only=main --no-interaction --no-ansi --no-root
+# Install dependencies with cache mount.
+# Gooclaim: --compile ships the libraries as bytecode. Without it, and with
+# PYTHONDONTWRITEBYTECODE=1 below, every start re-compiled every module it imported
+# (15,649 .py files, 1,304 compiled, measured on dev 2026-11-20): a slow start AND a
+# slow first search, since some libraries load on their first use.
+RUN poetry install --only=main --no-interaction --no-ansi --no-root --compile
 
 # Copy entrypoint script with proper permissions
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod 755 /app/entrypoint.sh
 
-# Copy application code
+# Copy application code (and ship it compiled too — see the install step above)
 COPY . .
+RUN python -m compileall -q /app/airweave
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \

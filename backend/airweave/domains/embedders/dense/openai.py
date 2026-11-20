@@ -90,6 +90,10 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
             max_retries=self._CLIENT_MAX_RETRIES,
             http_client=http_client,
         )
+        # Gooclaim: the SDK imports its WHOLE `resources` package (realtime, evals, beta…)
+        # the first time `client.embeddings` is read — ~1 s measured on dev 2026-11-20. Read
+        # it here, at startup, so the first member's question never pays for it.
+        self._embeddings = self._client.embeddings
         self._encoder = tiktoken.get_encoding("cl100k_base")
         self._semaphore = asyncio.Semaphore(self._MAX_CONCURRENT_REQUESTS)
 
@@ -208,7 +212,7 @@ class OpenAIDenseEmbedder(DenseEmbedderProtocol):
         import openai  # noqa: PLC0415
 
         try:
-            return await self._client.embeddings.create(
+            return await self._embeddings.create(
                 input=batch,
                 model=self._model,
                 dimensions=self._dimensions,

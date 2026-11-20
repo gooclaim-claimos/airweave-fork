@@ -74,6 +74,7 @@ from airweave.domains.organizations.protocols import (
     OrganizationServiceProtocol,
     UserOrganizationRepositoryProtocol,
 )
+from airweave.domains.search.gooclaim_warmup import SearchWarmup
 from airweave.domains.search.protocols import (
     AgenticSearchServiceProtocol,
     BrowseServiceProtocol,
@@ -271,6 +272,9 @@ class Container:
     # Optional fields (default=None) — must be last in frozen dataclass
     # OCR provider (with fallback chain + circuit breaking)
     ocr_provider: Optional[OcrProvider] = None
+
+    # Gooclaim: wakes the search index at startup (domains/search/gooclaim_warmup.py)
+    search_warmup: Optional[SearchWarmup] = None
 
     # -----------------------------------------------------------------
     # Convenience methods

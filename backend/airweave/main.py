@@ -4,6 +4,7 @@ This module sets up the FastAPI application and the middleware to log incoming r
 and unhandled exceptions.
 """
 
+import asyncio
 import os
 import subprocess
 import sys
@@ -90,6 +91,11 @@ async def lifespan(app: FastAPI):
             f"Failed to initialize system schedules (Temporal may not be available): {e}"
         )
 
+    # Gooclaim (2026-11-20): wake the search index in the background, so the first
+    # member's search after a start is not the slow one (domains/search/gooclaim_warmup.py).
+    warmup = container_mod.container.search_warmup
+    warmup_task = asyncio.create_task(warmup.run()) if warmup is not None else None
+
     # Start metrics sidecar + DB pool sampler; wire app.state.http_metrics
     from airweave.core.metrics_service import metrics_lifespan  # noqa: PLC0415
     from airweave.db.session import async_engine  # noqa: PLC0415
@@ -98,6 +104,8 @@ async def lifespan(app: FastAPI):
         yield
 
     container_mod.container.health.shutting_down = True
+    if warmup_task is not None and not warmup_task.done():
+        warmup_task.cancel()
 
     # Clean up health check engine connections
     from airweave.db.session import health_check_engine  # noqa: PLC0415

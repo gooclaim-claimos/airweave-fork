@@ -13,6 +13,7 @@ from uuid import uuid4
 import pytest
 
 from airweave.core.events.collection import CollectionLifecycleEvent
+from airweave.core.events.search import SearchCompletedEvent, SearchTier
 from airweave.core.events.source_connection import SourceConnectionLifecycleEvent
 from airweave.core.events.sync import SyncLifecycleEvent
 
@@ -97,3 +98,24 @@ class TestWebhookEventSubscriber:
         assert len(fake_webhook_publisher.events) == 2
         assert fake_webhook_publisher.has_event("sync.running")
         assert fake_webhook_publisher.has_event("sync.completed")
+
+
+class TestSearchEventsAreNotSent:
+    """Gooclaim (2026-11-20): search events are not sent as webhooks.
+
+    A search's webhook ran inside its response (~250 ms of a 480 ms search on dev) and
+    no one subscribes to it. Sync events still go.
+    """
+
+    @pytest.mark.asyncio
+    async def test_a_search_event_is_not_forwarded(self, fake_webhook_publisher, subscriber):
+        event = SearchCompletedEvent(
+            organization_id=ORG_ID,
+            request_id="r-1",
+            tier=SearchTier.INSTANT,
+            results=[],
+            duration_ms=10,
+        )
+        await subscriber.handle(event)
+
+        assert fake_webhook_publisher.events == []
