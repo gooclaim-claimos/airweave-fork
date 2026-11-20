@@ -36,6 +36,7 @@ from airweave.api.deps import Inject
 from airweave.api.router import TrailingSlashRouter
 from airweave.domains.collections.protocols import CollectionServiceProtocol
 from airweave.domains.source_connections.protocols import SourceConnectionServiceProtocol
+from airweave.platform.sources.gooclaim_labels import detect_uins, first_pages_text, labels_of
 from airweave.platform.sources.gooclaim_upload import (
     SIDECAR_SUFFIX,
     SUPPORTED_EXTENSIONS,
@@ -67,6 +68,9 @@ class UploadFileResponse(BaseModel):
     uploaded_by: Optional[str] = Field(None, description="Stable user/service identifier")
     description: Optional[str] = Field(None, description="Optional human description")
     stored_path: str = Field(..., description="Server-side path the file was written to")
+    # Gooclaim (T531): the product UIN(s) read off the first pages — a suggestion the
+    # tenant confirms (upload_labels.py); only a confirmed label scopes a search.
+    detected_uins: list[str] = Field(default_factory=list)
 
 
 class UploadListItem(BaseModel):
@@ -79,6 +83,10 @@ class UploadListItem(BaseModel):
     uploaded_at: datetime
     uploaded_by: Optional[str] = None
     description: Optional[str] = None
+    # Gooclaim (T531): which product(s) this document covers (gooclaim_labels.py).
+    detected_uins: list[str] = Field(default_factory=list)
+    product_uins: list[str] = Field(default_factory=list)
+    applies_to: Optional[Literal["products", "general"]] = None
 
 
 class UploadListResponse(BaseModel):
@@ -317,6 +325,8 @@ async def upload_file(
 
     uploaded_at = datetime.now(tz=timezone.utc)
     uploaded_by = _ctx_user_identifier(ctx)
+    # Gooclaim (T531): the product UIN printed on the first pages, as a suggestion.
+    detected = detect_uins(first_pages_text(stored_path))
 
     sidecar = {
         "upload_id": upload_id,
@@ -326,6 +336,7 @@ async def upload_file(
         "uploaded_at": uploaded_at.isoformat(),
         "uploaded_by": uploaded_by,
         "description": description,
+        "detected_uins": detected,
     }
     sidecar_path = stored_path.with_suffix(stored_path.suffix + SIDECAR_SUFFIX)
     sidecar_path.write_text(json.dumps(sidecar, indent=2, sort_keys=True), encoding="utf-8")
@@ -340,6 +351,7 @@ async def upload_file(
         uploaded_by=uploaded_by,
         description=description,
         stored_path=str(stored_path),
+        detected_uins=detected,
     )
 
 
@@ -390,6 +402,7 @@ async def list_uploads(
                     uploaded_at=uploaded_at,
                     uploaded_by=sidecar.get("uploaded_by"),
                     description=sidecar.get("description"),
+                    **labels_of(sidecar),
                 )
             )
 

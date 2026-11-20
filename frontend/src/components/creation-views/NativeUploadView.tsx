@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/lib/theme-provider';
 import { useCollectionCreationStore } from '@/stores/collectionCreationStore';
 import { LIBRARY_MEANING, LibraryBadge } from '@/components/collection/LibraryBadge';
+import { DocumentProductLabel } from './DocumentProductLabel';
 
 interface NativeUploadViewProps {
   humanReadableId: string;
@@ -33,6 +34,10 @@ interface UploadListItem {
   uploaded_at: string;
   uploaded_by?: string | null;
   description?: string | null;
+  // Gooclaim (T531): which product the document covers (DocumentProductLabel).
+  detected_uins?: string[];
+  product_uins?: string[];
+  applies_to?: 'products' | 'general' | null;
 }
 
 interface UploadFileResponse extends UploadListItem {
@@ -283,6 +288,16 @@ export const NativeUploadView: React.FC<NativeUploadViewProps> = ({ humanReadabl
                   <div className={cn('text-xs', isDark ? 'text-gray-500' : 'text-gray-500')}>
                     {it.file_type.toUpperCase()} · {fmtSize(it.size)} · {fmtDate(it.uploaded_at)}
                   </div>
+                  {audience === 'members' && (
+                    <DocumentProductLabel
+                      item={it}
+                      connectionId={connectionId}
+                      isDark={isDark}
+                      onSaved={(saved) =>
+                        setItems((all) => all.map((x) => (x.upload_id === saved.upload_id ? saved : x)))
+                      }
+                    />
+                  )}
                 </div>
               </li>
             ))}

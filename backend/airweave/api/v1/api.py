@@ -20,6 +20,7 @@ from airweave.api.v1.endpoints import (
     source_rate_limits,
     sources,
     sync,
+    upload_labels,
     uploads,
     usage,
     users,
@@ -61,3 +62,5 @@ api_router.include_router(
 api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(connect.router, prefix="/connect", tags=["connect"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["gooclaim-uploads"])
+# Gooclaim (T531): which product an uploaded document covers.
+api_router.include_router(upload_labels.router, prefix="/uploads", tags=["gooclaim-uploads"])
