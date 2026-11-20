@@ -19,6 +19,9 @@
     <document-processing/>
 
     <nodes>
+      <!-- Gooclaim (dev box 2, 8 GB shared with ~15 services): heap capped from the
+           1.5 GB self-hosted default; the library is small. Rollback: delete this line. -->
+      <jvm options="-Xms256m -Xmx768m"/>
       <node hostalias="container0"/>
     </nodes>
   </container>
