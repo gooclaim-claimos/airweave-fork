@@ -31,6 +31,7 @@ from svix.api import (
 from svix.exceptions import HttpError as SvixHttpError
 from svix.exceptions import HTTPValidationError as SvixValidationError
 
+from airweave.adapters.webhooks.gooclaim_audit import AuditEndpoint
 from airweave.core.config import settings
 from airweave.core.protocols.webhooks import WebhookAdmin, WebhookPublisher
 from airweave.domains.webhooks.types import (
@@ -170,6 +171,10 @@ class SvixAdapter(WebhookPublisher, WebhookAdmin):
         """Initialize Svix adapter with JWT token from settings."""
         token = _generate_token(settings.SVIX_JWT_SECRET)
         self._svix = SvixAsync(token, SvixOptions(server_url=settings.SVIX_URL))
+        # Gooclaim: every tenant's data-sources events reach the audit ledger.
+        self._audit = AuditEndpoint(
+            self._svix, settings.GOOCLAIM_AUDIT_WEBHOOK_URL, settings.GOOCLAIM_AUDIT_WEBHOOK_SECRET
+        )
 
     async def _create_org(self, org_id: uuid.UUID) -> None:
         await self._svix.application.create(ApplicationIn(name=str(org_id), uid=str(org_id)))
@@ -203,6 +208,7 @@ class SvixAdapter(WebhookPublisher, WebhookAdmin):
         """
         event_type = event.event_type.value
         payload = event.model_dump(mode="json")
+        await self._audit.ensure(event.organization_id, event_type)  # Gooclaim, never raises
 
         max_retries = 3
         retry_delays = [0, 1, 2]

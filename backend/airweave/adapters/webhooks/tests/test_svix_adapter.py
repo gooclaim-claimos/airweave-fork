@@ -12,6 +12,7 @@ from uuid import uuid4
 import pytest
 from svix.exceptions import HttpError as SvixHttpError
 
+from airweave.adapters.webhooks.gooclaim_audit import AuditEndpoint
 from airweave.domains.webhooks.types import WebhookPublishError, WebhooksError
 
 NOW = datetime(2024, 3, 15, 9, 0, 0, tzinfo=timezone.utc)
@@ -159,6 +160,8 @@ def adapter():
     svix_mock.message_attempt.list_by_endpoint = AsyncMock()
 
     a._svix = svix_mock
+    # Gooclaim: the audit endpoint, switched off (no address) unless a test sets one.
+    a._audit = AuditEndpoint(svix_mock, "", "")
     return a
 
 

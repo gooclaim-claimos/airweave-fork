@@ -292,6 +292,11 @@ class Settings(BaseSettings):
     SVIX_URL: str = "http://localhost:8071"
     SVIX_JWT_SECRET: str
     WEBHOOK_VERIFY_ENDPOINTS: bool = True
+    # Gooclaim: the audit ledger's receiver (gooclaim-audit) — every tenant's data-sources
+    # events go there (adapters/webhooks/gooclaim_audit.py). Empty URL = off. The secret is
+    # the Svix `whsec_…` signing secret gooclaim-audit verifies with.
+    GOOCLAIM_AUDIT_WEBHOOK_URL: str = ""
+    GOOCLAIM_AUDIT_WEBHOOK_SECRET: str = ""
 
     @field_validator("HEALTH_CHECK_TIMEOUT", mode="before")
     def validate_health_check_timeout(cls, v: float) -> float:
