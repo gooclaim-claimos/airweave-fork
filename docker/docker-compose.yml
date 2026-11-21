@@ -308,7 +308,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
-    restart: on-failure
+    # Gooclaim: unless-stopped, not on-failure — a clean box shutdown exits 0,
+    # so on-failure left Vespa (every policy answer) down after each EC2 stop/start.
+    restart: unless-stopped
 
   # Vespa init container - deploys the application package automatically
   # This runs once after vespa is healthy, then exits
