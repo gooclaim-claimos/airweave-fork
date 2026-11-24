@@ -82,9 +82,10 @@ class AnthropicLLM(BaseLLM):
 
         # Gooclaim (T418, T542): the name the GATEWAY is sent — the task `knowledge.answer`;
         # the gooclaim-datasources key maps it to the real model (Console → AI Control
-        # Center) and refuses a name the key is not granted. (OCR and embeddings still name
-        # their real models in Airweave's own code: mistral-ocr-latest, text-embedding-3-small.) The spec still decides context
-        # window, output cap and thinking; only the `model` field on the wire changes.
+        # Center) and refuses a name the key is not granted. OCR does the same with
+        # `knowledge.read` (OCR_GATEWAY_MODEL). Embeddings keep the real model each collection
+        # was indexed with (vectors from two models cannot be compared). The spec still decides
+        # context window, output cap and thinking; only the `model` field on the wire changes.
         self._api_model = os.getenv("ANTHROPIC_GATEWAY_MODEL") or model_spec.api_model_name
 
         self._effort = model_spec.thinking_config.effort  # e.g., "high"

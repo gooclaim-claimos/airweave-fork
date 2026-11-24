@@ -83,6 +83,9 @@ class MistralOcrClient:
         # Gooclaim (T418): set when OCR goes through the LLM gateway (LiteLLM).
         self._gateway_url: Optional[str] = None
         self._gateway_key: Optional[str] = None
+        # Gooclaim (T542): the name the GATEWAY is sent — the task `knowledge.read`
+        # (OCR_GATEWAY_MODEL); the key maps it to the real OCR model, set in the Console.
+        self._gateway_model = "mistral-ocr-latest"
 
     # ------------------------------------------------------------------
     # Lazy client initialisation
@@ -108,6 +111,7 @@ class MistralOcrClient:
                 raise SyncFailureError("LLM_GATEWAY_API_KEY required when LLM_GATEWAY_URL is set")
             self._gateway_url = gateway_url.rstrip("/")
             self._gateway_key = gateway_key
+            self._gateway_model = os.getenv("OCR_GATEWAY_MODEL") or "mistral-ocr-latest"
             self._client = httpx.AsyncClient(timeout=120.0, event_hooks=tenant_event_hooks())
             self._initialized = True
             logger.debug("Mistral OCR client initialized (through the LLM gateway)")
@@ -239,7 +243,7 @@ class MistralOcrClient:
         response = await self._client.post(
             f"{self._gateway_url}/v1/ocr",
             headers={"Authorization": f"Bearer {self._gateway_key}"},
-            json={"model": "mistral-ocr-latest", "document": {"type": kind, kind: data_url}},
+            json={"model": self._gateway_model, "document": {"type": kind, kind: data_url}},
         )
         response.raise_for_status()  # HTTPStatusError → _is_retryable decides
         return response.json()
