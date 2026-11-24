@@ -80,9 +80,10 @@ class AnthropicLLM(BaseLLM):
         except Exception as e:
             raise RuntimeError(f"Failed to initialize Anthropic client: {e}") from e
 
-        # Gooclaim (T418): the name the GATEWAY knows this model by. LiteLLM's routed
-        # /v1/messages serves the alias (`smart`) — one model, one name — and refuses
-        # the vendor name a key is not granted. The spec still decides context
+        # Gooclaim (T418, T542): the name the GATEWAY is sent — the task `knowledge.answer`;
+        # the gooclaim-datasources key maps it to the real model (Console → AI Control
+        # Center) and refuses a name the key is not granted. (OCR and embeddings still name
+        # their real models in Airweave's own code: mistral-ocr-latest, text-embedding-3-small.) The spec still decides context
         # window, output cap and thinking; only the `model` field on the wire changes.
         self._api_model = os.getenv("ANTHROPIC_GATEWAY_MODEL") or model_spec.api_model_name
 
